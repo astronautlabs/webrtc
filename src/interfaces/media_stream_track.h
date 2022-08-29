@@ -1,4 +1,6 @@
-/* Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+/**
+ * Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
+ * Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
  *
  * Use of this source code is governed by a BSD-style license that can be found
  * in the LICENSE.md file in the root of the source tree. All contributing
@@ -28,7 +30,7 @@ class MediaStreamTrack
  public:
   explicit MediaStreamTrack(const Napi::CallbackInfo&);
 
-  ~MediaStreamTrack() override;
+  void Finalize(Napi::Env env) override;
 
   static void Init(Napi::Env, Napi::Object);
 
@@ -48,6 +50,10 @@ class MediaStreamTrack
   > * wrap();
 
   static Napi::FunctionReference& constructor();
+
+  inline std::string getId() {
+      return _track->id();
+  }
 
  protected:
   void Stop() override;

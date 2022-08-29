@@ -10,12 +10,12 @@ CONVERTER_IMPL(webrtc::RTCError*, SomeError, error) {
 
 CONVERTER_IMPL(const webrtc::RTCError*, SomeError, error) {
   if (!error) {
-    return Validation<SomeError>::Invalid("No error? Please file a bug on https://github.com/node-webrtc/node-webrtc");
+    return Validation<SomeError>::Invalid("No error? Please file a bug on https://github.com/astronautlabs/webrtc");
   }
   auto type = MakeRight<ErrorFactory::DOMExceptionName>(ErrorFactory::ErrorName::kError);
   switch (error->type()) {
     case webrtc::RTCErrorType::NONE:
-      return Validation<SomeError>::Invalid("No error? Please file a bug on https://github.com/node-webrtc/node-webrtc");
+      return Validation<SomeError>::Invalid("No error? Please file a bug on https://github.com/astronautlabs/webrtc");
     case webrtc::RTCErrorType::UNSUPPORTED_PARAMETER:
     case webrtc::RTCErrorType::INVALID_PARAMETER:
       type = MakeLeft<ErrorFactory::ErrorName>(ErrorFactory::DOMExceptionName::kInvalidAccessError);
@@ -24,7 +24,7 @@ CONVERTER_IMPL(const webrtc::RTCError*, SomeError, error) {
       type = MakeRight<ErrorFactory::DOMExceptionName>(ErrorFactory::ErrorName::kRangeError);
       break;
     case webrtc::RTCErrorType::SYNTAX_ERROR:
-      type = MakeRight<ErrorFactory::DOMExceptionName>(ErrorFactory::ErrorName::kSyntaxError);
+      type = MakeLeft<ErrorFactory::ErrorName>(ErrorFactory::DOMExceptionName::kSyntaxError);
       break;
     case webrtc::RTCErrorType::INVALID_STATE:
       type = MakeLeft<ErrorFactory::ErrorName>(ErrorFactory::DOMExceptionName::kInvalidStateError);
@@ -67,6 +67,8 @@ TO_NAPI_IMPL(SomeError, pair) {
         return ErrorFactory::CreateNetworkError(env, message);
       case ErrorFactory::DOMExceptionName::kOperationError:
         return ErrorFactory::CreateOperationError(env, message);
+      case ErrorFactory::DOMExceptionName::kSyntaxError:
+        return ErrorFactory::CreateSyntaxError(env, message);
     }
   }, [env, message](auto name) {
     switch (name) {
@@ -74,8 +76,6 @@ TO_NAPI_IMPL(SomeError, pair) {
         return ErrorFactory::CreateError(env, message);
       case ErrorFactory::ErrorName::kRangeError:
         return ErrorFactory::CreateRangeError(env, message);
-      case ErrorFactory::ErrorName::kSyntaxError:
-        return ErrorFactory::CreateSyntaxError(env, message);
     }
   })));
 }

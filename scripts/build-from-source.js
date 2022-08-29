@@ -5,14 +5,16 @@
 const { spawnSync } = require('child_process');
 
 const args = ['configure'];
+const DEBUG = !!process.env.DEBUG;
 
-if (process.env.DEBUG) {
+if (DEBUG) {
+  console.log(`** Enable debug configuration`);
   args.push('--debug');
 }
 
 if (process.platform === 'win32') {
   args.push('-g');
-  args.push('"Visual Studio 16 2019"');
+  args.push('"Visual Studio 16 2019"'); // Important: libwebrtc determines the version that will work.
 }
 
 function main() {
@@ -25,8 +27,15 @@ function main() {
     throw new Error('ncmake configure failed for wrtc');
   }
 
-  console.log('Running ncmake build');
-  status = spawnSync('ncmake', ['build'], {
+  let buildArgs = ['build'];
+
+  if (DEBUG) {
+    console.log(`** Enabling debug build`);
+    buildArgs.push('--debug');
+  }
+  
+  console.log(`Running ncmake build ${buildArgs.join(' ')}`);
+  status = spawnSync('ncmake', buildArgs, {
     shell: true,
     stdio: 'inherit'
   }).status;

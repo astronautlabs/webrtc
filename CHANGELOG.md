@@ -1,39 +1,45 @@
-0.4.6
-=====
+# vNext (0.5.0)
 
-New Features
-------------
+- Move Javascript sources to Typescript
+- Use Visual Studio 2022 for Windows builds
+- Add cmake `project()` directive
+- Add VS code C++ configuration
+- Set up `webrtc.astrocdn.com` for future binary builds
+
+# Forked to @astronautlabs/webrtc
+
+The previous changelog entries correspond to releases of the [`wrtc`](https://github.com/node-webrtc/node-webrtc) 
+package from which `@astronautlabs/webrtc` was forked.
+
+# 0.4.6
+
+## New Features
 
 - Added `target` property to RTCPeerConnection events (thanks, @CharlesRA).
 - Support for additional APIs in `lib/browser.js` (thanks, @piranna).
 - Added a naïve version of `getDeviceMedia` that delegates to `getUserMedia`
   (thanks, @piranna).
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Although Node 14 support was confirmed in v0.4.5, it was not included in the
   "engines" property of package.json (thanks, @farnabaz).
 - Potential fix for a crash mentioned in #637 (thanks, @thedracle).
 
-0.4.5
-=====
+# 0.4.5
 
-New Features
-------------
+## New Features
 
 - Updated to WebRTC M81.
 - Added support for Node 14.
 - Added rollback support.
 
-Bug Fixes
----------
+## Bug Fixes
 
 - RTCPeerConnection no longer raises "icegatheringstatechange" when the
   RTCPeerConnection is closed. Thanks, @arlolra. (#625)
 
-Breaking Changes
-----------------
+## Breaking Changes
 
 - With the update from M79 to M81, the `dtx`, `ptime`, and `codecPayloadType`
   parameters to RTCRtpEncodingParameters no longer take affect. They've also
@@ -42,19 +48,16 @@ Breaking Changes
   library are depending on the removed functionality, and I prefer not to
   increment the version number at this time.
 
-0.4.4
-=====
+# 0.4.4
 
-New Features
-------------
+## New Features
 
 - `addTrack` now supports multiple MediaStream arguments (#548). Additionally,
   MediaStreams can now be constructed with arbitrary IDs. For more information,
   see below. Thanks, @csheely and @sgodin.
 - `setStreams` now supports multiple MediaStream arguments.
 
-MediaStream
------------
+## MediaStream
 
 MediaStreams in node-webrtc can be constructed with arbitrary IDs. For example,
 the following MediaStream, `stream`, has its ID set to "foo".
@@ -64,11 +67,9 @@ const stream = new MediaStream({ id: 'foo' });
 stream.id === 'foo';  // true
 ```
 
-0.4.3
-=====
+# 0.4.3
 
-New Features
-------------
+## New Features
 
 - Updated to WebRTC M79.
 - Added support for Node 13.
@@ -92,8 +93,7 @@ New Features
 - Added support for `sendEncodings` to RTCRtpTransceiverInit.
 - Added support for `setCodecPreferences` to RTCRtpTransceiver.
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Fixed a bug where VideoFrame timestamps reported via RTCP were incorrect
   (#566). Thanks, @lonocvb.
@@ -101,32 +101,26 @@ Bug Fixes
   @taylorhoward92.
 - Fixed bugs related to N-API usage in recent version of Node 12 and 13.
 
-0.4.2
-=====
+# 0.4.2
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Fix image stride issue at certain resolutions. (#536)
 
-0.4.1
-=====
+# 0.4.1
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Fix memory leak when receiving strings over RTCDataChannel. (#528)
 
-0.4.0
-=====
+# 0.4.0
 
 node-webrtc is now implemented using N-API, which is ABI stable across Node
 releases. This means we can now ship fewer binaries while supporting a
 potentially greater number of Node releases. As of 0.4.0, node-webrtc targets
 N-API version 3.
 
-New Features
-------------
+## New Features
 
 - Updated to WebRTC M74.
 - Added support for Node 12.
@@ -135,13 +129,11 @@ New Features
 - Added initial RTCSctpTransport support (see below).
 - Expanded RTCIceCandidate support (see below).
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Avoid crashing when `createDataChannel` fails. (#508)
 
-Breaking Changes
-----------------
+## Breaking Changes
 
 - Dropped support for Node 6.
 - Installing from NPM only downloads pre-built binaries. If you wish to build
@@ -150,8 +142,7 @@ Breaking Changes
   RTCConfiguration property or the `SDP_SEMANTICS` environment variable to
   "plan-b".
 
-RTCIceTransport
----------------
+## RTCIceTransport
 
 RTCDtlsTransport now exposes RTCIceTransport under the `iceTransport` property.
 
@@ -167,8 +158,7 @@ The following events are supported:
 - "statechange"
 - "gatheringstatechange"
 
-RTCSctpTransport
-----------------
+## RTCSctpTransport
 
 RTCPeerConnection now exposes RTCSctpTransport under the `sctp` property.
 
@@ -184,8 +174,7 @@ The following attributes are partially supported:
 
 The "statechange" event is also supported.
 
-RTCIceCandidate
----------------
+## RTCIceCandidate
 
 RTCIceCandidates now include the following attributes:
 
@@ -201,11 +190,9 @@ RTCIceCandidates now include the following attributes:
 - `relatedPort`
 - `usernameFragment`
 
-0.3.7
-=====
+# 0.3.7
 
-New Features
-------------
+## New Features
 
 ### RTCDtlsTransport
 
@@ -219,16 +206,13 @@ supports the `state` property, the "statechange" event, and the "error" event.
 - Added `maxPacketLifeTime` getter to RTCDataChannel (#492).
 - Added `negotiated` getter to RTCDataChannel.
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Fixed `addIceCandidate` queueing behavior (#498).
 
-0.3.6
-=====
+# 0.3.6
 
-New Features
-------------
+## New Features
 
 ### Programmatic Audio
 
@@ -329,11 +313,9 @@ values are 0, 90, 180, and 270.
 
 EventListener instances now support [`handleEvent`](https://developer.mozilla.org/en-US/docs/Web/API/EventListener/handleEvent).
 
-0.3.5
-=====
+# 0.3.5
 
-New Features
-------------
+## New Features
 
 ### Programmatic Video
 
@@ -454,30 +436,25 @@ rgbaToI420(rgbaFrame, i420Frame);
 
 - Added support for setting MediaStreamTrack's `enabled` property (#475).
 
-0.3.4
-=====
+# 0.3.4
 
-New Features
-------------
+## New Features
 
 - Updated to WebRTC M71.
 - Relay remote audio MediaStreamTracks on Windows (0.1.5 initially introduced
   this feature for Linux and macOS; now, Windows supports it, too).
 - Added support for [pkg](https://github.com/zeit/pkg) (#404).
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Calling certain methods, like `addTrack`, `removeTrack`, etc., with objects
   that were not instances of MediaStreamTrack, RTCRtpSender, etc., could lead to
   segfaults. This was because we did not properly validate objects before
   attempting to unwrap them. (#448)
 
-0.3.3
-=====
+# 0.3.3
 
-New Features
-------------
+## New Features
 
 - Experimental support for armv7l and arm64. Binaries built for these
   architectures have been tested with QEMU but not on real devices. Please test
@@ -497,23 +474,19 @@ New Features
   DEBUG=true npm install
   ```
 
-0.3.2
-=====
+# 0.3.2
 
-New Features
-------------
+## New Features
 
 - Support for Node 11 on Windows.
 
-0.3.1
-=====
+# 0.3.1
 
 This release adds a number of new features and brings us closer to
 spec-compliance, thanks to the tests at
 [web-platform-tests/wpt](http://github.com/web-platform-tests/wpt).
 
-New Features
-------------
+## New Features
 
 ### `getUserMedia`
 
@@ -641,8 +614,7 @@ Added limited support for the `muted` property (it always returns `false`).
   [domexception](https://github.com/jsdom/domexception) to construct those
   DOMExceptions, if installed.
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Calling `addTrack` twice with the same MediaStreamTrack should throw an
   InvalidAccessError (#442).
@@ -650,11 +622,9 @@ Bug Fixes
 - MediaStream's `clone` method did not `clone` MediaStreamTracks.
 - MediaStreamTrack's `readyState` was not updated when `stop` was called.
 
-0.3.0
-=====
+# 0.3.0
 
-New Features
-------------
+## New Features
 
 - Support for Node 11. Binaries are available for Linux and macOS. Windows
   binaries will become available in a subsequent release once AppVeyor gains
@@ -663,67 +633,54 @@ New Features
   [mayeut/libwebrtc](https://github.com/mayeut/libwebrtc); instead, WebRTC is
   built from source.
 
-Breaking Changes
-----------------
+## Breaking Changes
 
 - Dropped support for Node 9
 - Minimum CMake version bumped to 3.12
 - Minimum GCC version bumped to 5.4
 - Minimum Microsoft Visual Studio version bumped to 2017
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Updating to WebRTC M70 fixes an RTCDataChannel-related interop bug with recent
   Firefox releases (#444).
 
-0.2.2
-=====
+# 0.2.2
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Destroy AudioDeviceModule on the worker thread.
 
-0.2.1
-=====
+# 0.2.1
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Fixed an AudioDeviceModule memory and thread leak (#429).
 - Fixed an issue where closing an RTCPeerConnection would raise "open" events on
   any RTCDataChannels whose `readyState` was "connecting" (#436).
 
-0.2.0
-=====
+# 0.2.0
 
-Breaking Changes
-----------------
+## Breaking Changes
 
 - Dropped support for Node 4, 5 and 7 (#408).
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Fixed a race when closing an RTCDataChannel (#358).
 - Fixed memory leaks in `createOffer`, `createAnswer`, `addIceCandidate`, and
   `getStats` (#425).
 
-0.1.6
-=====
+# 0.1.6
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Fixed an issue with receiving multiple ArrayBuffers over an RTCDataChannel
   that could cause invalid memory accesses (#406).
 
-0.1.5
-=====
+# 0.1.5
 
-New Features
-------------
+## New Features
 
 - This release allows relaying remote MediaStreamTracks. This can be useful for
   test applications. **Note:** currently, Windows cannot relay audio
@@ -801,11 +758,9 @@ and the following attributes
 - `transport` (always returns `null` for now)
 - `rtcpTransport` (always returns `null` for now)
 
-0.1.4
-=====
+# 0.1.4
 
-New Features
-------------
+## New Features
 
 - Added support for Node 10 (#402)
 
@@ -844,30 +799,24 @@ attributes
 - `kind`
 - `readyState`
 
-0.1.3
-=====
+# 0.1.3
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Fixed memory leaks related to RTCPeerConnection events.
 
-0.1.2
-=====
+# 0.1.2
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Fixed memory leaks related to sending and receiving messages over
   RTCDataChannels (#205, #304, #319). There are some less severe leaks related
   to RTCPeerConnection events that remain. These will be addressed in a future
   release.
 
-0.1.1
-=====
+# 0.1.1
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Calling `createDataChannel` on a closed RTCPeerConnection no longer returns
   `undefined`; instead, it raises an InvalidStateError (#314, #382).
@@ -877,14 +826,12 @@ Bug Fixes
   Linux (for example, up to 3000 in my tests, not exceeding thread limits).
   (#362)
 
-0.1.0
-=====
+# 0.1.0
 
 This project will begin to follow [SemVer](https://semver.org) in preparation
 for a 1.0.0 release.
 
-New Features
-------------
+## New Features
 
 Besides updating to WebRTC M60 (using
 [mayeut/libwebrtc](https://github.com/mayeut/libwebrtc)), this release adds a
@@ -983,8 +930,7 @@ Added top-level exports for
 * RTCDataChannelEvent
 * RTCPeerConnectionIceEvent
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Fixed a failed assertion when closing RTCPeerConnection's or RTCDataChannel's
   event loop (#376).
@@ -993,8 +939,7 @@ Bug Fixes
 - Copy StatsReports on the signaling thread. This fixes a thread checker
   assertion raised by debug builds of libwebrtc.
 
-Breaking Changes
-----------------
+## Breaking Changes
 
 - Dropped support for "moz"- and "webkit"-prefixed WebRTC APIs in
   `lib/browser.js`. This means that, when bundling JavaScript that depends on
@@ -1007,11 +952,9 @@ Breaking Changes
 - Dropped support for the `RTCDataStates` and `BinaryTypes` properties on the
   RTCDataChannel prototype. This, too, was an implementation detail.
 
-0.0.67
-======
+# 0.0.67
 
-Bug Fixes
----------
+## Bug Fixes
 
 - ObjectWrap instances accessed in an event loop (like PeerConnection and
   DataChannel) were getting freed before the event loop completed, which caused
@@ -1021,26 +964,21 @@ Bug Fixes
   PeerConnectionFactory was freed, accessing the underlying DataChannelInterface
   would try to use Threads which had been freed.
 
-0.0.66
-======
+# 0.0.66
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Fixed a CPU regression introduced in 0.0.63. We now share a single
   PeerConnectionFactoryInterface across PeerConnectionInterfaces, and we now use
   a "dummy" AudioDeviceModule instead of FakeAudioDeviceModule.
 
-0.0.65
-======
+# 0.0.65
 
-New Features
-------------
+## New Features
 
 - Added support for sending Buffers (#103)
 
-Bug Fixes
----------
+## Bug Fixes
 
 - Sending an ArrayBufferView over an RTCDataChannel did not take into account
   the ArrayBufferView's `offset` or `length` properties. This resulted in
@@ -1049,33 +987,27 @@ Bug Fixes
 - unzip-stream 0.2.2 breaks compatibility with Node 4 and 5. This release pins
   to unzip-stream 0.2.1.
 
-Breaking Changes
-----------------
+## Breaking Changes
 
 - Building from source requires CMake 3.1 or newer
 
-0.0.64
-======
+# 0.0.64
 
-Bug Fixes
----------
+## Bug Fixes
 
 - We no longer `Externalize` ArrayBuffers. This fixes an error when sending
   ArrayBuffers mutliple times (#262 and #264) and a memory leak (#304).
 - Fixed RTCDataChannel-related segfaults by checking for `nullptr` (#236 and
   #325)
 
-0.0.63
-======
+# 0.0.63
 
-New Features
-------------
+## New Features
 
 - Support for Node 9
 - Updated to WebRTC M57 (using [libwebrtc](https://github.com/aisouard/libwebrtc))
 
-Breaking Changes
-----------------
+## Breaking Changes
 
 - Minimum Mac OS X version bumped to 10.9
 - Minimum Microsoft Visual Studio version bumped to 2015

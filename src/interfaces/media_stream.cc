@@ -1,4 +1,6 @@
-/* Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+/**
+ * Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
+ * Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
  *
  * Use of this source code is governed by a BSD-style license that can be found
  * in the LICENSE.md file in the root of the source tree. All contributing
@@ -273,7 +275,10 @@ MediaStream* MediaStream::Create(
     Napi::External<rtc::scoped_refptr<webrtc::MediaStreamInterface>>::New(env, &stream)
   });
 
-  return MediaStream::Unwrap(object);
+  // Add a reference owned by the RTCPeerConnection
+  auto unwrapped = Unwrap(object);
+  unwrapped->Ref();
+  return unwrapped;
 }
 
 void MediaStream::Init(Napi::Env env, Napi::Object exports) {

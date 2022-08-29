@@ -1,4 +1,6 @@
-/* Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+/**
+ * Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
+ * Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
  *
  * Use of this source code is governed by a BSD-style license that can be found
  * in the LICENSE.md file in the root of the source tree. All contributing
@@ -17,6 +19,7 @@
 
 #include "src/dictionaries/node_webrtc/rtc_on_data_event_dict.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
+#include "src/interfaces/media_stream_track.h"
 
 namespace node_webrtc {
 
@@ -70,8 +73,8 @@ class RTCAudioSource
   : public Napi::ObjectWrap<RTCAudioSource> {
  public:
   RTCAudioSource(const Napi::CallbackInfo&);
-
   static void Init(Napi::Env, Napi::Object);
+  void Finalize(Napi::Env env) override;
 
  private:
   static Napi::FunctionReference& constructor();
@@ -80,6 +83,7 @@ class RTCAudioSource
   Napi::Value OnData(const Napi::CallbackInfo&);
 
   rtc::scoped_refptr<RTCAudioTrackSource> _source;
+  std::set<MediaStreamTrack*> _tracks;
 };
 
 }  // namespace node_webrtc

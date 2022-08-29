@@ -82,20 +82,26 @@ class TestAudioDeviceModuleImpl  // NOLINT
   ~TestAudioDeviceModuleImpl() override {
     StopPlayout();  // NOLINT
     StopRecording();  // NOLINT
-    if (thread_) {
+    if (!thread_.empty()) {
       {
         rtc::CritScope cs(&lock_);
         stop_thread_ = true;
       }
-      thread_->Stop();
+      thread_.Finalize();
     }
   }
 
   int32_t Init() override {
-    thread_ = absl::make_unique<rtc::PlatformThread>(
-            TestAudioDeviceModuleImpl::Run, this, "TestAudioDeviceModuleImpl",
-            rtc::kHighPriority);
-    thread_->Start();
+    thread_ = rtc::PlatformThread::SpawnJoinable(
+      [&] (){
+        TestAudioDeviceModuleImpl::Run(this);
+      }, "TestAudioDeviceModuleImpl",
+      rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kHigh)
+    );
+    // thread_ = absl::make_unique<rtc::PlatformThread>(
+    //         TestAudioDeviceModuleImpl::Run, this, "TestAudioDeviceModuleImpl",
+    //         rtc::kHighPriority);
+    // thread_->Start();
     return 0;
   }
 
@@ -249,7 +255,7 @@ class TestAudioDeviceModuleImpl  // NOLINT
   std::vector<int16_t> playout_buffer_ RTC_GUARDED_BY(lock_);
   rtc::BufferT<int16_t> recording_buffer_ RTC_GUARDED_BY(lock_);
 
-  std::unique_ptr<rtc::PlatformThread> thread_;
+  rtc::PlatformThread thread_;
   bool stop_thread_ RTC_GUARDED_BY(lock_);
 };
 

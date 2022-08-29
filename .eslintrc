@@ -28,7 +28,7 @@ rules:
   func-style: [2, declaration]
   handle-callback-err: 2
   key-spacing: 2
-  linebreak-style: [2, unix]
+  //linebreak-style: [2, unix]
   new-cap: 2
   new-parens: 2
   no-alert: 2

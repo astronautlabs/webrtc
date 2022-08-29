@@ -54,7 +54,10 @@ TO_NAPI_IMPL(webrtc::IceCandidateInterface*, pair) {
 
   std::string candidate_string;
   if (!value->ToString(&candidate_string)) {
-    return Validation<Napi::Value>::Invalid("Failed to print the candidate string. This is pretty weird. File a bug on https://github.com/node-webrtc/node-webrtc");
+    return Validation<Napi::Value>::Invalid(
+      "Failed to print the candidate string. This is pretty weird. " 
+      "File a bug on https://github.com/astronautlabs/webrtc"
+    );
   }
 
   auto candidate = value->candidate();

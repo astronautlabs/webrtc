@@ -7,7 +7,7 @@ const { symlinkSync, writeFileSync } = require('fs');
 const { join } = require('path');
 
 const CWD = join(__dirname, '..');
-const NODE_WEBRTC_EXAMPLES_URL = 'https://github.com/node-webrtc/node-webrtc-examples';
+const NODE_WEBRTC_EXAMPLES_URL = 'https://github.com/astronautlabs/webrtc-examples';
 const NODE_WEBRTC_EXAMPLES_DIR = 'example';
 const NODE_WEBRTC_EXAMPLES_REF = '445355403c943457200b5aba687fec45618c1c8a';
 

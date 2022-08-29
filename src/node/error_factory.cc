@@ -1,4 +1,6 @@
-/* Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+/**
+ * Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
+ * Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
  *
  * Use of this source code is governed by a BSD-style license that can be found
  * in the LICENSE.md file in the root of the source tree. All contributing
@@ -60,7 +62,7 @@ Napi::Value node_webrtc::ErrorFactory::CreateRangeError(const Napi::Env env, con
 // FIXME(mroberts): Actually implement this.
 Napi::Value node_webrtc::ErrorFactory::CreateSyntaxError(const Napi::Env env, const std::string message) {
   Napi::EscapableHandleScope scope(env);
-  return scope.Escape(Napi::Error::New(env, message).Value());
+  return scope.Escape(CreateDOMException(env, message, DOMExceptionName::kSyntaxError));
 }
 
 const char* node_webrtc::ErrorFactory::DOMExceptionNameToString(DOMExceptionName name) {
@@ -71,6 +73,8 @@ const char* node_webrtc::ErrorFactory::DOMExceptionNameToString(DOMExceptionName
       return "InvalidModificationError";
     case kInvalidStateError:
       return "InvalidStateError";
+    case kSyntaxError:
+        return "SyntaxError";
     case kNetworkError:
       return "NetworkError";
     case kOperationError:

@@ -1,4 +1,6 @@
-/* Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+/**
+ * Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
+ * Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
  *
  * Use of this source code is governed by a BSD-style license that can be found
  * in the LICENSE.md file in the root of the source tree. All contributing
@@ -17,19 +19,23 @@
 namespace webrtc { class RTCError; }
 
 namespace node_webrtc {
+	class SetSessionDescriptionObserver: 
+		public PromiseCreator<RTCPeerConnection>, 
+		public webrtc::SetSessionDescriptionObserver {
+	public:
+		SetSessionDescriptionObserver(
+			RTCPeerConnection* peer_connection,
+			Napi::Promise::Deferred deferred)
+			: PromiseCreator<RTCPeerConnection>(peer_connection, deferred) {
+			pc = peer_connection;
+		}
 
-class SetSessionDescriptionObserver
-  : public PromiseCreator<RTCPeerConnection>
-  , public webrtc::SetSessionDescriptionObserver {
- public:
-  SetSessionDescriptionObserver(
-      RTCPeerConnection* peer_connection,
-      Napi::Promise::Deferred deferred)
-    : PromiseCreator<RTCPeerConnection>(peer_connection, deferred) {}
+		void OnSuccess() override;
 
-  void OnSuccess() override;
+		void OnFailure(webrtc::RTCError) override;
 
-  void OnFailure(webrtc::RTCError) override;
-};
+	private:
+		RTCPeerConnection* pc;
+	};
 
 }  // namespace node_webrtc

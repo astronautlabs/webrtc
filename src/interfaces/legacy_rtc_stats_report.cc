@@ -1,4 +1,6 @@
-/* Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+/**
+ * Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
+ * Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
  *
  * Use of this source code is governed by a BSD-style license that can be found
  * in the LICENSE.md file in the root of the source tree. All contributing
@@ -73,14 +75,13 @@ Napi::Value LegacyStatsReport::GetType(const Napi::CallbackInfo& info) {
 
 LegacyStatsReport* LegacyStatsReport::Create(double timestamp, const std::map<std::string, std::string>& stats) {
   auto env = LegacyStatsReport::constructor().Env();
-  Napi::HandleScope scope(env);
 
   auto object = LegacyStatsReport::constructor().New({
     Napi::External<double>::New(env, &timestamp),
     Napi::External<std::map<std::string, std::string>>::New(env, const_cast<std::map<std::string, std::string>*>(&stats))
   });
 
-  return LegacyStatsReport::Unwrap(object);
+  return Unwrap(object);
 }
 
 void LegacyStatsReport::Init(Napi::Env env, Napi::Object exports) {

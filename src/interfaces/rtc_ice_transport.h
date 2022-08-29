@@ -1,4 +1,6 @@
-/* Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+/**
+ * Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
+ * Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
  *
  * Use of this source code is governed by a BSD-style license that can be found
  * in the LICENSE.md file in the root of the source tree. All contributing
@@ -23,59 +25,59 @@ namespace cricket { class IceTransportInternal; }
 
 namespace node_webrtc {
 
-class PeerConnectionFactory;
+	class PeerConnectionFactory;
 
-class RTCIceTransport
-  : public AsyncObjectWrapWithLoop<RTCIceTransport>
-  , public sigslot::has_slots<sigslot::multi_threaded_local> {
- public:
-  explicit RTCIceTransport(const Napi::CallbackInfo&);
+	class RTCIceTransport
+		: public AsyncObjectWrapWithLoop<RTCIceTransport>
+		, public sigslot::has_slots<sigslot::multi_threaded_local> {
+	public:
+		explicit RTCIceTransport(const Napi::CallbackInfo&);
 
-  ~RTCIceTransport() override;
+		void Finalize(Napi::Env env) override;
 
-  static void Init(Napi::Env, Napi::Object);
+		static void Init(Napi::Env, Napi::Object);
 
-  static ::node_webrtc::Wrap <
-  RTCIceTransport*,
-  rtc::scoped_refptr<webrtc::IceTransportInterface>,
-  PeerConnectionFactory*
-  > * wrap();
+		static ::node_webrtc::Wrap <
+			RTCIceTransport*,
+			rtc::scoped_refptr<webrtc::IceTransportInterface>,
+			PeerConnectionFactory*
+		>* wrap();
 
-  void OnRTCDtlsTransportStopped();
+		void OnRTCDtlsTransportStopped();
 
- protected:
-  void Stop() override;
+	protected:
+		void Stop() override;
 
- private:
-  static Napi::FunctionReference& constructor();
+	private:
+		static Napi::FunctionReference& constructor();
 
-  static RTCIceTransport* Create(
-      PeerConnectionFactory*,
-      rtc::scoped_refptr<webrtc::IceTransportInterface>);
+		static RTCIceTransport* Create(
+			PeerConnectionFactory*,
+			rtc::scoped_refptr<webrtc::IceTransportInterface>);
 
-  void OnStateChanged(cricket::IceTransportInternal*);
-  void OnGatheringStateChanged(cricket::IceTransportInternal*);
+		void OnStateChanged(cricket::IceTransportInternal*);
+		void OnGatheringStateChanged(cricket::IceTransportInternal*);
 
-  void TakeSnapshot();
+		void TakeSnapshot();
 
-  Napi::Value GetRole(const Napi::CallbackInfo&);
-  Napi::Value GetComponent(const Napi::CallbackInfo&);
-  Napi::Value GetState(const Napi::CallbackInfo&);
-  Napi::Value GetGatheringState(const Napi::CallbackInfo&);
+		Napi::Value GetRole(const Napi::CallbackInfo&);
+		Napi::Value GetComponent(const Napi::CallbackInfo&);
+		Napi::Value GetState(const Napi::CallbackInfo&);
+		Napi::Value GetGatheringState(const Napi::CallbackInfo&);
 
-  Napi::Value GetLocalCandidates(const Napi::CallbackInfo&);
-  Napi::Value GetRemoteCandidates(const Napi::CallbackInfo&);
-  Napi::Value GetSelectedCandidatePair(const Napi::CallbackInfo&);
-  Napi::Value GetLocalParameters(const Napi::CallbackInfo&);
-  Napi::Value GetRemoteParameters(const Napi::CallbackInfo&);
+		Napi::Value GetLocalCandidates(const Napi::CallbackInfo&);
+		Napi::Value GetRemoteCandidates(const Napi::CallbackInfo&);
+		Napi::Value GetSelectedCandidatePair(const Napi::CallbackInfo&);
+		Napi::Value GetLocalParameters(const Napi::CallbackInfo&);
+		Napi::Value GetRemoteParameters(const Napi::CallbackInfo&);
 
-  RTCIceComponent _component = RTCIceComponent::kRtp;
-  PeerConnectionFactory* _factory;
-  cricket::IceGatheringState _gathering_state = cricket::IceGatheringState::kIceGatheringNew;
-  std::mutex _mutex{};
-  cricket::IceRole _role = cricket::IceRole::ICEROLE_UNKNOWN;
-  webrtc::IceTransportState _state = webrtc::IceTransportState::kNew;
-  rtc::scoped_refptr<webrtc::IceTransportInterface> _transport;
-};
+		RTCIceComponent _component = RTCIceComponent::kRtp;
+		PeerConnectionFactory* _factory;
+		cricket::IceGatheringState _gathering_state = cricket::IceGatheringState::kIceGatheringNew;
+		std::mutex _mutex{};
+		cricket::IceRole _role = cricket::IceRole::ICEROLE_UNKNOWN;
+		webrtc::IceTransportState _state = webrtc::IceTransportState::kNew;
+		rtc::scoped_refptr<webrtc::IceTransportInterface> _transport;
+	};
 
 }  // namespace node_webrtc

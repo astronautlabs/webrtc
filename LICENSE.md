@@ -2,6 +2,7 @@ The following license applies to all parts of this software except as documented
 below.
 
 ```
+Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
 Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,

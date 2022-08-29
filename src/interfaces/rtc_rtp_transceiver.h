@@ -1,4 +1,6 @@
-/* Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+/**
+ * Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
+ * Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
  *
  * Use of this source code is governed by a BSD-style license that can be found
  * in the LICENSE.md file in the root of the source tree. All contributing
@@ -12,54 +14,71 @@
 #include <node-addon-api/napi.h>
 #include <webrtc/api/scoped_refptr.h>
 
+#include "src/utilities/napi_ref_ptr.h"
 #include "src/converters/napi.h"
 #include "src/converters/napi.h"
 #include "src/node/async_object_wrap.h"
 #include "src/node/wrap.h"
+#include "src/interfaces/rtc_peer_connection.h"
 
 namespace webrtc { class RtpTransceiverInterface; }
 
 namespace node_webrtc {
+	class RTCPeerConnection;
+	class RTCRtpSender;
+	class RTCRtpReceiver;
+	class RTCRtpTransceiver : public Napi::ObjectWrap<RTCRtpTransceiver> {
+	public:
+		explicit RTCRtpTransceiver(const Napi::CallbackInfo&);
+		static void Init(Napi::Env, Napi::Object);
+		static Napi::FunctionReference& constructor();
+		void Finalize(Napi::Env env) override;
+		static RTCRtpTransceiver* Create(RTCPeerConnection* pc, RTCRtpSender* sender, RTCRtpReceiver* receiver);
+		void updateMembers(rtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtcTransceiver);
 
-class PeerConnectionFactory;
+		inline RTCRtpReceiver* getReceiver() { return this->receiver;  }
+		inline uintptr_t getId() { return id;  }
+		inline void setId(uintptr_t value) { id = value; }
+	private:
 
-class RTCRtpTransceiver: public AsyncObjectWrap<RTCRtpTransceiver> {
- public:
-  explicit RTCRtpTransceiver(const Napi::CallbackInfo&);
+		inline std::string directionToString(webrtc::RtpTransceiverDirection rtcDirection) {
+			if (rtcDirection == webrtc::RtpTransceiverDirection::kInactive)
+				return "inactive";
+			else if (rtcDirection == webrtc::RtpTransceiverDirection::kRecvOnly)
+				return "recvonly";
+			else if (rtcDirection == webrtc::RtpTransceiverDirection::kSendOnly)
+				return "sendonly";
+			else if (rtcDirection == webrtc::RtpTransceiverDirection::kSendRecv)
+				return "sendrecv";
+			return "unknown";
+		}
 
-  ~RTCRtpTransceiver() override;
+		uintptr_t id;
+		std::string mid = "";
+		RTCPeerConnection* pc = nullptr;
+		RTCRtpSender* sender = nullptr;
+		RTCRtpReceiver* receiver = nullptr;
+		bool stopped = false;
+		std::string direction = "inactive";
+		std::string currentDirection = "inactive";
+		std::string firedDirection = "inactive";
 
-  static void Init(Napi::Env, Napi::Object);
+		Napi::Reference<Napi::Value> pcRef;
+		Napi::Reference<Napi::Value> senderRef;
+		Napi::Reference<Napi::Value> receiverRef;
 
-  static ::node_webrtc::Wrap <
-  RTCRtpTransceiver*,
-  rtc::scoped_refptr<webrtc::RtpTransceiverInterface>,
-  PeerConnectionFactory*
-  > * wrap();
+		Napi::Value GetMid(const Napi::CallbackInfo&);
+		Napi::Value GetSender(const Napi::CallbackInfo&);
+		Napi::Value GetReceiver(const Napi::CallbackInfo&);
+		Napi::Value GetStopped(const Napi::CallbackInfo&);
+		Napi::Value GetDirection(const Napi::CallbackInfo&);
+		void SetDirection(const Napi::CallbackInfo&, const Napi::Value&);
+		Napi::Value GetCurrentDirection(const Napi::CallbackInfo&);
 
-  static Napi::FunctionReference& constructor();
+		Napi::Value Stop(const Napi::CallbackInfo&);
+		Napi::Value SetCodecPreferences(const Napi::CallbackInfo&);
+	};
 
- private:
+	DECLARE_TO_NAPI(RTCRtpTransceiver*)
 
-  static RTCRtpTransceiver* Create(
-      PeerConnectionFactory*,
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface>);
-
-  Napi::Value GetMid(const Napi::CallbackInfo&);
-  Napi::Value GetSender(const Napi::CallbackInfo&);
-  Napi::Value GetReceiver(const Napi::CallbackInfo&);
-  Napi::Value GetStopped(const Napi::CallbackInfo&);
-  Napi::Value GetDirection(const Napi::CallbackInfo&);
-  void SetDirection(const Napi::CallbackInfo&, const Napi::Value&);
-  Napi::Value GetCurrentDirection(const Napi::CallbackInfo&);
-
-  Napi::Value Stop(const Napi::CallbackInfo&);
-  Napi::Value SetCodecPreferences(const Napi::CallbackInfo&);
-
-  PeerConnectionFactory* _factory;
-  rtc::scoped_refptr<webrtc::RtpTransceiverInterface> _transceiver;
-};
-
-DECLARE_TO_NAPI(RTCRtpTransceiver*)
-
-}  // namespace node_webrtc
+}

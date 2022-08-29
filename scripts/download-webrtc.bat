@@ -32,8 +32,8 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO rmdir webrtc
 rmdir webrtc
 
-ECHO mklink /D webrtc src
-mklink /D webrtc src
+ECHO mklink /j webrtc src
+mklink /j webrtc src
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 GOTO DONE

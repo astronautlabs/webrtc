@@ -52,7 +52,7 @@ TO_NAPI_IMPL(webrtc::PeerConnectionInterface::IceServer, pair) {
 
   auto iceServer = pair.second;
   if (!iceServer.uri.empty()) {
-    NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "urls", iceServer.uri)
+    NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "urls", std::vector<std::string>({ iceServer.uri }))
   } else {
     NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "urls", iceServer.urls)
   }
@@ -61,8 +61,9 @@ TO_NAPI_IMPL(webrtc::PeerConnectionInterface::IceServer, pair) {
   }
   if (!iceServer.password.empty()) {
     NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "credential", iceServer.password)
-    NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "credentialType", RTCIceCredentialType::kPassword)
   }
+
+  NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "credentialType", RTCIceCredentialType::kPassword)
 
   return Pure(scope.Escape(object));
 }

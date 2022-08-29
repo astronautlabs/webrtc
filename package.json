@@ -1,66 +1,72 @@
 {
-  "name": "wrtc",
-  "private": true,
+  "name": "@astronautlabs/webrtc",
   "description": "Standards-compliant WebRTC implementation for Node",
   "keywords": [
     "webrtc",
     "p2p",
     "peer"
   ],
-  "version": "0.4.7-dev",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "0.5.2",
   "author": "Alan K <ack@modeswitch.org> (http://blog.modeswitch.org)",
-  "homepage": "https://github.com/node-webrtc/node-webrtc",
-  "bugs": "https://github.com/node-webrtc/node-webrtc/issues",
+  "homepage": "https://github.com/astronautlabs/webrtc",
+  "bugs": "https://github.com/astronautlabs/webrtc/issues",
   "license": "BSD-2-Clause",
   "repository": {
     "type": "git",
-    "url": "http://github.com/node-webrtc/node-webrtc.git"
+    "url": "https://github.com/astronautlabs/webrtc.git"
   },
-  "main": "lib/index.js",
-  "browser": "lib/browser.js",
-  "binary": {
-    "module_name": "wrtc",
-    "module_path": "./build/{configuration}/",
-    "remote_path": "./{module_name}/v{version}/{configuration}/",
-    "package_name": "{platform}-{arch}.tar.gz",
-    "host": "https://node-webrtc.s3.amazonaws.com"
+  "main": "dist/nodejs/index.js",
+  "browser": "dist/browser/index.js",
+  "twine": {
+    "distributionUrl": "https://webrtc.astrocdn.com",
+    "moduleName": "wrtc"
   },
   "engines": {
-    "node": "^8.11.2 || ^10.0.0 || ^11.0.0 || ^12.0.0 || ^13.0.0 || ^14.0.0 || ^15.0.0"
+    "node": "^14.0.0 || ^16.0.0 || ^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.4",
+    "@astronautlabs/twine": "^1.1.2",
+    "bindings": "^1.5.0",
+    "libyuv": "^0.1.3",
     "nan": "^2.3.2",
-    "node-addon-api": "^1.6.2",
-    "node-cmake": "2.3.2"
+    "node-addon-api": "^5.0.0",
+    "node-cmake": "2.3.2",
+    "segfault-handler": "^1.3.0"
   },
   "optionalDependencies": {
     "domexception": "^1.0.1"
   },
-  "bundledDependencies": [
-    "@mapbox/node-pre-gyp"
-  ],
   "devDependencies": {
     "@fidm/x509": "^1.2.1",
+    "@types/chai": "^4.3.1",
+    "@types/node": "^18.6.3",
+    "@types/simple-peer": "^9.11.4",
+    "@types/which": "^2.0.1",
     "aws-sdk": "^2.2.10",
     "browserify-middleware": "^8.1.1",
+    "chai": "^4.3.6",
     "cross-env": "^5.1.4",
+    "dotenv": "^16.0.1",
     "eslint": "^4.14.0",
     "express": "^4.16.2",
     "js-yaml": "^3.13.0",
-    "jsdom": "^15.0.0",
-    "karma": "^4.0.1",
+    "jsdom": "^16.5.0",
+    "karma": "^6.3.16",
     "karma-browserify": "^5.1.2",
     "karma-chrome-launcher": "^2.2.0",
     "karma-firefox-launcher": "^1.1.0",
     "karma-tap": "^4.1.4",
     "karma-tap-pretty-reporter": "^4.1.0",
     "minimatch": "^3.0.4",
-    "minimist": "1.2.5",
+    "minimist": "1.2.6",
     "mocha": "^5.2.0",
     "mocha-sugar-free": "^1.4.0",
     "node-fetch": "^2.5.0",
     "q": "^1.5.1",
+    "razmin": "^1.2.0",
     "recursive-copy": "^2.0.10",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.5",
@@ -71,20 +77,39 @@
     "tap-spec": "^5.0.0",
     "tape": "^4.9.1",
     "temp": "^0.9.0",
-    "travis-multirunner": "^4.3.0",
-    "ws": "^5.2.0"
+    "typescript": "^4.7.4",
+    "which": "^2.0.2",
+    "ws": "^5.2.0",
+    "zone.js": "^0.11.8"
   },
   "scripts": {
-    "install": "node scripts/download-prebuilt-or-build-from-source.js",
+    "build": "tsc -b",
+    "install": "twine install",
+    "build:native": "node scripts/build-from-source.js",
+    "build:native:release": "npm run configure && ncmake build -j 12",
+    "build:native:debug": "npm run configure:debug && ncmake build --debug -j 12",
+    "clean": "ncmake clean",
+    "configure:debug": "ncmake configure --debug",
+    "configure": "ncmake configure",
     "install-example": "node scripts/install-example.js",
     "lint": "eslint lib/*.js lib/**/*.js test/*.js test/**/*.js karma/*.js scripts/*.js",
-    "publish-binary": "node scripts/publish.js",
-    "test": "node --expose-gc test/all.js",
+    "publish:binary": "twine publish",
+    "test": "npm run build && node --expose-gc --enable-source-maps dist/nodejs/test/test.js",
+    "test:cpp": "npm run build && node --expose-gc --enable-source-maps dist/nodejs/test/cpp-test.js",
+    "test:gdb": "npm run build && cd build/external/libwebrtc/build/Debug && gdb --args node ../../../../../dist/nodejs/test/test.js",
+    "test:gdb:verbose": "npm run build && cd build/external/libwebrtc/build/Debug && gdb --args node ../../../../../dist/nodejs/test/test.js --verbose",
+    "test:vgdb": "npm run build && cd build/external/libwebrtc/build/Debug && vgdb --args node ../../../../../dist/nodejs/test/test.js",
+    "test:verbose": "npm run build && node --expose-gc --enable-source-maps --trace-exit dist/nodejs/test/test.js --verbose",
+    "test:debug": "npm run build && node --expose-gc --enable-source-maps --trace-exit --inspect-brk dist/nodejs/test/test.js --verbose",
+    "test:debug:native": "npm run build && node --expose-gc --enable-source-maps --trace-exit dist/nodejs/test/test.js --verbose --native-debug",
     "test:browsers": "cross-env BROWSER=chrome node scripts/karma.js && cross-env BROWSER=firefox node scripts/karma.js",
     "test:electron": "electron test/electron",
     "wpt:init": "git submodule update --init --recursive",
-    "wpt:reset": "rimraf ./test/web-platform-tests/tests && npm run wpt:init",
-    "wpt:test": "mocha test/web-platform-tests/run-wpts.js --exit",
-    "wpt:update": "git submodule update --recursive --remote --force && cd test/web-platform-tests/tests && python wpt.py manifest --path ../wpt-manifest.json"
+    "wpt:reset": "rimraf ./web-platform-tests && npm run wpt:init",
+    "wpt:test": "npm run build && node dist/nodejs/test/web-platform-tests/run-wpts.js",
+    "wpt:test:debug": "npm run build && node --inspect-brk dist/nodejs/test/web-platform-tests/run-wpts.js",
+    "wpt:test:debug:native": "npm run build && node dist/nodejs/test/web-platform-tests/run-wpts.js --native-debug",
+    "wpt:test:gdb": "npm run build && cd build/external/libwebrtc/build/Debug && gdb --args node ../../../../../dist/nodejs/test/web-platform-tests/run-wpts.js",
+    "wpt:update": "git submodule update --recursive --remote --force && cd web-platform-tests && python wpt.py manifest --path ../lib/nodejs/test/web-platform-tests/wpt-manifest.json"
   }
 }

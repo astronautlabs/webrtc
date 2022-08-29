@@ -24,7 +24,7 @@ TO_NAPI_IMPL(rtc::scoped_refptr<webrtc::VideoFrameBuffer>, pair) {
   auto value = pair.second;
   return value->type() == webrtc::VideoFrameBuffer::Type::kI420
       ? From<Napi::Value>(std::make_pair(pair.first, value->GetI420()))
-      : Validation<Napi::Value>::Invalid("Unsupported RTCVideoFrame type (file a node-webrtc bug, please!)");
+      : Validation<Napi::Value>::Invalid("Unsupported RTCVideoFrame type (file a bug in @/webrtc, please!)");
 }
 
 CONVERT_VIA(Napi::Value, I420ImageData, rtc::scoped_refptr<webrtc::I420Buffer>)

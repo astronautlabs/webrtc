@@ -1,4 +1,6 @@
-/* Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+/**
+ * Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
+ * Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
  *
  * Use of this source code is governed by a BSD-style license that can be found
  * in the LICENSE.md file in the root of the source tree. All contributing
@@ -45,7 +47,7 @@ MediaStreamTrack::MediaStreamTrack(const Napi::CallbackInfo& info)
   _enabled = false;
 }
 
-MediaStreamTrack::~MediaStreamTrack() {
+void MediaStreamTrack::Finalize(Napi::Env env) {
   _track = nullptr;
 
   Napi::HandleScope scope(PeerConnectionFactory::constructor().Env());
@@ -53,7 +55,7 @@ MediaStreamTrack::~MediaStreamTrack() {
   _factory = nullptr;
 
   wrap()->Release(this);
-}  // NOLINT
+}
 
 void MediaStreamTrack::Stop() {
   _track->UnregisterObserver(this);
@@ -63,9 +65,15 @@ void MediaStreamTrack::Stop() {
 }
 
 void MediaStreamTrack::OnChanged() {
-  if (_track->state() == webrtc::MediaStreamTrackInterface::TrackState::kEnded) {
-    Stop();
-  }
+  // Important to dispatch onto our own thread, because we may be in the process of shutting down
+  // via PeerConnection.Close(). If that is the case, stopping the track will attempt to unregister
+  // the observer on the underlying MediaStreamTrack which will cause a deadlock between signalling
+  // and worker threads.
+  Dispatch(CreateCallback<MediaStreamTrack>([this] () {
+    if (_track->state() == webrtc::MediaStreamTrackInterface::TrackState::kEnded) {
+      Stop();
+    }
+  }));
 }
 
 void MediaStreamTrack::OnPeerConnectionClosed() {
@@ -155,12 +163,14 @@ MediaStreamTrack* MediaStreamTrack::Create(
   auto env = constructor().Env();
   Napi::HandleScope scope(env);
 
-  auto mediaStreamTrack = constructor().New({
+  auto mediaStreamTrack = Unwrap(constructor().New({
     factory->Value(),
     Napi::External<rtc::scoped_refptr<webrtc::MediaStreamTrackInterface>>::New(env, &track)
-  });
+  }));
 
-  return Unwrap(mediaStreamTrack);
+  // Add a reference owned by the RTCPeerConnection
+  mediaStreamTrack->Ref();
+  return mediaStreamTrack;
 }
 
 void MediaStreamTrack::Init(Napi::Env env, Napi::Object exports) {

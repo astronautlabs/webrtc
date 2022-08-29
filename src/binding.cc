@@ -1,4 +1,6 @@
-/* Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+/**
+ * Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
+ * Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
  *
  * Use of this source code is governed by a BSD-style license that can be found
  * in the LICENSE.md file in the root of the source tree. All contributing
@@ -41,6 +43,13 @@ static void dispose(void*) {
 }
 
 static Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  #ifdef DEBUG
+    // Comment this out when needed, but do not commit.
+    rtc::LogMessage::SetLogToStderr(false);
+  #else
+    rtc::LogMessage::SetLogToStderr(false);
+  #endif 
+
   node_webrtc::AsyncContextReleaser::Init(env, exports);
   node_webrtc::ErrorFactory::Init(env, exports);
   node_webrtc::GetDisplayMedia::Init(env, exports);

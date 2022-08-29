@@ -1,0 +1,6 @@
+
+echo Extracting SDK...
+./winsdksetup.exe /layout Win10SDK /quiet
+cd Win10SDK
+echo Installing SDK...
+./winsdksetup.exe /features + /quiet /norestart

@@ -1,0 +1,16 @@
+.vscode/
+.clang-tidy
+.eslintrc
+appveyor.yml
+build/
+ci/
+dist/test/**
+dist/**/*.test.js
+dist/test.js
+docs/
+karma/
+node/
+out/
+private/
+web-platform-tests/
+.env

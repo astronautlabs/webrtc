@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 
+# project(node-webrtc)
+
 include(ExternalProject)
 find_package(Git REQUIRED)
 find_package(Threads REQUIRED)
@@ -37,11 +39,13 @@ set(libwebrtc_binary_dir ${CMAKE_BINARY_DIR}/external/libwebrtc/build/${CMAKE_BU
 set(libwebrtc_src_dir ${CMAKE_BINARY_DIR}/external/libwebrtc/download/src)
 
 add_library(libc++ OBJECT IMPORTED)
-add_dependencies(libc++ libwebrtc)
+#add_dependencies(libc++ libwebrtc)
 
 set(libc++_objects
   algorithm.o
   any.o
+  atomic.o
+  barrier.o
   bind.o
   charconv.o
   chrono.o
@@ -52,6 +56,7 @@ set(libc++_objects
   functional.o
   future.o
   hash.o
+  ios.instantiations.o
   ios.o
   iostream.o
   locale.o
@@ -61,6 +66,7 @@ set(libc++_objects
   new.o
   optional.o
   random.o
+  random_shuffle.o
   regex.o
   shared_mutex.o
   stdexcept.o
@@ -89,7 +95,7 @@ set_target_properties(libc++ PROPERTIES IMPORTED_OBJECTS_DEBUG "${libc++_objects
 # -----------------------------------------------------------------------------
 
 add_library(libc++abi OBJECT IMPORTED)
-add_dependencies(libc++abi libwebrtc)
+#add_dependencies(libc++abi libwebrtc)
 
 set(libc++abi_objects
   abort_message.o
@@ -101,7 +107,7 @@ set(libc++abi_objects
   cxa_guard.o
   cxa_handlers.o
   cxa_personality.o
-  cxa_unexpected.o
+  cxa_thread_atexit.o
   cxa_vector.o
   cxa_virtual.o
   fallback_malloc.o
@@ -124,13 +130,15 @@ set_target_properties(libc++abi PROPERTIES IMPORTED_OBJECTS_DEBUG "${libc++abi_o
 # libwebrtc
 # -----------------------------------------------------------------------------
 
-set(WEBRTC_REVISION branch-heads/4280)
+set(WEBRTC_REVISION branch-heads/4638) # M95 https://groups.google.com/g/discuss-webrtc/c/SfzpFc-dH-E/m/JHlMpLO1AAAJ
 
 list(APPEND GN_GEN_ARGS
   rtc_build_examples=false
   rtc_use_x11=false
   rtc_enable_protobuf=false
   rtc_use_gtk=false
+  use_custom_libcxx=false 
+  use_custom_libcxx_for_host=false
   rtc_include_pulse_audio=false
   rtc_include_tests=false
 )
@@ -185,8 +193,8 @@ if (WIN32)
   )
 else()
   set(byproducts
-    ${libc++_objects}
-    ${libc++abi_objects}
+    #${libc++_objects}
+    #${libc++abi_objects}
     ${libwebrtc_binary_dir}/obj/libwebrtc.a
     ${libwebrtc_binary_dir}/obj/pc/libpeerconnection.a
   )
@@ -237,6 +245,7 @@ else()
 endif()
 
 set(libc++_include_dir "${libwebrtc_source_dir}/src/buildtools/third_party/libc++/trunk/include")
+set(libc++_config_site_include_dir "${libwebrtc_source_dir}/src/buildtools/third_party/libc++")
 set(libc++abi_include_dir "${libwebrtc_source_dir}/src/buildtools/third_party/libc++abi/trunk/include")
 
 # NOTE(mroberts): I would like this to be INTERFACE.
@@ -308,7 +317,12 @@ if(NOT clang_tidy_path STREQUAL "clang_tidy_path-NOTFOUND")
   set_property(TARGET ${MODULE} PROPERTY CXX_CLANG_TIDY ${clang_tidy_path})
 endif()
 
-set(node_addon_api_dir ${CMAKE_SOURCE_DIR}/node_modules/node-addon-api)
+execute_process(
+  COMMAND node -p "require('node-addon-api').include.replace(/\"/g, '')"
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  OUTPUT_VARIABLE node_addon_api_dir
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
 # NOTE(mroberts): Workaround for
 #
@@ -372,25 +386,27 @@ else()
   #   https://gitlab.kitware.com/cmake/cmake/issues/15052
   #
   # is to include all the header files here.
-  target_include_directories(${MODULE} SYSTEM PRIVATE
-    ${libc++_include_dir}
-    ${libc++abi_include_dir}
-  )
+  # target_include_directories(${MODULE} SYSTEM PRIVATE
+  #   ${libc++_include_dir}
+  #   ${libc++_config_site_include_dir}
+  #   ${libc++abi_include_dir}
+  # )
 
   # NOTE(mroberts): On Linux and macOS, we statically link the same libc++ and
   # libc++abi libraries that libwebrtc builds against.
   target_link_libraries(${MODULE} PRIVATE
     -lc
     -lm
-    libc++
-    libc++abi
+    #libc++
+    #libc++abi
   )
 
   target_compile_options(${MODULE} PRIVATE
     -fno-rtti
     -fvisibility=hidden
-    -nostdinc++
-    -nodefaultlibs
+    -pthread
+    #-nostdinc++
+    #-nodefaultlibs
     -Wall
     -Wextra
     -Wno-missing-field-initializers
@@ -401,7 +417,7 @@ else()
   )
 
   target_compile_definitions(${MODULE} PRIVATE
-    -D_LIBCPP_ABI_UNSTABLE
+    #-D_LIBCPP_ABI_UNSTABLE
     -DWEBRTC_POSIX=1
   )
 
@@ -440,7 +456,7 @@ else()
     )
 
     target_compile_definitions(${MODULE} PRIVATE
-      -D_LIBCPP_ABI_UNSTABLE
+      #-D_LIBCPP_ABI_UNSTABLE
       -DWEBRTC_MAC
       -DWEBRTC_IOS
     )

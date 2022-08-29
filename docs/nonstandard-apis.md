@@ -4,7 +4,7 @@ Nonstandard APIs
 MediaStream
 -----------
 
-MediaStreams in node-webrtc can be constructed with arbitrary IDs. For example,
+MediaStreams in `@/webrtc` can be constructed with arbitrary IDs. For example,
 the following MediaStream, `stream`, has its ID set to "foo".
 
 ```js
@@ -55,7 +55,7 @@ SDP_SEMANTICS=plan-b node app.js
 Programmatic Audio
 ------------------
 
-node-webrtc includes nonstandard, programmatic audio APIs in the form of
+`@/webrtc` includes nonstandard, programmatic audio APIs in the form of
 RTCAudioSource and RTCAudioSink. With these APIs, you can
 
  * Pass audio samples to RTCAudioSource via the `onData` method. Then use the
@@ -143,7 +143,7 @@ interface RTCAudioSink: EventTarget {
 Programmatic Video
 ------------------
 
-node-webrtc includes nonstandard, programmatic video APIs in the form of
+`@/webrtc` includes nonstandard, programmatic video APIs in the form of
 RTCVideoSource and RTCVideoSink. With these APIs, you can
 
  * Pass [I420](https://wiki.videolan.org/YUV/#I420) frames to RTCVideoSource
@@ -183,9 +183,9 @@ setTimeout(() => {
 }, 10000);
 ```
 
-node-webrtc also includes bindings to some
-[libyuv](https://chromium.googlesource.com/libyuv/libyuv/) functions for
-handling I420 frames. These can be useful when converting to and from RGBA.
+`@/webrtc` uses
+[libyuv](https://github.com/astronautlabs/libyuv) for handling conversions to/from I420 frames. These can be useful 
+when converting to and from RGBA.
 
 ### RTCVideoSource
 

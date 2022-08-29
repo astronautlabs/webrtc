@@ -29,7 +29,8 @@ class AsyncObjectWrapWithLoop
    * This method will be invoked once the AsyncObjectWrapWithLoop stops.
    */
   void DidStop() override {
-    this->Unref();
+    if (!this->IsEmpty())
+        this->Unref();
   }
 };
 

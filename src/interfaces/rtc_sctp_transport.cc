@@ -1,4 +1,6 @@
-/* Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+/**
+ * Copyright (c) 2022 Astronaut Labs, LLC. All rights reserved.
+ * Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
  *
  * Use of this source code is governed by a BSD-style license that can be found
  * in the LICENSE.md file in the root of the source tree. All contributing
@@ -45,12 +47,12 @@ RTCSctpTransport::RTCSctpTransport(const Napi::CallbackInfo& info)
   }
 }
 
-RTCSctpTransport::~RTCSctpTransport() {
+void RTCSctpTransport::Finalize(Napi::Env env) {
   Napi::HandleScope scope(PeerConnectionFactory::constructor().Env());
   _factory->Unref();
   _factory = nullptr;
   wrap()->Release(this);
-}  // NOLINT
+}
 
 void RTCSctpTransport::Stop() {
   _transport->UnregisterObserver();
@@ -81,7 +83,11 @@ RTCSctpTransport* RTCSctpTransport::Create(
     Napi::External<rtc::scoped_refptr<webrtc::SctpTransportInterface>>::New(env, &transport)
   });
 
-  return RTCSctpTransport::Unwrap(object);
+  auto unwrapped = Unwrap(object);
+
+  // The reference is owned by RTCPeerConnection
+  unwrapped->Ref();
+  return unwrapped;
 }
 
 void RTCSctpTransport::OnStateChange(const webrtc::SctpTransportInformation info) {
