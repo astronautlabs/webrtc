@@ -6,7 +6,7 @@
         "sourceMap": true,
         "target": "ES2016",
         "module": "nodenext",
-        "lib": ["DOM", "DOM.AsyncIterable", "DOM.Iterable", "ES2025"],
+        "lib": ["DOM", "DOM.Iterable", "ES2022"],
         "moduleResolution": "nodenext",
         "esModuleInterop": true,
         "outDir": "dist",
