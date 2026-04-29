@@ -1,4 +1,4 @@
-import 'segfault-handler';
+import '@astronautlabs/segfault-handler';
 import path from 'path';
 import fs from 'fs';
 import jsYAML from 'js-yaml';
