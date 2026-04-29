@@ -1,4 +1,4 @@
-import 'segfault-handler';
+import '@astronautlabs/segfault-handler';
 import { describe, suite } from "razmin";
 
 console.log(`****************`);

@@ -50,7 +50,7 @@ export const load = dirname => {
     const { window } = new JSDOM(contents, options);
 
     // some of the loaded files expect these to exist
-    window.document.parent = window;
+    window.document['parent'] = window;
     window.loadComplete = () => { };
 
     fileCache[file] = contents;
