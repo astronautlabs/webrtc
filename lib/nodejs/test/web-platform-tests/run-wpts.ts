@@ -1,7 +1,7 @@
 import '@astronautlabs/segfault-handler';
 import path from 'path';
 import fs from 'fs';
-import jsYAML from 'js-yaml';
+import * as jsYAML from 'js-yaml';
 import { Minimatch } from 'minimatch';
 import { readManifest, getPossibleTestFilePaths, stripPrefix } from './wpt-manifest-utils.js';
 import startWPTServer from './start-wpt-server.js';
@@ -14,7 +14,7 @@ import { ConsoleReporter, describe, it, suite, TestFunction } from 'razmin';
  * only those tests will be run. If no filters are specified in this list, all tests
  * will run.
  */
-const ONLY = [
+const ONLY: string[] = [
   //`RTCPeerConnection-addTrack.https.html`
   //`RTCConfiguration-iceServers.html`
   //`RTCDataChannel-id.html`                  // flakey abort on linux due to weakptr destructor sequencing
@@ -23,7 +23,7 @@ const ONLY = [
 // The WPT suite routinely ignores promise rejections.
 process.on("unhandledRejection", () => {});
 
-const validReasons = new Set([
+const validReasons = new Set<ExpectedResult>([
   'fail',
   'fail-slow',
   'timeout',
@@ -32,7 +32,7 @@ const validReasons = new Set([
   'timeout-success',
   'needs-node10',
   'needs-node11'
-]);
+] as const);
 
 const hasNode10 = Number(process.versions.node.split('.')[0]) >= 10;
 const hasNode11 = Number(process.versions.node.split('.')[0]) >= 11;
@@ -43,21 +43,27 @@ const possibleTestFilePaths = getPossibleTestFilePaths(manifest);
 
 const toRunFilename = path.resolve(__dirname, '..', '..', '..', '..', 'lib', 'nodejs', 'test', 'web-platform-tests', 'to-run.yaml');
 const toRunString = fs.readFileSync(toRunFilename, { encoding: 'utf-8' });
-const toRunDocs = jsYAML.safeLoadAll(toRunString, { filename: toRunFilename });
+
+type ExpectedResult = '' | undefined | 'fail' | 'fail-slow' | 'needs-node10' | 'needs-node11' | 'timeout-success' 
+    | 'flaky' | 'mutates-globals' | 'timeout';
+type ToRunDoc = { DIR: string } & Record<string, [expected: ExpectedResult, message?: string]>;
+const toRunDocs = jsYAML.loadAll(toRunString, undefined, { filename: toRunFilename }) as 
+    ToRunDoc[];
 
 const minimatchers = new Map();
 
 checkToRun();
 
-let wptServerURL;
+let wptServerURL: string;
 //const runSingleWPT = wptRunner(() => wptServerURL);
 
-let serverPromise;
+let serverPromise: Promise<void>;
 
 async function startServer() {
   if (!serverPromise) {
     serverPromise = startWPTServer({ toUpstream: false }).then(url => {
-      wptServerURL = url;
+      wptServerURL = url || ''; // TODO: later we expect this to be non-undefined, but startWPTServer() returns undefined
+                                // in browser context
     });
   }
 
@@ -86,7 +92,7 @@ function defineSuite() {
 
               const testFile = stripPrefix(testFilePath, toRunDoc.DIR + '/');
               const reason = matchingPattern && toRunDoc[matchingPattern][0];
-              const shouldSkip = ['fail-slow', 'timeout', 'flaky', 'mutates-globals'].includes(reason);
+              const shouldSkip = ['fail-slow', 'timeout', 'flaky', 'mutates-globals'].includes(reason as string);
               const expectFail = (reason === 'fail') ||
                                 (reason === 'needs-node10' && !hasNode10) ||
                                 (reason === 'needs-node11' && !hasNode11);
@@ -177,7 +183,7 @@ function checkToRun() {
   }
 }
 
-function expectationsInDoc(doc) {
+function expectationsInDoc(doc: ToRunDoc) {
   const keys = Object.keys(doc);
   keys.shift(); // get rid of the DIR key
   return keys;

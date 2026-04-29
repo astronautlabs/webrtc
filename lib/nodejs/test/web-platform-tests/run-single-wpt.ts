@@ -3,10 +3,8 @@ import path from 'path';
 import { URL } from 'url';
 import { specify } from 'mocha-sugar-free';
 import { inBrowserContext } from './util';
-import { JSDOM, VirtualConsole } from 'jsdom/lib/api.js';
-import ResourceLoader from 'jsdom/lib/jsdom/browser/resources/resource-loader';
+import { JSDOM, VirtualConsole, ResourceLoader, FetchOptions, AbortablePromise } from 'jsdom';
 import * as wrtc from '../..';
-import fetch from 'node-fetch';
 
 const reporterPathname = '/resources/testharnessreport.js';
 
@@ -15,11 +13,13 @@ class CustomResourceLoader extends ResourceLoader {
     super({ strictSSL: false });
   }
 
-  fetch(urlString, options) {
+  override fetch(urlString: string, options: FetchOptions) {
     const url = new URL(urlString);
 
     if (url.pathname === reporterPathname) {
-      return Promise.resolve(Buffer.from('window.shimTest();', 'utf-8'));
+      let promise = Promise.resolve(Buffer.from('window.shimTest();', 'utf-8')) as AbortablePromise<Buffer>;
+      promise.abort = () => {};
+      return promise;
     } else if (url.pathname.startsWith('/resources/')) {
       // When running to-upstream tests, the server doesn't have a /resources/ directory.
       // So, always go to the one in ./tests.
@@ -44,12 +44,12 @@ interface Result {
   stack: string;
 }
 
-export async function runSingleWPT(urlPrefix, testPath, expectFail, allowTimeoutSuccess = false) {
-  const unhandledExceptions = [];
+export async function runSingleWPT(urlPrefix: string, testPath: string, expectFail: boolean, allowTimeoutSuccess = false) {
+  const unhandledExceptions: any[] = [];
   let allowUnhandledExceptions = false;
 
   const virtualConsole = new VirtualConsole().sendTo(console, { omitJSDOMErrors: true });
-  virtualConsole.on('jsdomError', e => {
+  virtualConsole.on('jsdomError', (e: any) => {
     if (e.type === 'unhandled exception' && !allowUnhandledExceptions) {
       unhandledExceptions.push(e);
 
@@ -68,7 +68,8 @@ export async function runSingleWPT(urlPrefix, testPath, expectFail, allowTimeout
     virtualConsole,
     resources: new CustomResourceLoader(),
     pretendToBeVisual: true,
-    storageQuota: 100000 // Filling the default quota takes about a minute between two WPTs
+    // TODO: this isn't passable with the specified types (only available for new JSDOM())
+    //storageQuota: 100000 // Filling the default quota takes about a minute between two WPTs
   });
   const { window } = dom;
 
@@ -76,19 +77,19 @@ export async function runSingleWPT(urlPrefix, testPath, expectFail, allowTimeout
   Object.assign(window, wrtc);
   window.TypeError = TypeError;
 
-  window.navigator.mediaDevices = Object.assign({}, window.navigator.mediaDevices, {
+  (window.navigator as { mediaDevices: MediaDevices }).mediaDevices = Object.assign({}, window.navigator.mediaDevices, {
     getUserMedia: wrtc.getUserMedia
   });
 
-  window.fetch = function safeFetch() {
-    const args = [].slice.call(arguments);
+  window.fetch = function safeFetch(...passedArguments: any[]) {
+    const args: string[] = [].slice.call(passedArguments);
     const url = args[0];
     try {
       new window.URL(url);
     } catch (error) {
       args[0] = window.location.protocol + '//' + window.location.host + url;
     }
-    return fetch.apply(null, args);
+    return fetch.apply(null, args as any);
   };
 
   await new Promise<void>((resolve, reject) => {
@@ -96,14 +97,14 @@ export async function runSingleWPT(urlPrefix, testPath, expectFail, allowTimeout
 
     window.shimTest = () => {
       const oldSetup = window.setup;
-      window.setup = options => {
+      window.setup = (options: any) => {
         if (options.allow_uncaught_exception) {
           allowUnhandledExceptions = true;
         }
         oldSetup(options);
       };
 
-      let completionCallback;
+      let completionCallback: (a: unknown[], b: { status: number }) => void;
       let internalTimeout = setTimeout(() => {
         // It shouldn't be possible to hit this, but some tests are broken in a way that 
         // prevents the completion callback.
@@ -111,7 +112,7 @@ export async function runSingleWPT(urlPrefix, testPath, expectFail, allowTimeout
         completionCallback([], { status: 2 });
       }, 70000);
 
-      window.add_result_callback(test => {
+      window.add_result_callback((test: Result) => {
         console.log(`    (***) ${summarizeResult(test)}`);
         results.push(test);
       });
