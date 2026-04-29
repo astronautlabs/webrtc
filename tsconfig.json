@@ -5,10 +5,12 @@
         "declaration": true,
         "sourceMap": true,
         "target": "ES2016",
-        "module": "CommonJS",
-        "moduleResolution": "Node",
+        "module": "nodenext",
+        "lib": ["DOM", "DOM.AsyncIterable", "DOM.Iterable", "ES2025"],
+        "moduleResolution": "nodenext",
         "esModuleInterop": true,
-        "outDir": "dist"
+        "outDir": "dist",
+        "rootDir": "lib"
     },
     "include": [
         "lib/**/*.ts"
