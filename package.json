@@ -10,6 +10,9 @@
     "access": "public"
   },
   "version": "0.5.2",
+  "maintainers": [
+    "William Lahti <liam@astronautlabs.com>"
+  ],
   "author": "Alan K <ack@modeswitch.org> (http://blog.modeswitch.org)",
   "homepage": "https://github.com/astronautlabs/webrtc",
   "bugs": "https://github.com/astronautlabs/webrtc/issues",

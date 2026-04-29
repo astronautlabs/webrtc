@@ -5,6 +5,10 @@
 
 > 📺 Part of the [**Astronaut Labs Broadcast Suite**](https://github.com/astronautlabs/broadcast)
 
+> Originally published as [`wrtc`](https://github.com/node-webrtc/node-webrtc), forked primarily for use in
+> [Astronaut Labs Broadcast Stack](https://github.com/astronautlabs/broadcast). Feel free to use for your own purposes
+> as well.
+
 [![NPM](https://img.shields.io/npm/v/@astronautlabs/webrtc.svg)](https://www.npmjs.com/package/@astronautlabs/webrtc) [![Build Status](https://circleci.com/gh/astronautlabs/webrtc/tree/main.svg?style=shield)](https://circleci.com/gh/astronautlabs/webrtc)
 
 Node.js bindings for `libwebrtc`, which implements [WebRTC M95](https://groups.google.com/g/discuss-webrtc/c/SfzpFc-dH-E/m/JHlMpLO1AAAJ). This project aims for spec-compliance and is tested using the W3C's [web-platform-tests](https://github.com/web-platform-tests/wpt) project. A number of [nonstandard APIs](docs/nonstandard-apis.md) for testing are also included.
