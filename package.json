@@ -9,7 +9,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "0.5.5",
+  "version": "0.5.4",
   "maintainers": [
     "William Lahti <liam@astronautlabs.com>"
   ],
@@ -102,6 +102,7 @@
     "install-example": "node scripts/install-example.js",
     "lint": "eslint lib/*.js lib/**/*.js test/*.js test/**/*.js karma/*.js scripts/*.js",
     "publish:binary": "twine publish",
+    "prepublishOnly": "npm run test",
     "test": "npm run build && node --expose-gc --enable-source-maps dist/nodejs/test/test.js",
     "test:cpp": "npm run build && node --expose-gc --enable-source-maps dist/nodejs/test/cpp-test.js",
     "test:gdb": "npm run build && cd build/external/libwebrtc/build/Debug && gdb --args node ../../../../../dist/nodejs/test/test.js",
