@@ -108,7 +108,7 @@ describe('RTCRTPSender', it => {
     // even duplicates get added
     // 3 streams per track and 2 tracks (audio + video) = 6 msid lines
 
-    expect((offer.sdp.match(/a=msid:/g) || []).length).to.equal(6)
+    expect((offer.sdp!.match(/a=msid:/g) || []).length).to.equal(6)
     pc.close();
   });
   

@@ -1,5 +1,5 @@
 import { inherits } from 'util';
-import * as native from '../../binding';
+import native from '../../binding';
 import { EventTarget } from './eventtarget';
 export const MediaStream: (typeof globalThis.MediaStream & typeof MediaStreamExtensions) = native.MediaStream;
 export type MediaStream = globalThis.MediaStream;

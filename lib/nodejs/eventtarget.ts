@@ -7,40 +7,37 @@ export class EventTarget {
     constructor() {
     }
 
-    private _listeners: Record<string, any> = {};
+    private _listeners: Record<string, Set<(EventListener | { handleEvent: (event: Event) => void })>> = {};
 
-    addEventListener(type, listener) {
+    addEventListener(type: string, listener: EventListener) {
         const listeners = this._listeners = this._listeners || {};
-
-        if (!listeners[type]) {
+        if (!listeners[type])
             listeners[type] = new Set();
-        }
-
         listeners[type].add(listener);
     };
 
-    dispatchEvent(event) {
-        let listeners = this._listeners = this._listeners || {};
+    dispatchEvent(event: Event) {
+        let listeners = this._listeners ||= {};
 
         process.nextTick(() => {
-            listeners = new Set(listeners[event.type] || []);
+            let responders = new Set(listeners[event.type] || []);
 
-            const dummyListener = this['on' + event.type];
+            const dummyListener = (this as any)['on' + event.type];
             if (typeof dummyListener === 'function') {
-                listeners.add(dummyListener);
+                responders.add(dummyListener);
             }
 
-            listeners.forEach(listener => {
+            responders.forEach(listener => {
                 if (typeof listener === 'object' && typeof listener.handleEvent === 'function') {
                     listener.handleEvent(event);
-                } else {
+                } else if (typeof listener === 'function') {
                     listener.call(this, event);
                 }
             });
         });
     }
 
-    removeEventListener(type, listener) {
+    removeEventListener(type: string, listener: EventListener | { handleEvent: (event: Event) => void }) {
         const listeners = this._listeners = this._listeners || {};
         if (listeners[type]) {
             listeners[type].delete(listener);

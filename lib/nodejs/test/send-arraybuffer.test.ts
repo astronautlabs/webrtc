@@ -6,7 +6,7 @@ import { RTCPeerConnection } from '..';
 const maxOrderedAndReliableSize = 262144;
 const maxUnorderedAndUnreliableSize = 262144;
 
-async function test(size, options) {
+async function test(size: number, options: any) {
   const pc1 = new RTCPeerConnection();
   const pc2 = new RTCPeerConnection();
   [[pc1, pc2], [pc2, pc1]].forEach(([pc1, pc2]) => {

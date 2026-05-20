@@ -1,5 +1,5 @@
 import { EventTarget } from "./eventtarget";
-import * as native from '../../binding';
+import native from '../../binding';
 
 export class MediaDevices extends EventTarget {
   enumerateDevices() {
@@ -10,11 +10,11 @@ export class MediaDevices extends EventTarget {
     throw new Error('Not yet implemented; file a feature request for @/webrtc');
   };
 
-  getDisplayMedia(...args) {
+  getDisplayMedia(...args: any[]) {
     return native.getDisplayMedia(...args);
   }
 
-  getUserMedia(...args) {
+  getUserMedia(...args: any[]) {
     return native.getUserMedia(...args);
   }
 }

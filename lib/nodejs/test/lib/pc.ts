@@ -1,4 +1,5 @@
-import { RTCPeerConnection } from '../..';
+import { RTCPeerConnection, RTCStatsReportExtension, RTCVideoSource } from '../..';
+import { RTCVideoFrame } from '../../videoframe';
 
 export function createRTCPeerConnections(configuration1 = {}, configuration2 = {}, options: any = {}) {
   options = {
@@ -14,7 +15,7 @@ export function createRTCPeerConnections(configuration1 = {}, configuration2 = {
           if (candidate) {
             try {
               await pcB.addIceCandidate(candidate);
-            } catch (e) {
+            } catch (e: any) {
               console.error(`[test-lib] Caught error while conveying ICE candidate between peers: ${e.message}`);
               debugger;
               throw e;
@@ -30,7 +31,7 @@ export function createRTCPeerConnections(configuration1 = {}, configuration2 = {
   }
 }
 
-export async function doOffer(offerer, answerer) {
+export async function doOffer(offerer: RTCPeerConnection, answerer: RTCPeerConnection) {
   const offer = await offerer.createOffer();
   await Promise.all([
     offerer.setLocalDescription(offer),
@@ -38,7 +39,7 @@ export async function doOffer(offerer, answerer) {
   ]);
 }
 
-export async function doAnswer(answerer, offerer) {
+export async function doAnswer(answerer: RTCPeerConnection, offerer: RTCPeerConnection) {
   const answer = await answerer.createAnswer();
   await Promise.all([
     answerer.setLocalDescription(answer),
@@ -46,7 +47,7 @@ export async function doAnswer(answerer, offerer) {
   ]);
 }
 
-export async function negotiate(offerer, answerer) {
+export async function negotiate(offerer: RTCPeerConnection, answerer: RTCPeerConnection) {
   await doOffer(offerer, answerer);
   await doAnswer(answerer, offerer);
 }
@@ -82,7 +83,7 @@ export async function negotiateRTCPeerConnections(
   }
 }
 
-export async function getLocalTrackStats(pc, track, check = (stats) => true) {
+export async function getLocalTrackStats(pc: RTCPeerConnection, track: MediaStreamTrack, check = (stats: RTCStatsReport & RTCStatsReportExtension) => true) {
   let stats;
   do {
     const report = await pc.getStats();
@@ -95,7 +96,7 @@ export async function getLocalTrackStats(pc, track, check = (stats) => true) {
   return stats;
 }
 
-export async function confirmSentFrameDimensions(source, track, pc, frame) {
+export async function confirmSentFrameDimensions(source: RTCVideoSource, track: MediaStreamTrack, pc: RTCPeerConnection, frame: RTCVideoFrame) {
   await getLocalTrackStats(pc, track, stats => {
     if (stats.frameWidth === frame.width
       && stats.frameHeight === frame.height) {
@@ -106,7 +107,7 @@ export async function confirmSentFrameDimensions(source, track, pc, frame) {
   });
 }
 
-export function waitForStateChange(target, state, options: any = {}) {
+export function waitForStateChange(target: any, state: any, options: any = {}) {
   options = {
     event: 'statechange',
     property: 'state',

@@ -53,9 +53,9 @@ describe('RTCDataChannel', it => {
   
     let offer = await peer1.createOffer({});
     await peer1.setLocalDescription(offer);
-    peer2.setRemoteDescription(peer1.localDescription);
+    peer2.setRemoteDescription(peer1.localDescription!);
     let answer = await  peer2.createAnswer();
     await peer2.setLocalDescription(answer);
-    await peer1.setRemoteDescription(peer2.localDescription);
+    await peer1.setRemoteDescription(peer2.localDescription!);
   })
 });

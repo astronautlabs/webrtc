@@ -3,8 +3,8 @@ import { expect } from 'chai';
 import { RTCPeerConnection } from '..';
 
 describe('RTCPeerConnection', it => {
-  var peer;
-  var localDesc;
+  var peer: RTCPeerConnection;
+  var localDesc: RTCSessionDescriptionInit;
 
   it('create a peer connection', () => {
     peer = new RTCPeerConnection({ iceServers: [] });
@@ -34,7 +34,7 @@ describe('RTCPeerConnection', it => {
     await peer.setLocalDescription(localDesc);
     
     expect(peer.localDescription).to.exist;
-    expect(peer.localDescription.sdp).to.exist;
+    expect(peer.localDescription!.sdp).to.exist;
   });
   
   it('cleanup connection', async () => {

@@ -1,4 +1,4 @@
 
-import * as native from '../../binding';
-export const getUserMedia: typeof globalThis.getUserMedia = native.getUserMedia;
-export type getUserMedia = typeof globalThis.getUserMedia;
+import native from '../../binding';
+export const getUserMedia: MediaDevices['getUserMedia'] = native.getUserMedia;
+

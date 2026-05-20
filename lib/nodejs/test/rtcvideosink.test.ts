@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { describe } from 'razmin';
 import { RTCVideoSink, RTCVideoSource } from '..';
+import { RTCVideoFrame } from '../videoframe';
 import { I420Frame } from './lib/frame';
 
 describe('RTCVideoSink', it => {
@@ -10,7 +11,7 @@ describe('RTCVideoSink', it => {
     const sink = new RTCVideoSink(track);
     expect(sink.stopped).to.be.false;
     const inputFrame = new I420Frame(160, 120);
-    const outputFramePromise = new Promise<I420Frame>(resolve => { sink.onframe = ({ frame }) => resolve(frame); });
+    const outputFramePromise = new Promise<RTCVideoFrame>(resolve => { sink.onframe = ({ frame }) => resolve(frame); });
     source.onFrame(inputFrame);
 
     let outputFrame = await outputFramePromise;

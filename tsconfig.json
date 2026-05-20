@@ -10,7 +10,8 @@
         "moduleResolution": "nodenext",
         "esModuleInterop": true,
         "outDir": "dist",
-        "rootDir": "lib"
+        "rootDir": "lib",
+        "strict": true
     },
     "include": [
         "lib/**/*.ts"

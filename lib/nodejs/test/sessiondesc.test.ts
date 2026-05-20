@@ -5,8 +5,8 @@ import {
   RTCSessionDescription
 } from '..';
 
-let peer;
-let localDesc;
+let peer: any;
+let localDesc: any;
 
 describe('RTCSessionDescription', it => {
 

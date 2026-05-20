@@ -1,12 +1,18 @@
 import { inherits } from 'util';
-import * as native from '../../binding';
+import native from '../../binding';
+import { RTCAudioData } from './audiodata';
 import { EventTarget } from './eventtarget';
-export const RTCAudioSink = native.RTCAudioSink;
-export type RTCAudioSink = typeof RTCAudioSinkT;
-declare class RTCAudioSinkT { 
+
+export interface RTCAudioSinkEvent extends Event, RTCAudioData {
+}
+
+const RTCAudioSinkNative: typeof RTCAudioSink = native.RTCAudioSink;
+export { RTCAudioSinkNative as RTCAudioSink };
+declare class RTCAudioSink extends EventTarget { 
     constructor(track: MediaStreamTrack);
     stop(): void;
     readonly stopped: boolean;
-    ondata: (data: Buffer) => void;
+    ondata: (event: RTCAudioSinkEvent) => void;
 }
+
 inherits(native.RTCAudioSink, EventTarget);

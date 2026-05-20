@@ -6,8 +6,8 @@ export class RTCSessionDescription implements globalThis.RTCSessionDescription {
     }
   }
 
-  sdp: string;
-  type: RTCSdpType;
+  sdp!: string;
+  type!: RTCSdpType;
 
   toJSON() {
     return { sdp: this.sdp, type: this.type };

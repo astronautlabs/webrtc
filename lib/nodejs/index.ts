@@ -1,4 +1,4 @@
-import * as native from '../../binding';
+import native from '../../binding';
 try {
   native.setDOMException(require('domexception'));
 } catch (error) {
@@ -32,9 +32,9 @@ import { RTCDataChannel } from './datachannel';
 
 // NOTE(mroberts): Here's a hack to support jsdom's Blob implementation.
 RTCDataChannel.prototype.send = function send(data) {
-  const implSymbol = Object.getOwnPropertySymbols(data).find(symbol => symbol.toString() === 'Symbol(impl)');
-  if (data[implSymbol] && data[implSymbol]._buffer) {
-    data = data[implSymbol]._buffer;
+  const implSymbol = Object.getOwnPropertySymbols(data).find(symbol => symbol.toString() === 'Symbol(impl)')!;
+  if ((data as any)[implSymbol] && (data as any)[implSymbol]._buffer) {
+    data = (data as any)[implSymbol]._buffer;
   }
-  this._send(data);
+  (this as any)._send(data);
 };

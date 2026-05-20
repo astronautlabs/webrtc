@@ -12,7 +12,7 @@ var isDarwinOnCircleCi = process.platform === 'darwin'
 
 var skipReflexive = isDarwinOnCircleCi || !process.env.CHECK_REFLEXIVE;
 
-var pc;
+var pc: RTCPeerConnection;
 
 describe('RTCPeerConnection', it => {
   it('assign ICE server and get reflective candidates', async () => {

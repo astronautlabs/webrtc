@@ -1,11 +1,12 @@
-export class RTCDataChannelEvent {
-    constructor(readonly type, eventInitDict?: Record<string, any>) {
+import { RTCEvent } from "./rtc-event";
+
+export class RTCDataChannelEvent extends RTCEvent {
+    constructor(type: string, eventInitDict: EventInit & { channel: RTCDataChannel, target: EventTarget }) {
+        super(type, eventInitDict);
         this.channel = eventInitDict?.channel;
-        this.target = eventInitDict?.target;
+        this.target = eventInitDict.target;
     }
 
-    readonly bubbles = false;
-    readonly cancelable = false;
-    readonly channel;
-    readonly target;
+    readonly channel: RTCDataChannel;
+    readonly target: EventTarget;
 }

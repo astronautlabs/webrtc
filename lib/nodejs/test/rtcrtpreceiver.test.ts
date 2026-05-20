@@ -279,10 +279,10 @@ describe('RTCRTPReceiver', it => {
   });
 });
 
-function compareParameters(actual, expected, message) {
+function compareParameters(actual: any, expected: any, message: string) {
   expect(actual.headerExtensions).to.eql(expected.headerExtensions, message);
   expect(actual.codecs.length).to.equal(expected.codecs.length, message);
-  actual.codecs.forEach((actualCodec, i) => {
+  actual.codecs.forEach((actualCodec: any, i: number) => {
     const expectedCodec = expected.codecs[i];
     Object.keys(expectedCodec).forEach(key => {
       if (key === 'sdpFmtpLine') {
@@ -295,7 +295,7 @@ function compareParameters(actual, expected, message) {
   expect(actual.encodings).to.eql(expected.encodings, message);
 }
 
-function compareSdpFmtpLine(actual, expected, message) {
+function compareSdpFmtpLine(actual: string, expected: string, message: string) {
   const [actualHead, ...actualTail] = actual.split(' ');
   const [expectedHead, ...expectedTail] = expected.split(' ');
   expect(actualHead).to.eql(expectedHead, message);

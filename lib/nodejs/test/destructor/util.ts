@@ -8,81 +8,86 @@ import { createHook } from 'async_hooks';
  * @property {Promise<T>} promise
  */
 
+export interface Deferred<T> {
+    resolve: (result: T) => void;
+    reject: (error: any) => void;
+    promise: Promise<T>
+}
 /**
  * Create a {@link Deferred}.
  * @returns {Deferred<T>}
  */
-export function createDeferred() {
-  const deferred: any = {};
-  deferred.promise = new Promise((resolve, reject) => Object.assign(deferred, {
-    resolve,
-    reject
-  }));
-  return deferred;
+export function createDeferred<T = any>(): Deferred<T> {
+    const deferred: any = {};
+    deferred.promise = new Promise((resolve, reject) => Object.assign(deferred, {
+        resolve,
+        reject
+    }));
+    return deferred;
 }
 
 const typesToIgnore = new Set([
-  'FSEVENTWRAP', 'FSREQCALLBACK', 'GETADDRINFOREQWRAP', 'GETNAMEINFOREQWRAP', 'HTTPINCOMINGMESSAGE',
-  'HTTPCLIENTREQUEST', 'JSSTREAM', 'PIPECONNECTWRAP', 'PIPEWRAP', 'PROCESSWRAP', 'QUERYWRAP',
-  'SHUTDOWNWRAP', 'SIGNALWRAP', 'STATWATCHER', 'TCPCONNECTWRAP', 'TCPSERVERWRAP', 'TCPWRAP',
-  'TTYWRAP', 'UDPSENDWRAP', 'UDPWRAP', 'WRITEWRAP', 'ZLIB', 'SSLCONNECTION', 'PBKDF2REQUEST',
-  'RANDOMBYTESREQUEST', 'TLSWRAP', 'Microtask', 'Timeout', 'Immediate', 'TickObject', 'PROMISE'
+    'FSEVENTWRAP', 'FSREQCALLBACK', 'GETADDRINFOREQWRAP', 'GETNAMEINFOREQWRAP', 'HTTPINCOMINGMESSAGE',
+    'HTTPCLIENTREQUEST', 'JSSTREAM', 'PIPECONNECTWRAP', 'PIPEWRAP', 'PROCESSWRAP', 'QUERYWRAP',
+    'SHUTDOWNWRAP', 'SIGNALWRAP', 'STATWATCHER', 'TCPCONNECTWRAP', 'TCPSERVERWRAP', 'TCPWRAP',
+    'TTYWRAP', 'UDPSENDWRAP', 'UDPWRAP', 'WRITEWRAP', 'ZLIB', 'SSLCONNECTION', 'PBKDF2REQUEST',
+    'RANDOMBYTESREQUEST', 'TLSWRAP', 'Microtask', 'Timeout', 'Immediate', 'TickObject', 'PROMISE'
 ]);
 
 export function trackDestructors() {
-  const asyncIds = new WeakMap();
-  const destructorDeferreds = new Map();
+    const asyncIds = new WeakMap<object, number>();
+    const destructorDeferreds = new Map();
 
-  function createDestructorDeferred(resource, asyncId) {
-    const destructorDeferred = createDeferred();
-    asyncIds.set(resource, asyncId);
-    destructorDeferreds.set(asyncId, destructorDeferred);
-    return destructorDeferred;
-  }
-
-  function maybeResolveDestructorDeferred(asyncId) {
-    const destructorDeferred = destructorDeferreds.get(asyncId);
-    if (destructorDeferred) {
-      destructorDeferreds.delete(asyncId);
-      destructorDeferred.resolve();
-      return true;
+    function createDestructorDeferred(resource: object, asyncId: number) {
+        const destructorDeferred = createDeferred();
+        asyncIds.set(resource, asyncId);
+        destructorDeferreds.set(asyncId, destructorDeferred);
+        return destructorDeferred;
     }
-    return false;
-  }
 
-  function getDestructorPromise(resource) {
-    const asyncId = asyncIds.get(resource);
-    if (!asyncId) {
-      return Promise.reject(new Error('Unknown resource'));
+    function maybeResolveDestructorDeferred(asyncId: number) {
+        const destructorDeferred = destructorDeferreds.get(asyncId);
+        if (destructorDeferred) {
+            destructorDeferreds.delete(asyncId);
+            destructorDeferred.resolve();
+            return true;
+        }
+        return false;
     }
-    const destructorDeferred = destructorDeferreds.get(asyncId);
-    return destructorDeferred
-      ? destructorDeferred.promise
-      : Promise.reject(new Error('Unknown asyncId'));
-  }
 
-  const interval = setInterval(gc);
-
-  const asyncHook = createHook({
-    init(asyncId, type, triggerAsyncId, resource) {
-      if (typesToIgnore.has(type)) {
-        return;
-      }
-      createDestructorDeferred(resource, asyncId);
-    },
-    destroy(asyncId) {
-      maybeResolveDestructorDeferred(asyncId);
+    function getDestructorPromise(resource: object) {
+        const asyncId = asyncIds.get(resource);
+        if (!asyncId) {
+            return Promise.reject(new Error('Unknown resource'));
+        }
+        const destructorDeferred = destructorDeferreds.get(asyncId);
+        return destructorDeferred
+            ? destructorDeferred.promise
+            : Promise.reject(new Error('Unknown asyncId'));
     }
-  });
 
-  asyncHook.enable();
+    const interval = setInterval(gc ?? (() => { }));
 
-  return {
-    destructor: getDestructorPromise,
-    stop() {
-      clearInterval(interval);
-      asyncHook.disable();
-    }
-  };
+    const asyncHook = createHook({
+        init(asyncId, type, triggerAsyncId, resource) {
+            if (typesToIgnore.has(type)) {
+                return;
+            }
+            createDestructorDeferred(resource, asyncId);
+        },
+        destroy(asyncId) {
+            maybeResolveDestructorDeferred(asyncId);
+        }
+    });
+
+    asyncHook.enable();
+
+    return {
+        destructor: getDestructorPromise,
+        stop() {
+            clearInterval(interval);
+            asyncHook.disable();
+        }
+    };
 }
 

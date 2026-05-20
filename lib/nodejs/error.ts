@@ -1,5 +1,5 @@
 export class RTCError {
-    constructor(code, message) {
+    constructor(code: number, message: string) {
         this.name = this.reasonName[Math.min(code, this.reasonName.length - 1)];
         this.message = typeof message === 'string' ? message : this.name;
     }

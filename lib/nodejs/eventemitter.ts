@@ -3,6 +3,8 @@
  * @author Jesús Leganés Combarro "Piranna" <piranna@gmail.com>
  */
 
+type EventHandler = ((event: Event) => void) | { handleEvent(event: Event): void; };
+
 export class EventEmitter {
     constructor(private subject?: any) {
         if (!this.subject)
@@ -11,7 +13,7 @@ export class EventEmitter {
 
     private _listeners: Record<string, any> = {};
 
-    addEventListener(type, listener) {
+    addEventListener(type: string, listener: (event: Event) => void) {
         const listeners = this._listeners = this._listeners || {};
 
         if (!listeners[type]) {
@@ -21,7 +23,7 @@ export class EventEmitter {
         listeners[type].add(listener);
     };
 
-    dispatchEvent(event) {
+    dispatchEvent(event: Event) {
         let listeners = this._listeners = this._listeners || {};
 
         process.nextTick(() => {
@@ -32,10 +34,10 @@ export class EventEmitter {
                 listeners.add(dummyListener);
             }
 
-            listeners.forEach(listener => {
+            listeners.forEach((listener: EventHandler) => {
                 if (typeof listener === 'object' && typeof listener.handleEvent === 'function') {
                     listener.handleEvent(event);
-                } else {
+                } else if (typeof listener === 'function') {
                     listener.call(this.subject, event);
                 }
             });
@@ -44,7 +46,7 @@ export class EventEmitter {
         return true;
     }
 
-    removeEventListener(type, listener) {
+    removeEventListener(type: string, listener: EventListener) {
         const listeners = this._listeners = this._listeners || {};
         if (listeners[type]) {
             listeners[type].delete(listener);

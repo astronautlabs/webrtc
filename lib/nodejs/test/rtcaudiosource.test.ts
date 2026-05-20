@@ -5,7 +5,7 @@ import { describe, it } from 'razmin';
 
 import { RTCAudioSink, RTCAudioSource } from '..';
 
-function createData(bitsPerSample) {
+function createData(bitsPerSample: number) {
   const sampleRate = 8000;
   const channelCount = 1;
   const numberOfFrames = sampleRate / 100;  // 10 ms
@@ -30,7 +30,7 @@ function createData(bitsPerSample) {
   };
 }
 
-function createTest(bitsPerSample) {
+function createTest(bitsPerSample: number) {
   it(`(${bitsPerSample}-bit)`, async () => {
     const source = new RTCAudioSource();
     const track = source.createTrack();

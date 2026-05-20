@@ -1,4 +1,7 @@
-export function printBitsI420(frame, bits) {
+import { RTCVideoFrame } from "../../videoframe";
+import { I420Frame } from "./frame";
+
+export function printBitsI420(frame: I420Frame, bits: boolean[]) {
   const { width, height, data } = frame;
 
   const pixelWidth = width / 8;
@@ -19,7 +22,7 @@ export function printBitsI420(frame, bits) {
   }
 }
 
-export function readBitsI420(frame) {
+export function readBitsI420(frame: RTCVideoFrame) {
   const { width, height, data } = frame;
 
   const pixelWidth = width / 8;

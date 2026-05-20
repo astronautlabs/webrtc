@@ -2,7 +2,7 @@ import { describe } from 'razmin';
 
 import { RTCPeerConnection } from '..';
 
-const offer = {
+const offer: RTCSessionDescriptionInit = {
   type: 'offer',
   sdp: `\
 v=0
@@ -23,7 +23,7 @@ a=sctpmap:5000 webrtc-datachannel 1024
 `.split('\n').join('\r\n')
 };
 
-const candidate = {
+const candidate = <RTCIceCandidate>{
   candidate: 'candidate:559267639 1 udp 2122267903 ::1 57693 typ host generation 0 ufrag ZVjA network-id 2',
   sdpMid: '0',
   sdpMLineIndex: 0

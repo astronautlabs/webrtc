@@ -12,11 +12,11 @@ function tick() {
   return new Promise(resolve => setTimeout(resolve));
 }
 
-function printSource(source) {
+function printSource(source: any) {
   console.log(source);
 }
 
-function printTrack(track) {
+function printTrack(track: any) {
   console.log(track);
 }
 
@@ -78,7 +78,7 @@ describe('RTCVideoSource', it => {
     ];
   
     for (const frame of frames) {
-      await confirmSentFrameDimensions(source, track, pc1, frame);
+      await confirmSentFrameDimensions(source, track, pc1, frame as any);
       //t.pass(`Sent a ${frame.width}x${frame.height} frame`);
     }
   

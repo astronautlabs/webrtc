@@ -50,10 +50,10 @@ describe('RTCPeerConnection', () => {
     };
   
     Object.keys(spec).forEach((key) => {
-      let value = spec[key];
+      let value = (spec as any)[key];
       it(`after setting ${key}`, () => {
         var expectedConfiguration = Object.assign({}, defaultConfiguration);
-        expectedConfiguration[key] = value;
+        (expectedConfiguration as any)[key] = value;
         var pc = new RTCPeerConnection(<any>expectedConfiguration);
         pc.close();
         var actualConfiguration = pc.getConfiguration();
@@ -77,7 +77,7 @@ describe('RTCPeerConnection', () => {
       var pc = new RTCPeerConnection();
       var expectedConfiguration = Object.assign({}, pc.getConfiguration());
       expectedConfiguration.iceServers = [
-        { 
+        <RTCIceServer>{ 
           urls: ['stun:stun1.example.net'], 
           credential: 'password',
           "credentialType": "password" 
