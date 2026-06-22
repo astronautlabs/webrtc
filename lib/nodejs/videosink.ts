@@ -1,6 +1,6 @@
 import { inherits } from 'util';
 import native from '../../binding';
-import { EventTarget } from './eventtarget';
+import { EventTarget, mixinEventTarget } from './eventtarget';
 import { RTCVideoFrame } from './videoframe';
 
 export interface RTCVideoSinkEvent extends Event {
@@ -14,5 +14,6 @@ export class RTCVideoSink extends EventTarget {
     onframe?: (ev: RTCVideoSinkEvent) => void;
 }
 
-(RTCVideoSink as any) = native.RTCVideoSink;
-inherits(native.RTCVideoSink, EventTarget);
+console.log('MIXING IT IN');
+(RTCVideoSink as any) = mixinEventTarget(native.RTCVideoSink);
+//inherits(native.RTCVideoSink, EventTarget);

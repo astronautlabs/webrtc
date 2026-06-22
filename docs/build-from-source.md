@@ -10,7 +10,8 @@ required by node-cmake, you will need
 * CMake 3.12 or newer
 * GCC 5.4 or newer (Linux)
 * Xcode 9 or newer (macOS)
-* Microsoft Visual Studio 2019 (Windows)
+* Microsoft Visual Studio 2022 (Windows)
+    * Install the Clang toolkit and MSBuild Clang support from Individual Components
 * Check the [additional prerequisites listed by WebRTC](https://webrtc.github.io/webrtc-org/native-code/development/prerequisite-sw/) - although their install is automated by the CMake scripts provided
 
 
