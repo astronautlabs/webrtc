@@ -2,15 +2,17 @@ cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0091 NEW)
 cmake_policy(SET CMP0042 NEW)
 
-# Requirement: Node.js installed ---------------------------------------------------
+# Ensure node.js is installed
+# -----------------------------------------------------------------------------
 
 find_program(NODE_EXECUTABLE NAMES node)
 if(NOT NODE_EXECUTABLE)
     message(FATAL_ERROR "Node.js must be installed.")
 endif()
 
-# cmake-js ------------------------------------------------------------------------------------
-# https://github.com/cmake-js/cmake-js/issues/23#issuecomment-134265017 -----------------------
+# CLion support for cmake-js
+# https://github.com/cmake-js/cmake-js/issues/23#issuecomment-134265017
+# -----------------------------------------------------------------------------
 
 function(PARSE_CMAKEJS_PROPERTIES)
   # A much cleaner parser using Regex to target '-DVAR=VALUE'
@@ -51,6 +53,8 @@ function(PARSE_CMAKEJS_PROPERTIES)
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LOCAL_CMAKE_LIBRARY_OUTPUT_DIRECTORY}" PARENT_SCOPE)
 
 endfunction(PARSE_CMAKEJS_PROPERTIES)
+
+# -----------------------------------------------------------------------------
 
 macro(assign_bool var)
   if (${ARGN})
@@ -207,9 +211,7 @@ set_property(TARGET libc++ APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
 set_target_properties(libc++ PROPERTIES IMPORTED_OBJECTS_DEBUG "${libc++_objects}" IMPORTED_OBJECTS "${libc++_objects}")
 
 # NOTE(mroberts): I would like this to be INTERFACE.
-#
 #   https://gitlab.kitware.com/cmake/cmake/issues/15052
-#
 # target_include_directories(libc++ SYSTEM INTERFACE "${libc++_include_dir}")
 
 # libc++abi
@@ -242,9 +244,7 @@ set_property(TARGET libc++abi APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
 set_target_properties(libc++abi PROPERTIES IMPORTED_OBJECTS_DEBUG "${libc++abi_objects}" IMPORTED_OBJECTS "${libc++abi_objects}")
 
 # NOTE(mroberts): I would like this to be INTERFACE.
-#
 #   https://gitlab.kitware.com/cmake/cmake/issues/15052
-#
 # target_include_directories(libc++abi SYSTEM INTERFACE "${libc++abi_include_dir}")
 
 # libwebrtc
@@ -263,7 +263,6 @@ set_target_properties(libc++abi PROPERTIES IMPORTED_OBJECTS_DEBUG "${libc++abi_o
 # M150: branch-heads/7871
 set(WEBRTC_REVISION branch-heads/7871)
 
-# file(STRINGS nix.gni NIX_GN_GEN_ARGS)
 list(APPEND GN_GEN_ARGS
   rtc_build_examples=false
   rtc_use_x11=false
@@ -271,7 +270,6 @@ list(APPEND GN_GEN_ARGS
   rtc_include_pulse_audio=false
   rtc_include_tests=false
   use_lld=true
-  "${NIX_GN_GEN_ARGS}"
 )
 
 if (WIN32)
@@ -385,9 +383,7 @@ set(libc++_include_dir
 set(libc++abi_include_dir "${libwebrtc_source_dir}/src/third_party/libc++abi/src/include")
 
 # NOTE(mroberts): I would like this to be INTERFACE.
-#
 #   https://gitlab.kitware.com/cmake/cmake/issues/15052
-#
 # target_include_directories(libwebrtc SYSTEM INTERFACE
 #   ${libwebrtc_source_dir}
 #   ${libwebrtc_source_dir}/webrtc
@@ -456,9 +452,7 @@ set_target_properties(${MODULE} PROPERTIES PREFIX "" SUFFIX ".node")
 set_property(TARGET ${MODULE} PROPERTY CXX_STANDARD 20)
 
 # NOTE(mroberts): Workaround for
-#
 #   https://gitlab.kitware.com/cmake/cmake/issues/15052
-#
 # is to include all the header files here.
 target_include_directories(${MODULE} SYSTEM PRIVATE
   ${CMAKE_JS_INC}
@@ -573,9 +567,7 @@ else()
 
   if (${use_custom_libcxx})
     # NOTE(mroberts): Workaround for
-    #
     #   https://gitlab.kitware.com/cmake/cmake/issues/15052
-    #
     # is to include all the header files here.
     target_include_directories(${MODULE} SYSTEM PRIVATE
       ${libc++_include_dir}
@@ -586,7 +578,7 @@ else()
     target_link_libraries(${MODULE} PRIVATE
       libc++
       libc++abi
-      -nostdlib++ # Requires clang, but that's OK, we have nix :)
+      -nostdlib++ # (clang specific)
     )
 
     target_compile_options(${MODULE} PRIVATE
