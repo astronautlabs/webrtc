@@ -1,11 +1,11 @@
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { expect } from 'chai';
 
 import { RTCIceCandidate, RTCPeerConnection } from '..';
 
 import { captureCandidates } from './helpers/capture-candidates';
 
-describe('RTCPeerConnection', it => {
+describe('RTCPeerConnection', () => {
   let candidatesPromises: Promise<globalThis.RTCIceCandidate[]>[];
   let peers: RTCPeerConnection[] = [];
   let candidates: RTCIceCandidate[][] = [];

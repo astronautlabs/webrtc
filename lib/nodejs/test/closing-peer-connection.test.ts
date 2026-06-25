@@ -1,8 +1,8 @@
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { RTCPeerConnection } from '..';
 import { expect } from 'chai';
 
-describe('RTCPeerConnection', it => {
+describe('RTCPeerConnection', () => {
   it('make sure channel is available after after connection is closed on the other side', async () => {
     var peer1 = new RTCPeerConnection({ iceServers: [] });
     var peer2 = new RTCPeerConnection({ iceServers: [] });

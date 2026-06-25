@@ -46,7 +46,7 @@ function createTest(bitsPerSample: number) {
   });
 }
 
-describe('RTCAudioSource', it => {
+describe('RTCAudioSource', () => {
   // createTest(8);
   createTest(16);
   // createTest(32);

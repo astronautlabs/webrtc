@@ -1,10 +1,10 @@
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { expect } from 'chai';
 
 import { RTCPeerConnection } from '..';
 
 describe('RTCPeerConnection', () => {
-  describe('.getConfiguration()', it => {
+  describe('.getConfiguration()', () => {
     var defaultConfiguration = {
       iceServers: [],
       iceTransportPolicy: 'all',
@@ -66,7 +66,7 @@ describe('RTCPeerConnection', () => {
     });
   });
   
-  describe('.setConfiguration()', it => {
+  describe('.setConfiguration()', () => {
     it('after closing', () => {
       var pc = new RTCPeerConnection();
       pc.close();

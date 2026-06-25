@@ -3,7 +3,7 @@
 import { RTCVideoSource } from '..';
 import { confirmSentFrameDimensions, negotiateRTCPeerConnections } from './lib/pc';
 import { I420Frame } from './lib/frame';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { expect } from 'chai';
 
 const frame = new I420Frame(640, 480);
@@ -20,7 +20,7 @@ function printTrack(track: any) {
   console.log(track);
 }
 
-describe('RTCVideoSource', it => {
+describe('RTCVideoSource', () => {
   it('simple usage', async () => {
     await (async () => {
       const source = new RTCVideoSource();

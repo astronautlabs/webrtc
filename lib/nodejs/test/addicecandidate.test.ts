@@ -1,4 +1,4 @@
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 
 import { RTCPeerConnection } from '..';
 
@@ -29,7 +29,7 @@ const candidate = <RTCIceCandidate>{
   sdpMLineIndex: 0
 };
 
-describe('addIceCandidate', it => {
+describe('addIceCandidate', () => {
   it('has correct queueing behavior', async () => {
     const pc = new RTCPeerConnection();
     await Promise.all([

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import {
   MediaStream,
   MediaStreamTrack,
@@ -74,7 +74,7 @@ var sdp2 = [
   'a=rtcp-mux',
 ].join('\r\n') + '\r\n';
 
-describe('RTCRTPReceiver', it => {
+describe('RTCRTPReceiver', () => {
   it('applying a remote offer creates receivers (checked via .getReceivers)', async () => {
     // NOTE(mroberts): Create and close the RTCPeerConnection inside a Promise,
     // then delay with setTimeout so that we can test accessing getReceivers after

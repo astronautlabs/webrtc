@@ -6,7 +6,6 @@ import { Minimatch } from 'minimatch';
 import { readManifest, getPossibleTestFilePaths, stripPrefix } from './wpt-manifest-utils.js';
 import startWPTServer from './start-wpt-server.js';
 import { runSingleWPT } from './run-single-wpt';
-import { ConsoleReporter, describe, it, suite, TestFunction } from 'razmin';
 
 /**
  * If you wish to work on specific WPT tests, you can add filters for them here.
@@ -82,7 +81,7 @@ function defineSuite() {
   suite(() => {
     describe('web-platform-tests', () => {
       for (const toRunDoc of toRunDocs) {
-        describe(`: ${toRunDoc.DIR}`, it => {
+        describe(`: ${toRunDoc.DIR}`, () => {
           for (const testFilePath of possibleTestFilePaths) {
             if (testFilePath.startsWith(toRunDoc.DIR + '/')) {
               const matchingPattern = expectationsInDoc(toRunDoc).find(pattern => {

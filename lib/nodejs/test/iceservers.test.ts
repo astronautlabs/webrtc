@@ -1,5 +1,5 @@
 /* eslint no-console:0, no-process-env:0 */
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { expect } from 'chai';
 
 import { RTCPeerConnection, RTCSessionDescription } from '..';
@@ -14,7 +14,7 @@ var skipReflexive = isDarwinOnCircleCi || !process.env.CHECK_REFLEXIVE;
 
 var pc: RTCPeerConnection;
 
-describe('RTCPeerConnection', it => {
+describe('RTCPeerConnection', () => {
   it('assign ICE server and get reflective candidates', async () => {
     pc = new RTCPeerConnection({
       iceServers: [

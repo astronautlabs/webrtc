@@ -1,8 +1,8 @@
 import { RTCPeerConnection } from '..';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { expect } from 'chai';
 
-describe('RTCDataChannel', it => {
+describe('RTCDataChannel', () => {
   it('does not segfault when closed after RTCPeerConnection has been garbage collected', () => {
     var dc = (function() {
       var pc = new RTCPeerConnection();

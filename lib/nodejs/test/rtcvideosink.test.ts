@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { RTCVideoSink, RTCVideoSource } from '..';
 import { RTCVideoFrame } from '../videoframe';
 import { I420Frame } from './lib/frame';
 
-describe('RTCVideoSink', it => {
+describe('RTCVideoSink', () => {
   it('works', async () => {
     const source = new RTCVideoSource();
     const track = source.createTrack();

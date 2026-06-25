@@ -12,3 +12,4 @@ dist/
 private/
 .env
 build-*/
+coverage/

@@ -1,9 +1,9 @@
 import { expect } from 'chai';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { getUserMedia } from '..';
 import { RTCAudioSink } from '..';
 
-describe('RTCAudioSink', it => {
+describe('RTCAudioSink', () => {
   it('works', async () => {
     let stream = await getUserMedia({ audio: true });
   

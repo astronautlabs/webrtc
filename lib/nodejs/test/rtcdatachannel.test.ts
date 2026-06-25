@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { RTCPeerConnection } from '..';
 
-describe('RTCDataChannel', it => {
+describe('RTCDataChannel', () => {
   it('Calling .send(message) when .readyState is "closed" throws InvalidStateError', () => {
     const pc = new RTCPeerConnection();
     const dc = pc.createDataChannel('hello');

@@ -1,6 +1,6 @@
 import { Certificate } from '@fidm/x509';
 import { expect } from 'chai';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { RTCDtlsTransport, RTCIceTransport, RTCRtpSender, RTCRtpReceiver } from '..';
 import { createRTCPeerConnections, gatherCandidates, negotiate, waitForStateChange } from './lib/pc';
 
@@ -69,7 +69,7 @@ async function testDtlsTransport(createSenderOrReceiver: (pc: RTCPeerConnection)
   expect((transport!.iceTransport as any).role).to.equal('controlling');
 }
 
-describe('RTCDtlsTransport', it => {
+describe('RTCDtlsTransport', () => {
   it('accessed via RTCRtpSender .transport', () =>
     testDtlsTransport(pc => pc.addTransceiver('audio').sender));
   it('accessed via RTCRtpReceiver .transport', () =>

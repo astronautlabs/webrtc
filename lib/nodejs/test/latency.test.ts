@@ -157,19 +157,19 @@ async function measureTimeThroughUnorderedUnreliableRTCDataChannel() {
     }
 }
 
-describe('Latency', it => {
+describe('Latency', () => {
     it(': Average Time through Unordered, Unreliable RTCDataChannel', async () => {
         const averageTime = await measureTimeThroughUnorderedUnreliableRTCDataChannel();
         console.log(`    (***) Latency: data-channel: ${averageTime} ms`);
     });
     describe(': RTCVideoSource to', () => {
-        describe('LocalVideoSink', it => {
+        describe('LocalVideoSink', () => {
             testTimeFromRTCVideoSourceToLocalVideoSink(160, 120);
             testTimeFromRTCVideoSourceToLocalVideoSink(320, 240);
             testTimeFromRTCVideoSourceToLocalVideoSink(640, 480);
             testTimeFromRTCVideoSourceToLocalVideoSink(1280, 720);
         });
-        describe('RemoteVideoSink', it => {
+        describe('RemoteVideoSink', () => {
             testTimeFromRTCVideoSourceToRemoteVideoSink(160, 120);
             testTimeFromRTCVideoSourceToRemoteVideoSink(320, 240);
             testTimeFromRTCVideoSourceToRemoteVideoSink(640, 480);

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { getUserMedia, MediaStream, RTCPeerConnection, RTCSessionDescription } from '..';
 
 var sdp = [
@@ -37,7 +37,7 @@ var sdp = [
     'a=ssrc:2 msid:stream 456'
 ].join('\r\n') + '\r\n';
 
-describe('MediaStream', it => {
+describe('MediaStream', () => {
     it('should have no tracks after `new MediaStream()`', () => {
         var stream = new MediaStream();
         expect(stream.getTracks().length)

@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { RTCPeerConnection } from '..';
 
-describe('Pass interface to method', it => {
+describe('Pass interface to method', () => {
   it(': passing something that\'s not a MediaStream fails', () => {
     const pc = new RTCPeerConnection();
     expect(() => pc.addTransceiver('audio', { streams: [<any>{}] }))

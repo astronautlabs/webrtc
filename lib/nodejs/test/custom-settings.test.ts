@@ -1,12 +1,12 @@
 /* eslint no-console:0 */
 
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import SimplePeer from 'simple-peer';
 import * as wrtc from '..';
 
 type PortRange = { min: number, max: number };
 
-describe('CustomSettings', it => {
+describe('CustomSettings', () => {
     it('custom ports connect once', () => {
         connectClientServer({ min: 9000, max: 9010 }, (err: any) => {
             if (err)

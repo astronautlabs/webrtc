@@ -9,7 +9,7 @@ import {
 
 import { negotiateRTCPeerConnections } from './lib/pc';
 import { createDeferred, trackDestructors } from './destructor/util';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 
 async function waitUntilOpen(dataChannel: RTCDataChannel) {
     if (dataChannel.readyState === 'open') {
@@ -53,7 +53,7 @@ async function setupRTCDataChannels() {
     };
 }
 
-describe('RTCPeerConnection', it => {
+describe('RTCPeerConnection', () => {
     it.skip("RTCPeerConnection's destructor fires", async () => {
         const { destructor, stop } = trackDestructors();
         const pc = new RTCPeerConnection();
@@ -168,13 +168,13 @@ async function testSink(kind: 'audio' | 'video') {
     stop();
 }
 
-describe('RTCAudioSink', it => {
+describe('RTCAudioSink', () => {
     it.skip('RTCAudioSink\'s destructor fires', async () => {
         await testSink('audio');
     });
 });
 
-describe('RTCVideoSink', it => {
+describe('RTCVideoSink', () => {
     it.skip('RTCVideoSink\'s destructor fires', async () => {
         await testSink('video');
     });

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { RTCPeerConnection } from '..';
 
 // NOTE(mroberts): These limits were tested on macOS.
@@ -66,7 +66,7 @@ async function test(size: number, options: any) {
   pc2.close();
 }
 
-describe('Send ArrayBuffer', it => {
+describe('Send ArrayBuffer', () => {
   it('receiving two ArrayBuffers works (ordered, reliable)', () => {
     test(maxOrderedAndReliableSize, {});
   });

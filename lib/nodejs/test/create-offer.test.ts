@@ -1,8 +1,8 @@
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { expect } from 'chai';
 import { RTCPeerConnection } from '..';
 
-describe('RTCPeerConnection', it => {
+describe('RTCPeerConnection', () => {
   var peer: RTCPeerConnection;
   var localDesc: RTCSessionDescriptionInit;
 

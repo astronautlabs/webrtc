@@ -3,11 +3,11 @@ import SimplePeer from 'simple-peer';
 import * as simplepeer from 'simple-peer';
 
 import * as wrtc from '..';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 
 var log = process.env.LOG ? console.log : function() {};
 
-describe('multiconnect', it => {
+describe('multiconnect', () => {
   it('connect once', () => {
     log('###########################\n');
     connect((err: Error) => { if (err) throw err; });

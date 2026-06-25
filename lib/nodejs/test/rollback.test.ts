@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { RTCPeerConnection } from '..';
 
-describe('rollback', it => {
+describe('rollback', () => {
   it('local rollback (wrong state)', async () => {
     let pc = new RTCPeerConnection(<any>{ sdpSemantics: 'unified-plan' });
     let caughtError;

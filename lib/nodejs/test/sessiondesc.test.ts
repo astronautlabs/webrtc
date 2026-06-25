@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import {
   RTCPeerConnection,
   RTCSessionDescription
@@ -8,7 +8,7 @@ import {
 let peer: any;
 let localDesc: any;
 
-describe('RTCSessionDescription', it => {
+describe('RTCSessionDescription', () => {
 
   it('create a peer connection', () => {
     peer = new RTCPeerConnection({ iceServers: [] });

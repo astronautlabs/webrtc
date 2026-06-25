@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { describe } from 'razmin';
+import { describe, it } from '@jest/globals';
 import {
   RTCPeerConnection,
   RTCRtpSender,
@@ -42,7 +42,7 @@ var sdp = [
   'a=ssrc:2 msid:stream 456'
 ].join('\r\n') + '\r\n';
 
-describe('RTCRTPSender', it => {
+describe('RTCRTPSender', () => {
   it('.addTrack(track, stream)', async () => {
     let stream = await getMediaStream();
   
