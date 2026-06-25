@@ -328,12 +328,18 @@ if (WIN32)
   set(byproducts
     ${libc++_objects}
     ${libwebrtc_binary_dir}/obj/webrtc.lib
+    ${libwebrtc_binary_dir}/obj/api/video_codecs/builtin_video_encoder_factory.lib
+    ${libwebrtc_binary_dir}/obj/api/video_codecs/builtin_video_decoder_factory.lib
+    ${libwebrtc_binary_dir}/obj/media/rtc_internal_video_codecs.lib
   )
 else()
   set(byproducts
     ${libc++_objects}
     ${libc++abi_objects}
     ${libwebrtc_binary_dir}/obj/libwebrtc.a
+    ${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_encoder_factory.a
+    ${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_decoder_factory.a
+    ${libwebrtc_binary_dir}/obj/media/librtc_internal_video_codecs.a
   )
 endif()
 
@@ -413,12 +419,35 @@ ExternalProject_Add(
 ExternalProject_Get_Property(project_catch2 SOURCE_DIR)
 set(catch2_install_dir ${SOURCE_DIR})
 
-# node-webrtc
+# libbuiltin_video_encoder_factory
 # -----------------------------------------------------------------------------
 
-# Use the Clang that libwebrtc just built (not the system clang or gcc)
-# set(CMAKE_CXX_COMPILER ${libwebrtc_source_dir}/webrtc/third_party/llvm-build/Release+Asserts/bin/clang++)
-# set(CMAKE_C_COMPILER ${libwebrtc_source_dir}/webrtc/third_party/llvm-build/Release+Asserts/bin/clang)
+add_library(libbuiltin_video_encoder_factory STATIC IMPORTED)
+set_target_properties(libbuiltin_video_encoder_factory PROPERTIES
+    IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_encoder_factory.a"
+)
+add_dependencies(libbuiltin_video_encoder_factory project_libwebrtc)
+
+# libbuiltin_video_decoder_factory
+# -----------------------------------------------------------------------------
+
+add_library(libbuiltin_video_decoder_factory STATIC IMPORTED)
+set_target_properties(libbuiltin_video_decoder_factory PROPERTIES 
+  IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_decoder_factory.a"
+)
+add_dependencies(libbuiltin_video_decoder_factory project_libwebrtc)
+
+# librtc_internal_video_codecs
+# -----------------------------------------------------------------------------
+
+add_library(librtc_internal_video_codecs STATIC IMPORTED)
+set_target_properties(librtc_internal_video_codecs PROPERTIES 
+  IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/media/librtc_internal_video_codecs.a"
+)
+add_dependencies(librtc_internal_video_codecs project_libwebrtc)
+
+# node-webrtc
+# -----------------------------------------------------------------------------
 
 file(GLOB_RECURSE MODULE_SRC src/*.cc src/*.hh)
 add_library(${MODULE} SHARED ${MODULE_SRC} ${CMAKE_JS_SRC})
@@ -454,9 +483,9 @@ target_include_directories(${MODULE} PRIVATE
 target_link_libraries(${MODULE} PRIVATE
   ${CMAKE_THREAD_LIBS_INIT}
   libwebrtc
-  "${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_encoder_factory.a"
-  "${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_decoder_factory.a"
-  "${libwebrtc_binary_dir}/obj/media/librtc_internal_video_codecs.a"
+  libbuiltin_video_encoder_factory
+  libbuiltin_video_decoder_factory
+  librtc_internal_video_codecs
   ${CMAKE_JS_LIB}
 )
 

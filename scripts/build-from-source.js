@@ -28,10 +28,6 @@ function main(args) {
         if (stdout) {
             cmakeJsArgs.push(`--CDCMAKE_RC_COMPILER="${stdout.replace(/\\/g, "/")}"`);
         }
-    } else {
-        // currently cannot use ninja for the top level because it tries to resolve the RTC libraries we depend on 
-        // for the main wrtc.node target, but those aren't available until after we've built libwebrtc.
-        cmakeJsArgs.push(...["-G", "'Unix Makefiles'"]);
     }
 
     if (arch !== os.arch()) {
