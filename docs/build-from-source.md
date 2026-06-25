@@ -2,55 +2,43 @@
 
 ## Prerequisites
 
-`@/webrtc` uses [node-cmake](https://github.com/cjntaylor/node-cmake) to build
-from source. When building from source, in addition to the prerequisites
-required by node-cmake, you will need
+`@/webrtc` uses [cmake-js](https://github.com/cmake-js/cmake-js) to build from source. 
+
+In addition to the prerequisites for cmake-js, you will need:
 
 * Git
 * CMake 3.12 or newer
-* GCC 5.4 or newer (Linux)
-* Xcode 9 or newer (macOS)
-* Microsoft Visual Studio 2022 (Windows)
+* Clang 23 or newer
+* Microsoft Visual Studio 2022 or newer (Windows)
     * Install the Clang toolkit and MSBuild Clang support from Individual Components
-* Check the [additional prerequisites listed by WebRTC](https://webrtc.github.io/webrtc-org/native-code/development/prerequisite-sw/) - although their install is automated by the CMake scripts provided
 
+## Build
 
-## Install
-
-Once you have the prerequisites, clone the repository, set the `SKIP_DOWNLOAD`
-environment variable to "true", and run `npm install`. Just like when
-installing prebuilt binaries, you can set the `TARGET_ARCH` environment
-variable to "arm" or "arm64" to build for armv7l or arm64, respectively. Linux
-and macOS users can also set the `DEBUG` environment variable for debug builds.
+You can build a debug binary (for development) using `npm run build:dev`. 
+If you want to build a release binary, use `npm run build:native`.
+You can build the Typescript using `npm run build:tsc`.
 
 ```
 git clone https://github.com/astronautlabs/webrtc.git
 cd webrtc
-SKIP_DOWNLOAD=true npm install
+npm run build:dev
+npm run build:tsc
 ```
-
-Note: Use `$SKIP_DOWNLOAD = 'true'; npm install` on Windows Powershell.
 
 ## Subsequent Builds
 
-Subsequent builds can be triggered with `ncmake`:
+Subsequent builds can be triggered with `npm run build:dev` or `npm run build:native` depending on the binary you are 
+building.
 
-```
-./node_modules/.bin/ncmake configure
-./node_modules/.bin/ncmake build
-```
+## Compiler
 
-You can pass either `--debug` or `--release` to build a debug or release build of `@/webrtc` (and the underlying WebRTC 
-library). Refer to [node-cmake](https://github.com/cjntaylor/node-cmake) for additional command-line options to 
-`ncmake`.
+WebRTC itself is built with a clang that it compiles from scratch. However the wrtc.node binary is built using the 
+system-installed Clang. It will use Clang even if the `cc`/`c++` binaries in the path point to a different compiler.
+
+That being said, if you have set `CC`/`CXX` environment variables to pick your own compiler, that will be respected, 
+but your mileage may vary using anything other than Clang.
 
 ## Other Notes
-
-### Linux
-
-On Linux, we use the system provided version of `libstdc++`. You must have the appropriate headers installed. Also, 
-although we compile WebRTC sources with Clang (downloaded as part of WebRTC's build process), we compile `@/webrtc`
-sources with GCC 5.4 or newer.
 
 #### armv7l
 
@@ -79,12 +67,6 @@ wget https://releases.linaro.org/components/toolchain/binaries/7.3-2018.05/aarch
 tar xf gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu.tar.xz
 SKIP_DOWNLOAD=true TARGET_ARCH=arm64 ARM_TOOLS_PATH=$(pwd)/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu npm install
 ```
-
-### macOS
-
-On macOS, we statically link libc++ and libc++abi. Also, we compile WebRTC
-sources with the version of Clang downloaded as part of WebRTC's build process,
-but we compile `@/webrtc` sources using the system Clang.
 
 ### Windows
 

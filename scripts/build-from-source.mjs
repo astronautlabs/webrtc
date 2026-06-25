@@ -1,13 +1,22 @@
 #!/usr/bin/env node
 "use strict";
 
-const os = require("os");
-const path = require("path");
-const { spawnSync } = require("child_process");
+import os from "node:os";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+
+const __dirname = import.meta.dirname ? import.meta.dirname 
+    : import.meta.filename ? path.dirname(import.meta.filename)
+    : path.dirname(new URL(import.meta.url).pathname)
+;
 
 const CMAKE_JS = path.resolve(__dirname, "..", "node_modules", ".bin", "cmake-js");
 
 function main(args) {
+    if (args[0] === '--help') {
+        console.log(`@astronautlabs/webrtc: build script`);
+        process.exit(0);
+    }
     const isDevWorkspace = args[0] === 'workspace';
     const platform = os.platform();
     const arch = process.env.TARGET_ARCH ?? os.arch();

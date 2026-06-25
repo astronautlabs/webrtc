@@ -96,8 +96,8 @@
   "scripts": {
     "build:tsc": "tsc -b",
     "install": "twine install",
-    "build:dev": "node scripts/build-from-source.js workspace",
-    "build:native": "node scripts/build-from-source.js",
+    "build:dev": "node scripts/build-from-source.mjs workspace",
+    "build:native": "node scripts/build-from-source.mjs",
     "build:native:release": "npm run configure && ncmake build -j 12",
     "build:native:debug": "npm run configure:debug && ncmake build --debug -j 12",
     "clean": "ncmake clean",
