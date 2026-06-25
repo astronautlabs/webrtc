@@ -11,4 +11,4 @@ dist/
 .vs/
 private/
 .env
-build-*-*/
+build-*/
