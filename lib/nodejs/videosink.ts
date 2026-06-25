@@ -14,6 +14,5 @@ export class RTCVideoSink extends EventTarget {
     onframe?: (ev: RTCVideoSinkEvent) => void;
 }
 
-console.log('MIXING IT IN');
 (RTCVideoSink as any) = mixinEventTarget(native.RTCVideoSink);
 //inherits(native.RTCVideoSink, EventTarget);
