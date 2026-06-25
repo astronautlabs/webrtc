@@ -9,6 +9,7 @@
  */
 #include "src/interfaces/rtc_peer_connection/create_session_description_observer.h"
 
+#include <src/api/jsep.h>
 #include <type_traits>
 
 #include <webrtc/api/rtc_error.h>
@@ -16,9 +17,10 @@
 #include "src/converters/napi.h"
 #include "src/dictionaries/node_webrtc/some_error.h"
 
-void node_webrtc::CreateSessionDescriptionObserver::OnSuccess(webrtc::SessionDescriptionInterface* description) {
-  auto maybeDescription = node_webrtc::From<RTCSessionDescriptionInit>(const_cast<const webrtc::SessionDescriptionInterface*>(description));
-  delete description;
+void node_webrtc::CreateSessionDescriptionObserver::OnSuccess(webrtc::SessionDescriptionInterface *description) {
+  auto maybeDescription = node_webrtc::From<RTCSessionDescriptionInit>(
+      std::shared_ptr<const webrtc::SessionDescriptionInterface>{description}
+  );
   if (maybeDescription.IsInvalid()) {
     Reject(node_webrtc::SomeError(maybeDescription.ToErrors()[0]));
   } else {
@@ -28,8 +30,8 @@ void node_webrtc::CreateSessionDescriptionObserver::OnSuccess(webrtc::SessionDes
   }
 }
 
-void node_webrtc::CreateSessionDescriptionObserver::OnFailure(webrtc::RTCError error) {
-  Reject(node_webrtc::From<node_webrtc::SomeError>(&error).FromValidation([](auto errors) {
-    return node_webrtc::SomeError(errors[0]);
-  }));
+void node_webrtc::CreateSessionDescriptionObserver::OnFailure(
+    webrtc::RTCError error) {
+  Reject(node_webrtc::From<node_webrtc::SomeError>(&error).FromValidation(
+      [](auto errors) { return node_webrtc::SomeError(errors[0]); }));
 }

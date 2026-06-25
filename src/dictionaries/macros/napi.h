@@ -34,6 +34,16 @@ static Validation<Napi::Object> CreateObject(const Napi::Env env) {
       : Pure(scope.Escape(maybeObject).ToObject());
 }
 
+/**
+ * Uses the converter system to convert the given C++ value to a Napi::Value and places it onto the given Javascript
+ * object as a property with the given name.
+ * @tparam T
+ * @param env The execution environment where the given object lives
+ * @param object The Javascript object to set the property on
+ * @param key The property where the converted Javascript value should be placed
+ * @param value The value to convert
+ * @return
+ */
 template <typename T>
 static Maybe<Errors> ConvertAndSet(const Napi::Env env, Napi::Object object, const std::string& key, T value) {
   auto maybeValue = From<Napi::Value>(std::make_pair(env, value));

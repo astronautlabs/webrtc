@@ -40,13 +40,13 @@ class Either {
    * @return the result of applying the Either
    */
   template <typename F>
-  Either<L, typename std::result_of<F(R)>::type> Apply(const Either<L, F> f) const {
+  Either<L, std::invoke_result_t<F, R>> Apply(const Either<L, F> f) const {
     if (f.IsLeft()) {
-      return Either<L, typename std::result_of<F(R)>::type>::Left(f.UnsafeFromLeft());
+      return Either<L, std::invoke_result_t<F, R>>::Left(f.UnsafeFromLeft());
     } else if (IsLeft()) {
-      return Either<L, typename std::result_of<F(R)>::type>::Left(_left);
+      return Either<L, std::invoke_result_t<F, R>>::Left(_left);
     }
-    return Either<L, typename std::result_of<F(R)>::type>::Left(_right);
+    return Either<L, std::invoke_result_t<F, R>>::Left(_right);
   }
 
   /**
@@ -105,10 +105,10 @@ class Either {
    * @return the mapped Either
    */
   template <typename F>
-  Either<L, typename std::result_of<F(R)>::type> Map(F f) const {
+  Either<L, std::invoke_result_t<F,R>> Map(F f) const {
     return _is_right
-        ? Either<L, typename std::result_of<F(R)>::type>::Right(f(_right))
-        : Either<L, typename std::result_of<F(R)>::type>::Left(_left);
+        ? Either<L, std::invoke_result_t<F,R>>::Right(f(_right))
+        : Either<L, std::invoke_result_t<F,R>>::Left(_left);
   }
 
   /**

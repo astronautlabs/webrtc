@@ -11,12 +11,27 @@
 
 #include <webrtc/api/rtc_error.h>
 
+#include "absl/strings/match.h"
 #include "src/converters.h"
 #include "src/converters/napi.h"
 #include "src/converters/undefined.h"
 #include "src/dictionaries/node_webrtc/some_error.h"
 #include "src/functional/either.h"
 #include "src/node/error_factory.h"
+
+void node_webrtc::SetSessionDescriptionObserver::OnSetLocalDescriptionComplete(webrtc::RTCError error) {
+    if (error.ok())
+        OnSuccess();
+    else
+        OnFailure(error);
+}
+
+void node_webrtc::SetSessionDescriptionObserver::OnSetRemoteDescriptionComplete(webrtc::RTCError error) {
+    if (error.ok())
+        OnSuccess();
+    else
+        OnFailure(error);
+}
 
 void node_webrtc::SetSessionDescriptionObserver::OnSuccess() {
 	pc->onSetDescriptionComplete();
@@ -29,7 +44,7 @@ void node_webrtc::SetSessionDescriptionObserver::OnFailure(webrtc::RTCError erro
 		});
 
 	// NOTE(mroberts): This workaround is annoying.
-	if (someError.message().find("Local fingerprint does not match identity. Expected: ") != std::string::npos) {
+	if (absl::StrContains(someError.message(), "Local fingerprint does not match identity. Expected: ")) {
 		someError = node_webrtc::SomeError(someError.message(),
 			node_webrtc::MakeLeft<node_webrtc::ErrorFactory::ErrorName>(
 				node_webrtc::ErrorFactory::DOMExceptionName::kInvalidModificationError));

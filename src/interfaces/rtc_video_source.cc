@@ -13,6 +13,7 @@
 #include <webrtc/api/video/i420_buffer.h>
 #include <webrtc/api/video/video_frame.h>
 #include <webrtc/rtc_base/ref_counted_object.h>
+#include <webrtc/rtc_base/crypto_random.h>
 
 #include "src/converters.h"
 #include "src/converters/absl.h"
@@ -64,7 +65,7 @@ Napi::Value RTCVideoSource::New(const Napi::CallbackInfo& info) {
   .Map([](auto needsDenoising) { return absl::optional<bool>(needsDenoising); })
   .FromMaybe(absl::optional<bool>());
 
-  _source = new rtc::RefCountedObject<RTCVideoTrackSource>(init.isScreencast, needsDenoising);
+  _source = new webrtc::RefCountedObject<RTCVideoTrackSource>(init.isScreencast, needsDenoising);
 
   return info.Env().Undefined();
 }
@@ -72,7 +73,7 @@ Napi::Value RTCVideoSource::New(const Napi::CallbackInfo& info) {
 Napi::Value RTCVideoSource::CreateTrack(const Napi::CallbackInfo&) {
   // TODO(mroberts): Again, we have some implicit factory we are threading around. How to handle?
   auto factory = PeerConnectionFactory::GetOrCreateDefault();
-  auto track = factory->factory()->CreateVideoTrack(rtc::CreateRandomUuid(), _source);
+  auto track = factory->factory()->CreateVideoTrack(_source, webrtc::CreateRandomUuid());
 
   // Here the default reference will be owned by the RTCVideoSource. 
   // See RTCPeerConnection::AddTrack() for corresponding referencing logic in that case.
@@ -83,7 +84,7 @@ Napi::Value RTCVideoSource::CreateTrack(const Napi::CallbackInfo&) {
 }
 
 Napi::Value RTCVideoSource::OnFrame(const Napi::CallbackInfo& info) {
-  CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, buffer, rtc::scoped_refptr<webrtc::I420Buffer>)
+  CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, buffer, webrtc::scoped_refptr<webrtc::I420Buffer>)
 
   auto now = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::system_clock::now());
   uint64_t nowInUs = now.time_since_epoch().count();

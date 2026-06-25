@@ -48,14 +48,14 @@ class RTCDataChannel
 
   static ::node_webrtc::Wrap <
   RTCDataChannel*,
-  rtc::scoped_refptr<webrtc::DataChannelInterface>,
+  webrtc::scoped_refptr<webrtc::DataChannelInterface>,
   node_webrtc::DataChannelObserver*
   > * wrap();
 
  private:
   static RTCDataChannel* Create(
       node_webrtc::DataChannelObserver*,
-      rtc::scoped_refptr<webrtc::DataChannelInterface>);
+      webrtc::scoped_refptr<webrtc::DataChannelInterface>);
 
   static void HandleStateChange(RTCDataChannel&, webrtc::DataChannelInterface::DataState);
   static void HandleMessage(RTCDataChannel&, const webrtc::DataBuffer& buffer);
@@ -88,7 +88,7 @@ class RTCDataChannel
   std::string _cached_protocol;
   uint64_t _cached_buffered_amount;
   PeerConnectionFactory* _factory;
-  rtc::scoped_refptr<webrtc::DataChannelInterface> _jingleDataChannel;
+  webrtc::scoped_refptr<webrtc::DataChannelInterface> _jingleDataChannel;
 };
 
 class DataChannelObserver
@@ -98,18 +98,18 @@ class DataChannelObserver
  public:
   DataChannelObserver(
       PeerConnectionFactory* factory,
-      rtc::scoped_refptr<webrtc::DataChannelInterface> jingleDataChannel);
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> jingleDataChannel);
 
   ~DataChannelObserver() override;
 
   void OnStateChange() override;
   void OnMessage(const webrtc::DataBuffer& buffer) override;
 
-  rtc::scoped_refptr<webrtc::DataChannelInterface> channel() { return _jingleDataChannel; }
+  webrtc::scoped_refptr<webrtc::DataChannelInterface> channel() { return _jingleDataChannel; }
 
  private:
   PeerConnectionFactory* _factory;
-  rtc::scoped_refptr<webrtc::DataChannelInterface> _jingleDataChannel;
+  webrtc::scoped_refptr<webrtc::DataChannelInterface> _jingleDataChannel;
 };
 
 }  // namespace node_webrtc

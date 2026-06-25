@@ -86,13 +86,13 @@ namespace node_webrtc {
 	}
 
 	Napi::Value RTCRtpTransceiver::Stop(const Napi::CallbackInfo& info) {
-		pc->getUnderlying(this)->Stop();
+		pc->getUnderlying(this)->StopStandard(); // TODO(liam): Changed from deprecated Stop(), check behavior
 		return info.Env().Undefined();
 	}
 
 	Napi::Value RTCRtpTransceiver::SetCodecPreferences(const Napi::CallbackInfo& info) {
 		CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, codecs, std::vector<webrtc::RtpCodecCapability>)
-			auto capabilities = rtc::ArrayView<webrtc::RtpCodecCapability>(codecs);
+			auto capabilities = std::span<webrtc::RtpCodecCapability>(codecs);
 		auto error = pc->getUnderlying(this)->SetCodecPreferences(capabilities);
 		if (!error.ok()) {
 			CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), &error, result, Napi::Value)
@@ -105,7 +105,7 @@ namespace node_webrtc {
 	{
 		auto env = constructor().Env();
 		Napi::HandleScope scope(env);
-		auto unwrapped = Unwrap(constructor().New({
+		auto* unwrapped = Unwrap(constructor().New({
 			Napi::External<RTCPeerConnection>::New(env, pc),
 			Napi::External<RTCRtpSender>::New(env, sender),
 			Napi::External<RTCRtpReceiver>::New(env, receiver)
@@ -115,7 +115,7 @@ namespace node_webrtc {
 		return unwrapped;
 	}
 
-	void RTCRtpTransceiver::updateMembers(rtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtcTransceiver)
+	void RTCRtpTransceiver::updateMembers(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtcTransceiver)
 	{
 		if (currentDirection == "stopped")
 			return;
@@ -151,4 +151,4 @@ namespace node_webrtc {
 	TO_NAPI_IMPL(RTCRtpTransceiver*, pair) {
 		return Pure(pair.second->Value().As<Napi::Value>());
 	}
-}
+}  // namespace node_webrtc

@@ -11,6 +11,8 @@
 
 #include <memory>
 
+#include <src/api/set_local_description_observer_interface.h>
+#include <src/api/set_remote_description_observer_interface.h>
 #include <webrtc/api/jsep.h>
 
 #include "src/interfaces/rtc_peer_connection.h"
@@ -21,7 +23,8 @@ namespace webrtc { class RTCError; }
 namespace node_webrtc {
 	class SetSessionDescriptionObserver: 
 		public PromiseCreator<RTCPeerConnection>, 
-		public webrtc::SetSessionDescriptionObserver {
+		public webrtc::SetLocalDescriptionObserverInterface,
+		public webrtc::SetRemoteDescriptionObserverInterface {
 	public:
 		SetSessionDescriptionObserver(
 			RTCPeerConnection* peer_connection,
@@ -30,9 +33,11 @@ namespace node_webrtc {
 			pc = peer_connection;
 		}
 
-		void OnSuccess() override;
+        void OnSetLocalDescriptionComplete(webrtc::RTCError error) override;
+        void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override;
 
-		void OnFailure(webrtc::RTCError) override;
+		void OnSuccess();
+		void OnFailure(webrtc::RTCError);
 
 	private:
 		RTCPeerConnection* pc;

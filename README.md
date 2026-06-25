@@ -23,6 +23,31 @@ Installing from NPM downloads a prebuilt binary for your operating system × arc
 
 You can also [build from source](docs/build-from-source.md).
 
+# Developers
+
+This section has notes about how to be productive working with this codebase.
+
+## Build Commands
+
+- `npm run build:tsc` - Compiles the Typescript sources into Javascript
+- `npm run build:native` - Compiles libwebrtc and the wrtc.node Node.js addon in release mode
+- `npm run build:dev` - Compiles libwebrtc/wrtc.node in debug mode and outputs compile_commands.json for clangd support.
+  This is the one you want to use if you are working on the project, as opposed to building it for use in an application.
+
+## IDEs
+
+### Visual Studio Code + clangd
+
+This project will generate `build/compile_commands.json` when you use a developer build (`npm run build:dev`). The 
+`clangd` VS Code extension will pick this up out of the box, providing excellent intellisense for the project.
+
+## CLion
+
+This should work out of the box, except you need to make sure your node binary is available to CLion, which might not 
+be the case if you are using NVM and have added its shell integration in .bashrc or .bash_profile instead of .profile. 
+Also CLion has an option (default enabled in newer versions) to use the shell when executing commands, you would need 
+that turned on. None of this applies if your Node is installed at the system level.
+
 # Supported Platforms
 
 We intend to officially support
@@ -118,7 +143,17 @@ The table below maps our support intentions to which configurations have been va
 
 ### Linux
 
-Other libwebrtc bindings use Google's in-tree `libc++` when targetting Linux. Due to compatibility issues, and to reduce the need for multiple C++ standard libraries to be loaded within a single application when using `@/webrtc` in concert with other native add-ons, we have opted to use the system's `libstdc++` instead. This does mean that you will need a compatible version of `libstdc++` installed when you use the prebuilt versions of the library. If the prebuilt versions give you runtime link errors related to missing versions of `libstdc++`, either install the correct version or use `SKIP_DOWNLOAD=true` when running `npm install` to build from source instead.
+Compiling this addon requires Clang 23+. Ubuntu is often behind on the Clang version it ships. You can install the 
+newest Clang directly from the LLVM Project by following the instructions at https://apt.llvm.org/.
+
+At the time of writing, Clang 22 is installed when using LLVM's automatic apt installation script. To ensure you get 
+Clang 23, use:
+
+```bash
+wget https://apt.llvm.org/llvm.sh
+chmod +x llvm.sh
+sudo ./llvm.sh 23
+```
 
 # Examples
 

@@ -36,7 +36,7 @@ class RTCDtlsTransport
 
   static ::node_webrtc::Wrap <
   RTCDtlsTransport*,
-  rtc::scoped_refptr<webrtc::DtlsTransportInterface>,
+  webrtc::scoped_refptr<webrtc::DtlsTransportInterface>,
   PeerConnectionFactory*
   > * wrap();
 
@@ -56,14 +56,14 @@ class RTCDtlsTransport
 
   static RTCDtlsTransport* Create(
       PeerConnectionFactory*,
-      rtc::scoped_refptr<webrtc::DtlsTransportInterface>);
+      webrtc::scoped_refptr<webrtc::DtlsTransportInterface>);
 
   std::mutex _mutex;
   webrtc::DtlsTransportState _state;
-  std::vector<rtc::Buffer> _certs;
+  std::vector<webrtc::Buffer> _certs;
 
   PeerConnectionFactory* _factory;
-  rtc::scoped_refptr<webrtc::DtlsTransportInterface> _transport;
+  webrtc::scoped_refptr<webrtc::DtlsTransportInterface> _transport;
 };
 
 }  // namespace node_webrtc

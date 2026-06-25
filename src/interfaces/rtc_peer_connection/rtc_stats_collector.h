@@ -29,7 +29,7 @@ class RTCStatsCollector
       Napi::Promise::Deferred deferred)
     : PromiseCreator<RTCPeerConnection>(peer_connection, deferred) {}
 
-  void OnStatsDelivered(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&) override;
+  void OnStatsDelivered(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&) override;
 };
 
 }  // namespace node_webrtc;

@@ -7,7 +7,7 @@
 
 namespace node_webrtc {
 
-static rtc::scoped_refptr<webrtc::I420Buffer> CreateI420Buffer(
+static webrtc::scoped_refptr<webrtc::I420Buffer> CreateI420Buffer(
     I420ImageData i420Frame) {
   auto buffer = webrtc::I420Buffer::Create(i420Frame.width(), i420Frame.height());
   memcpy(buffer->MutableDataY(), i420Frame.dataY(), i420Frame.sizeOfLuminancePlane());
@@ -16,18 +16,18 @@ static rtc::scoped_refptr<webrtc::I420Buffer> CreateI420Buffer(
   return buffer;
 }
 
-CONVERTER_IMPL(I420ImageData, rtc::scoped_refptr<webrtc::I420Buffer>, value) {
+CONVERTER_IMPL(I420ImageData, webrtc::scoped_refptr<webrtc::I420Buffer>, value) {
   return Pure(CreateI420Buffer(value));
 }
 
-TO_NAPI_IMPL(rtc::scoped_refptr<webrtc::VideoFrameBuffer>, pair) {
+TO_NAPI_IMPL(webrtc::scoped_refptr<webrtc::VideoFrameBuffer>, pair) {
   auto value = pair.second;
   return value->type() == webrtc::VideoFrameBuffer::Type::kI420
       ? From<Napi::Value>(std::make_pair(pair.first, value->GetI420()))
       : Validation<Napi::Value>::Invalid("Unsupported RTCVideoFrame type (file a bug in @/webrtc, please!)");
 }
 
-CONVERT_VIA(Napi::Value, I420ImageData, rtc::scoped_refptr<webrtc::I420Buffer>)
+CONVERT_VIA(Napi::Value, I420ImageData, webrtc::scoped_refptr<webrtc::I420Buffer>)
 
 TO_NAPI_IMPL(const webrtc::I420BufferInterface*, pair) {
   auto env = pair.first;

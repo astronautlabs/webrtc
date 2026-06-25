@@ -19,7 +19,7 @@ TO_NAPI_IMPL(webrtc::RtpHeaderExtensionParameters, pair) {
   auto params = pair.second;
   NODE_WEBRTC_CREATE_OBJECT_OR_RETURN(env, object)
   NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "uri", params.uri)
-  NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "id", params.id)
+  NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "id", params.id.value())
   NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "encrypted", params.encrypt)
   return Pure(scope.Escape(object));
 }

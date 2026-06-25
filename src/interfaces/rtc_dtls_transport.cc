@@ -16,7 +16,6 @@
 #include <node-addon-api/napi.h>
 #include <webrtc/api/peer_connection_interface.h>  // IWYU pragma: keep
 #include <webrtc/api/rtc_error.h>
-#include <webrtc/rtc_base/location.h>
 #include <webrtc/rtc_base/thread.h>
 
 #include "src/converters.h"
@@ -36,21 +35,21 @@ Napi::FunctionReference& RTCDtlsTransport::constructor() {
   return constructor;
 }
 
-static std::vector<rtc::Buffer> copy_certs(webrtc::DtlsTransportInformation information) {
+static std::vector<webrtc::Buffer> copy_certs(webrtc::DtlsTransportInformation information) {
   auto certs = information.remote_ssl_certificates();
   if (certs) {
     auto size = certs->GetSize();
-    auto ders = std::vector<rtc::Buffer>();
+    auto ders = std::vector<webrtc::Buffer>();
     ders.reserve(size);
     for (unsigned long i = 0; i < size; i++) {
       // TODO(mroberts): I don't know a more approriate value to initialize with.
-      auto buffer = rtc::Buffer(1);
+      auto buffer = webrtc::Buffer::CreateUninitializedWithSize(1);
       certs->Get(i).ToDER(&buffer);
       ders.emplace_back(std::move(buffer));
     }
     return ders;
   }
-  return std::vector<rtc::Buffer>();
+  return std::vector<webrtc::Buffer>();
 }
 
 RTCDtlsTransport::RTCDtlsTransport(const Napi::CallbackInfo& info)
@@ -61,7 +60,7 @@ RTCDtlsTransport::RTCDtlsTransport(const Napi::CallbackInfo& info)
   }
 
   auto factory = PeerConnectionFactory::Unwrap(info[0].ToObject());
-  auto transport = *info[1].As<Napi::External<rtc::scoped_refptr<webrtc::DtlsTransportInterface>>>().Data();
+  auto transport = *info[1].As<Napi::External<webrtc::scoped_refptr<webrtc::DtlsTransportInterface>>>().Data();
 
   _factory = factory;
   _factory->Ref();
@@ -71,7 +70,7 @@ RTCDtlsTransport::RTCDtlsTransport(const Napi::CallbackInfo& info)
   // NOTE(mroberts): Ensure we create this.
   RTCIceTransport::wrap()->GetOrCreate(_factory, _transport->ice_transport());
 
-  _factory->_workerThread->Invoke<void>(RTC_FROM_HERE, [this]() {
+  _factory->_workerThread->BlockingCall([this]() {
     _transport->RegisterObserver(this);
     auto information = _transport->Information();
     _state = information.state();
@@ -149,7 +148,7 @@ Napi::Value RTCDtlsTransport::GetState(const Napi::CallbackInfo& info) {
 
 Napi::Value RTCDtlsTransport::GetRemoteCertificates(const Napi::CallbackInfo& info) {
   std::lock_guard<std::mutex> lock(_mutex);
-  auto certs = std::vector<rtc::Buffer*>();
+  auto certs = std::vector<webrtc::Buffer*>();
   certs.reserve(_certs.size());
   for (unsigned long i = 0; i < _certs.size(); i++) {
     auto cert = &_certs[i];
@@ -161,12 +160,12 @@ Napi::Value RTCDtlsTransport::GetRemoteCertificates(const Napi::CallbackInfo& in
 
 Wrap <
 RTCDtlsTransport*,
-rtc::scoped_refptr<webrtc::DtlsTransportInterface>,
+webrtc::scoped_refptr<webrtc::DtlsTransportInterface>,
 PeerConnectionFactory*
 > * RTCDtlsTransport::wrap() {
   static auto wrap = new node_webrtc::Wrap <
   RTCDtlsTransport*,
-  rtc::scoped_refptr<webrtc::DtlsTransportInterface>,
+  webrtc::scoped_refptr<webrtc::DtlsTransportInterface>,
   PeerConnectionFactory*
   > (RTCDtlsTransport::Create);
   return wrap;
@@ -174,13 +173,13 @@ PeerConnectionFactory*
 
 RTCDtlsTransport* RTCDtlsTransport::Create(
     PeerConnectionFactory* factory,
-    rtc::scoped_refptr<webrtc::DtlsTransportInterface> transport) {
+    webrtc::scoped_refptr<webrtc::DtlsTransportInterface> transport) {
   auto env = constructor().Env();
   Napi::HandleScope scope(env);
 
   auto object = constructor().New({
     factory->Value(),
-    Napi::External<rtc::scoped_refptr<webrtc::DtlsTransportInterface>>::New(env, &transport)
+    Napi::External<webrtc::scoped_refptr<webrtc::DtlsTransportInterface>>::New(env, &transport)
   });
 
   auto unwrapped = Unwrap(object);

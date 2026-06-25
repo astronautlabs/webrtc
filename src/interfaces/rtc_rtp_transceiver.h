@@ -34,7 +34,7 @@ namespace node_webrtc {
 		static Napi::FunctionReference& constructor();
 		void Finalize(Napi::Env env) override;
 		static RTCRtpTransceiver* Create(RTCPeerConnection* pc, RTCRtpSender* sender, RTCRtpReceiver* receiver);
-		void updateMembers(rtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtcTransceiver);
+		void updateMembers(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtcTransceiver);
 
 		inline RTCRtpReceiver* getReceiver() { return this->receiver;  }
 		inline uintptr_t getId() { return id;  }

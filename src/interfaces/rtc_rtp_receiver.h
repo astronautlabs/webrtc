@@ -81,7 +81,7 @@ namespace node_webrtc {
 		Napi::Value GetSynchronizationSources(const Napi::CallbackInfo&);
 		Napi::Value GetStats(const Napi::CallbackInfo&);
 
-		rtc::scoped_refptr<webrtc::RtpReceiverInterface> _receiver;
+		webrtc::scoped_refptr<webrtc::RtpReceiverInterface> _receiver;
 
 		std::string id;
 		napi_ref_ptr<RTCRtpTransceiver> transceiver;

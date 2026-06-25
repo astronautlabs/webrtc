@@ -92,7 +92,7 @@ namespace node_webrtc {
 		Napi::Value ReplaceTrack(const Napi::CallbackInfo&);
 		Napi::Value SetStreams(const Napi::CallbackInfo&);
 
-		//rtc::scoped_refptr<webrtc::RtpSenderInterface> _sender;
+		//webrtc::scoped_refptr<webrtc::RtpSenderInterface> _sender;
 
 		std::string id;
 		napi_ref_ptr<RTCRtpTransceiver> transceiver;

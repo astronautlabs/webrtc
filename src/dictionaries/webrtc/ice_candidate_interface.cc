@@ -24,7 +24,7 @@ namespace node_webrtc {
   DICT_DEFAULT(int, sdpMLineIndex, "sdpMLineIndex", 0) \
   DICT_OPTIONAL(std::string, usernameFragment, "usernameFragment")
 
-static Validation<webrtc::IceCandidateInterface*> ICE_CANDIDATE_INTERFACE_FN(
+static Validation<webrtc::IceCandidate*> ICE_CANDIDATE_INTERFACE_FN(
     const std::string& candidate,
     const std::string& sdpMid,
     const int sdpMLineIndex,
@@ -43,7 +43,7 @@ FROM_NAPI_IMPL(std::shared_ptr<webrtc::IceCandidateInterface>, napi_value) {
   });
 }
 
-TO_NAPI_IMPL(webrtc::IceCandidateInterface*, pair) {
+TO_NAPI_IMPL(webrtc::IceCandidate*, pair) {
   auto env = pair.first;
   Napi::EscapableHandleScope scope(env);
 
@@ -63,18 +63,7 @@ TO_NAPI_IMPL(webrtc::IceCandidateInterface*, pair) {
   auto candidate = value->candidate();
   auto component = candidate.component() == 1 ? RTCIceComponent::kRtp : RTCIceComponent::kRtcp;
 
-  const auto& candidate_type = candidate.type();
-  auto type = RTCIceCandidateType::kHost;
-  if (candidate_type == cricket::LOCAL_PORT_TYPE) {
-    type = RTCIceCandidateType::kHost;
-  } else if (candidate_type == cricket::STUN_PORT_TYPE) {
-    type = RTCIceCandidateType::kSrflx;
-  } else if (candidate_type == cricket::RELAY_PORT_TYPE) {
-    type = RTCIceCandidateType::kRelay;
-  } else if (candidate_type == cricket::PRFLX_PORT_TYPE) {
-    type = RTCIceCandidateType::kPrflx;
-  }
-
+  const auto type = candidate.type();
   NODE_WEBRTC_CREATE_OBJECT_OR_RETURN(env, object)
   NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "candidate", candidate_string)
 
@@ -107,7 +96,7 @@ TO_NAPI_IMPL(webrtc::IceCandidateInterface*, pair) {
     NODE_WEBRTC_CONVERT_AND_SET_OR_RETURN(env, object, "tcpType", candidate.tcptype())
   }
 
-  if (type == RTCIceCandidateType::kHost) {
+  if (type == webrtc::IceCandidateType::kHost) {
     object.Set("relatedAddress", env.Null());
     object.Set("relatedPort", env.Null());
   } else {

@@ -58,7 +58,7 @@ static webrtc::RtpCodecParameters NapiToRtpCodecParameters(
   auto indexOfSlash = mimeType.find("/");
   auto kindString = mimeType.substr(0, indexOfSlash);
   auto nameString = mimeType.substr(indexOfSlash + 1);
-  result.kind = kindString == "audio" ? cricket::MEDIA_TYPE_AUDIO : cricket::MEDIA_TYPE_VIDEO;
+  result.kind = kindString == "audio" ? webrtc::MediaType::AUDIO : webrtc::MediaType::VIDEO;
   result.name = nameString;
   result.payload_type = payloadType;
   result.clock_rate = clockRate;

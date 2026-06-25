@@ -13,6 +13,7 @@
 #include <mutex>
 
 #include <node-addon-api/napi.h>
+#include <src/rtc_base/physical_socket_server.h>
 #include <webrtc/api/peer_connection_interface.h>
 #include <webrtc/api/scoped_refptr.h>
 #include <webrtc/modules/audio_device/include/audio_device.h>
@@ -56,11 +57,11 @@ class PeerConnectionFactory
   /**
    * Get the underlying webrtc::PeerConnectionFactoryInterface.
    */
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory() { return _factory; }
+  webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory() { return _factory; }
 
-  rtc::NetworkManager* getNetworkManager() { return _networkManager.get(); }
+  webrtc::NetworkManager* getNetworkManager() { return _networkManager.get(); }
 
-  rtc::PacketSocketFactory* getSocketFactory() { return _socketFactory.get(); }
+  webrtc::PacketSocketFactory* getSocketFactory() { return _socketFactory.get(); }
 
   static void Init(Napi::Env, Napi::Object);
 
@@ -68,19 +69,20 @@ class PeerConnectionFactory
 
   static void Dispose();
 
-  std::unique_ptr<rtc::Thread> _signalingThread;
-  std::unique_ptr<rtc::Thread> _workerThread;
+  std::unique_ptr<webrtc::Thread> _signalingThread;
+  std::unique_ptr<webrtc::Thread> _workerThread;
 
  private:
   static PeerConnectionFactory* _default;
   static std::mutex _mutex;
   static int _references;
 
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
-  rtc::scoped_refptr<webrtc::AudioDeviceModule> _audioDeviceModule;
+  webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
+  webrtc::scoped_refptr<webrtc::AudioDeviceModule> _audioDeviceModule;
 
-  std::unique_ptr<rtc::NetworkManager> _networkManager;
-  std::unique_ptr<rtc::PacketSocketFactory> _socketFactory;
+  std::unique_ptr<webrtc::PhysicalSocketServer> _socketServer;
+  std::unique_ptr<webrtc::NetworkManager> _networkManager;
+  std::unique_ptr<webrtc::PacketSocketFactory> _socketFactory;
 };
 
 }  // namespace node_webrtc

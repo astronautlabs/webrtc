@@ -12,6 +12,7 @@
 #include "src/converters/arguments.h"
 #include "src/enums/webrtc/ice_connection_state.h"
 #include "src/enums/webrtc/ice_gathering_state.h"
+#include "absl/functional/bind_front.h"
 #include "src/enums/webrtc/ice_role.h"
 #include "src/enums/webrtc/ice_transport_state.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
@@ -31,18 +32,18 @@ RTCIceTransport::RTCIceTransport(const Napi::CallbackInfo& info)
   }
 
   auto factory = PeerConnectionFactory::Unwrap(info[0].ToObject());
-  auto transport = *info[1].As<Napi::External<rtc::scoped_refptr<webrtc::IceTransportInterface>>>().Data();
+  auto transport = *info[1].As<Napi::External<webrtc::scoped_refptr<webrtc::IceTransportInterface>>>().Data();
 
   _factory = factory;
-  _factory->Ref();
+  (void)_factory->Ref();
 
   _transport = std::move(transport);
 
-  _factory->_workerThread->Invoke<void>(RTC_FROM_HERE, [this]() {
-    auto internal = _transport->internal();
+  _factory->_workerThread->BlockingCall([this]() {
+    auto* internal = _transport->internal();
     if (internal) {
-      internal->SignalIceTransportStateChanged.connect(this, &RTCIceTransport::OnStateChanged);
-      internal->SignalGatheringState.connect(this, &RTCIceTransport::OnGatheringStateChanged);
+      internal->SubscribeIceTransportStateChanged(this, absl::bind_front(&RTCIceTransport::OnStateChanged, this));
+      internal->AddGatheringStateCallback(this, absl::bind_front(&RTCIceTransport::OnGatheringStateChanged, this));
     }
     TakeSnapshot();
     if (_state == webrtc::IceTransportState::kClosed) {
@@ -52,30 +53,29 @@ RTCIceTransport::RTCIceTransport(const Napi::CallbackInfo& info)
 }
 
 void RTCIceTransport::TakeSnapshot() {
-  std::lock_guard<std::mutex> lock(_mutex);
-  auto internal = _transport->internal();
-  if (internal) {
+  const std::scoped_lock<std::mutex> lock(_mutex);
+  if (auto* internal = _transport->internal()) {
     _role = internal->GetIceRole();
     _component = internal->component() == 1 ? RTCIceComponent::kRtp : RTCIceComponent::kRtcp;
     _state = internal->GetIceTransportState();
     _gathering_state = internal->gathering_state();
   } else {
     _state = webrtc::IceTransportState::kClosed;
-    _gathering_state = cricket::IceGatheringState::kIceGatheringComplete;
+    _gathering_state = webrtc::IceGatheringState::kIceGatheringComplete;
   }
 }
 
 void RTCIceTransport::Finalize(Napi::Env env) {
   Napi::HandleScope scope(PeerConnectionFactory::constructor().Env());
-  _factory->Unref();
+  (void)_factory->Unref();
   _factory = nullptr;
   wrap()->Release(this);
 }
 
 void RTCIceTransport::OnRTCDtlsTransportStopped() {
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   _state = webrtc::IceTransportState::kClosed;
-  _gathering_state = cricket::IceGatheringState::kIceGatheringComplete;
+  _gathering_state = webrtc::IceGatheringState::kIceGatheringComplete;
   Stop();
 }
 
@@ -89,12 +89,12 @@ void RTCIceTransport::Stop() {
 
 Wrap <
 RTCIceTransport*,
-rtc::scoped_refptr<webrtc::IceTransportInterface>,
+webrtc::scoped_refptr<webrtc::IceTransportInterface>,
 PeerConnectionFactory*
 > * RTCIceTransport::wrap() {
   static auto wrap = new node_webrtc::Wrap <
   RTCIceTransport*,
-  rtc::scoped_refptr<webrtc::IceTransportInterface>,
+  webrtc::scoped_refptr<webrtc::IceTransportInterface>,
   PeerConnectionFactory*
   > (RTCIceTransport::Create);
   return wrap;
@@ -102,21 +102,21 @@ PeerConnectionFactory*
 
 RTCIceTransport* RTCIceTransport::Create(
     PeerConnectionFactory* factory,
-    rtc::scoped_refptr<webrtc::IceTransportInterface> transport) {
+    webrtc::scoped_refptr<webrtc::IceTransportInterface> transport) {
   auto env = constructor().Env();
   Napi::HandleScope scope(env);
 
   auto object = constructor().New({
     factory->Value(),
-    Napi::External<rtc::scoped_refptr<webrtc::IceTransportInterface>>::New(env, &transport)
+    Napi::External<webrtc::scoped_refptr<webrtc::IceTransportInterface>>::New(env, &transport)
   });
 
   auto unwrapped = Unwrap(object);
-  unwrapped->Ref();
+  (void)unwrapped->Ref();
   return unwrapped;
 }
 
-void RTCIceTransport::OnStateChanged(cricket::IceTransportInternal*) {
+void RTCIceTransport::OnStateChanged(webrtc::IceTransportInternal*) {
   TakeSnapshot();
 
   Dispatch(CreateCallback<RTCIceTransport>([this]() {
@@ -132,7 +132,7 @@ void RTCIceTransport::OnStateChanged(cricket::IceTransportInternal*) {
   }
 }
 
-void RTCIceTransport::OnGatheringStateChanged(cricket::IceTransportInternal*) {
+void RTCIceTransport::OnGatheringStateChanged(webrtc::IceTransportInternal*) {
   TakeSnapshot();
 
   Dispatch(CreateCallback<RTCIceTransport>([this]() {
@@ -145,34 +145,34 @@ void RTCIceTransport::OnGatheringStateChanged(cricket::IceTransportInternal*) {
 }
 
 Napi::Value RTCIceTransport::GetRole(const Napi::CallbackInfo& info) {
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _role, result, Napi::Value)
   return result;
 }
 
 Napi::Value RTCIceTransport::GetComponent(const Napi::CallbackInfo& info) {
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _component, result, Napi::Value)
   return result;
 }
 
 Napi::Value RTCIceTransport::GetState(const Napi::CallbackInfo& info) {
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _state, result, Napi::Value)
   return result;
 }
 
 Napi::Value RTCIceTransport::GetGatheringState(const Napi::CallbackInfo& info) {
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   webrtc::PeerConnectionInterface::IceGatheringState state;
   switch (_gathering_state) {
-    case cricket::IceGatheringState::kIceGatheringNew:
+    case webrtc::IceGatheringState::kIceGatheringNew:
       state = webrtc::PeerConnectionInterface::IceGatheringState::kIceGatheringComplete;
       break;
-    case cricket::IceGatheringState::kIceGatheringGathering:
+    case webrtc::IceGatheringState::kIceGatheringGathering:
       state = webrtc::PeerConnectionInterface::IceGatheringState::kIceGatheringComplete;
       break;
-    case cricket::IceGatheringState::kIceGatheringComplete:
+    case webrtc::IceGatheringState::kIceGatheringComplete:
       state = webrtc::PeerConnectionInterface::IceGatheringState::kIceGatheringComplete;
       break;
   }
@@ -221,7 +221,7 @@ void RTCIceTransport::Init(Napi::Env env, Napi::Object exports) {
   constructor() = Napi::Persistent(func);
   constructor().SuppressDestruct();
 
-  exports.Set("RTCIceTransport", func);
+  (void)exports.Set("RTCIceTransport", func);
 }
 
 }  // namespace node_webrtc

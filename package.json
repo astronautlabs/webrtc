@@ -37,7 +37,7 @@
     "cmake-js": "^8.0.0",
     "libyuv": "^0.1.8",
     "nan": "^2.26.2",
-    "node-addon-api": "^5.0.0",
+    "node-addon-api": "^5.1.0",
     "node-cmake": "2.5.1"
   },
   "optionalDependencies": {
@@ -94,8 +94,9 @@
     "zone.js": "^0.11.8"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build:tsc": "tsc -b",
     "install": "twine install",
+    "build:dev": "node scripts/build-from-source.js workspace",
     "build:native": "node scripts/build-from-source.js",
     "build:native:release": "npm run configure && ncmake build -j 12",
     "build:native:debug": "npm run configure:debug && ncmake build --debug -j 12",

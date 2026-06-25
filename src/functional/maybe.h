@@ -46,10 +46,10 @@ class Maybe {
    * @return the result of applying the Maybe
    */
   template <typename F>
-  Maybe<typename std::result_of<F(T)>::type> Apply(const Maybe<F> f) const {
+  Maybe<std::invoke_result_t<F, T>> Apply(const Maybe<F> f) const {
     return f.IsJust() && _is_just
-        ? Maybe<typename std::result_of<F(T)>::type>::Just(f.UnsafeFromJust()(_value))
-        : Maybe<typename std::result_of<F(T)>::type>::Nothing();
+        ? Maybe<std::invoke_result_t<F, T>>::Just(f.UnsafeFromJust()(_value))
+        : Maybe<std::invoke_result_t<F, T>>::Nothing();
   }
 
   /**
@@ -96,10 +96,10 @@ class Maybe {
    * @return the mapped Maybe
    */
   template <typename F>
-  Maybe<typename std::result_of<F(T)>::type> Map(F f) const {
+  Maybe<std::invoke_result_t<F, T>> Map(F f) const {
     return _is_just
-        ? Maybe<typename std::result_of<F(T)>::type>::Just(f(_value))
-        : Maybe<typename std::result_of<F(T)>::type>::Nothing();
+        ? Maybe<std::invoke_result_t<F, T>>::Just(f(_value))
+        : Maybe<std::invoke_result_t<F, T>>::Nothing();
   }
 
   /**

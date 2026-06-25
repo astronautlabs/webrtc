@@ -16,6 +16,7 @@
 
 #include <webrtc/api/array_view.h>
 #include <webrtc/api/scoped_refptr.h>
+#include <webrtc/api/units/time_delta.h>
 #include <webrtc/modules/audio_device/include/audio_device.h>
 #include <webrtc/rtc_base/buffer.h>
 #include <webrtc/rtc_base/event.h>
@@ -44,7 +45,7 @@ class TestAudioDeviceModule : public webrtc::AudioDeviceModule {
     // Replaces the contents of |buffer| with 10ms of captured audio data
     // (see TestAudioDeviceModule::SamplesPerFrame). Returns true if the
     // capturer can keep producing data, or false when the capture finishes.
-    virtual bool Capture(rtc::BufferT<int16_t>* buffer) = 0;
+    virtual bool Capture(webrtc::BufferT<int16_t>* buffer) = 0;
   };
 
   class Renderer {
@@ -58,7 +59,7 @@ class TestAudioDeviceModule : public webrtc::AudioDeviceModule {
     virtual int NumChannels() const = 0;
     // Renders the passed audio data and returns true if the renderer wants
     // to keep receiving data, or false otherwise.
-    virtual bool Render(rtc::ArrayView<const int16_t> data) = 0;
+    virtual bool Render(webrtc::ArrayView<const int16_t> data) = 0;
   };
 
   // A fake capturer that generates pulses with random samples between
@@ -79,7 +80,7 @@ class TestAudioDeviceModule : public webrtc::AudioDeviceModule {
   // |renderer| is an object that receives audio data that would have been
   // played out. Can be nullptr if this device is never used for playing.
   // Use one of the Create... functions to get these instances.
-  static rtc::scoped_refptr<TestAudioDeviceModule> CreateTestAudioDeviceModule(
+  static webrtc::scoped_refptr<TestAudioDeviceModule> CreateTestAudioDeviceModule(
       std::unique_ptr<Capturer> capturer,
       std::unique_ptr<Renderer> renderer,
       float speed = 1);
@@ -142,10 +143,10 @@ class TestAudioDeviceModule : public webrtc::AudioDeviceModule {
 
   // Blocks until the Renderer refuses to receive data.
   // Returns false if |timeout_ms| passes before that happens.
-  virtual bool WaitForPlayoutEnd(int timeout_ms = rtc::Event::kForever) = 0;
+  virtual bool WaitForPlayoutEnd(webrtc::TimeDelta timeout = webrtc::Event::kForever) = 0;
   // Blocks until the Recorder stops producing data.
   // Returns false if |timeout_ms| passes before that happens.
-  virtual bool WaitForRecordingEnd(int timeout_ms = rtc::Event::kForever) = 0;
+  virtual bool WaitForRecordingEnd(webrtc::TimeDelta timeout_ms = webrtc::Event::kForever) = 0;
 };
 
 }  // namespace node_webrtc

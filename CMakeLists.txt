@@ -2,6 +2,56 @@ cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0091 NEW)
 cmake_policy(SET CMP0042 NEW)
 
+# Requirement: Node.js installed ---------------------------------------------------
+
+find_program(NODE_EXECUTABLE NAMES node)
+if(NOT NODE_EXECUTABLE)
+    message(FATAL_ERROR "Node.js must be installed.")
+endif()
+
+# cmake-js ------------------------------------------------------------------------------------
+# https://github.com/cmake-js/cmake-js/issues/23#issuecomment-134265017 -----------------------
+
+function(PARSE_CMAKEJS_PROPERTIES)
+  # A much cleaner parser using Regex to target '-DVAR=VALUE'
+  function(GET_VARIABLE INPUT_STRING VARIABLE_TO_SELECT OUTPUT_VARIABLE)
+    # Matches: '-D[VARIABLE_TO_SELECT]=[capture everything up to the next single quote]'
+    string(REGEX MATCH "'-D${VARIABLE_TO_SELECT}=([^']*)'" _discard "${INPUT_STRING}")
+    
+    # CMAKE_MATCH_1 contains the captured group inside the parentheses
+    set("${OUTPUT_VARIABLE}" "${CMAKE_MATCH_1}" PARENT_SCOPE)
+  endfunction(GET_VARIABLE)
+
+  # Setup the command arguments dynamically
+  set(CMAKE_JS_ARGS print-configure -l error)
+  string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER)
+  if (CMAKE_BUILD_TYPE_LOWER STREQUAL "debug")
+    list(APPEND CMAKE_JS_ARGS "--debug")
+  endif()
+
+  # Ensure CMake can find Node
+  find_program(NODE_EXECUTABLE NAMES node)
+  if(NOT NODE_EXECUTABLE)
+      message(FATAL_ERROR "Node.js not found! Please ensure 'node' is in your system PATH.")
+  endif()
+
+  execute_process(
+      COMMAND ${NODE_EXECUTABLE} ./node_modules/.bin/cmake-js ${CMAKE_JS_ARGS}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      OUTPUT_VARIABLE CMAKE_JS_OUTPUT
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
+  # Extract the variables
+  get_variable("${CMAKE_JS_OUTPUT}" "CMAKE_JS_INC" LOCAL_CMAKE_JS_INC)
+  get_variable("${CMAKE_JS_OUTPUT}" "CMAKE_LIBRARY_OUTPUT_DIRECTORY" LOCAL_CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+
+  # Export them to the main CMakeLists scope
+  set(CMAKE_JS_INC "${LOCAL_CMAKE_JS_INC}" PARENT_SCOPE)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LOCAL_CMAKE_LIBRARY_OUTPUT_DIRECTORY}" PARENT_SCOPE)
+
+endfunction(PARSE_CMAKEJS_PROPERTIES)
+
 macro(assign_bool var)
   if (${ARGN})
     set(${var} ON)
@@ -21,10 +71,26 @@ endif()
 if (WIN32 AND ${use_custom_libcxx})
   set(CMAKE_C_COMPILER "clang-cl" CACHE STRING "" FORCE)
   set(CMAKE_CXX_COMPILER "clang-cl" CACHE STRING "" FORCE)
+elseif(NOT WIN32)
+  # Do not override if the user explicitly passed CC/CXX via environment variables
+  if(NOT DEFINED ENV{CC} AND NOT DEFINED ENV{CXX})
+    find_program(SYSTEM_CLANG_C NAMES clang)
+    find_program(SYSTEM_CLANG_CXX NAMES clang++)
+
+    if(SYSTEM_CLANG_C AND SYSTEM_CLANG_CXX)
+      set(CMAKE_C_COMPILER "${SYSTEM_CLANG_C}")
+      set(CMAKE_CXX_COMPILER "${SYSTEM_CLANG_CXX}")
+      message(STATUS "Found system Clang: ${SYSTEM_CLANG_CXX}")
+    else()
+      message(FATAL_ERROR "This project requires Clang. Please install clang and clang++ on your system.")
+    endif()
+  endif()
 endif()
 
 set(MODULE wrtc)
 project(${MODULE})
+
+parse_cmakejs_properties()
 
 include(ExternalProject)
 find_package(Git REQUIRED)
@@ -43,7 +109,7 @@ ExternalProject_Add(
   TMP_DIR           ${CMAKE_BINARY_DIR}/external/depot_tools/tmp
   STAMP_DIR         ${CMAKE_BINARY_DIR}/external/depot_tools/stamp
   DOWNLOAD_DIR      ${CMAKE_BINARY_DIR}/external/depot_tools/download
-  SOURCE_DIR        ${CMAKE_BINARY_DIR}/external/depot_tools/src
+  SOURCE_DIR        ${CMAKE_BINARY_DIR}/external/depot_tools/depot_tools
   BINARY_DIR        ${CMAKE_BINARY_DIR}/external/depot_tools/build
 
   CONFIGURE_COMMAND ""
@@ -69,48 +135,59 @@ else()
   set(obj_ext .o)
 endif()
 
+# To update this set based on the built libc++ when upgrading the project, use the following command to obtain a new 
+# list:
+# ls build/external/libwebrtc/build/Debug/obj/buildtools/third_party/libc++/libc++/*.o | xargs -n 1 basename | sed 's/\.o/${obj_ext}/'
 set(libc++_objects
-  algorithm${obj_ext}
-  any${obj_ext}
-  atomic${obj_ext}
-  barrier${obj_ext}
-  bind${obj_ext}
-  charconv${obj_ext}
-  chrono${obj_ext}
-  condition_variable${obj_ext}
-  condition_variable_destructor${obj_ext}
-  d2fixed${obj_ext}
-  d2s${obj_ext}
-  exception${obj_ext}
-  f2s${obj_ext}
-  format${obj_ext}
-  functional${obj_ext}
-  future${obj_ext}
-  hash${obj_ext}
-  ios.instantiations${obj_ext}
-  ios${obj_ext}
-  iostream${obj_ext}
-  locale${obj_ext}
-  memory${obj_ext}
-  mutex${obj_ext}
-  mutex_destructor${obj_ext}
-  new${obj_ext}
-  optional${obj_ext}
-  random${obj_ext}
-  random_shuffle${obj_ext}
-  regex${obj_ext}
-  shared_mutex${obj_ext}
-  stdexcept${obj_ext}
-  string${obj_ext}
-  strstream${obj_ext}
-  system_error${obj_ext}
-  thread${obj_ext}
-  typeinfo${obj_ext}
-  utility${obj_ext}
-  valarray${obj_ext}
-  variant${obj_ext}
-  vector${obj_ext}
-  verbose_abort${obj_ext}
+    algorithm${obj_ext}
+    any${obj_ext}
+    atomic${obj_ext}
+    barrier${obj_ext}
+    bind${obj_ext}
+    call_once${obj_ext}
+    charconv${obj_ext}
+    chrono${obj_ext}
+    condition_variable${obj_ext}
+    condition_variable_destructor${obj_ext}
+    d2fixed${obj_ext}
+    d2s${obj_ext}
+    directory_entry${obj_ext}
+    directory_iterator${obj_ext}
+    error_category${obj_ext}
+    exception${obj_ext}
+    f2s${obj_ext}
+    filesystem_clock${obj_ext}
+    filesystem_error${obj_ext}
+    functional${obj_ext}
+    future${obj_ext}
+    hash${obj_ext}
+    ios.instantiations${obj_ext}
+    ios${obj_ext}
+    iostream${obj_ext}
+    locale${obj_ext}
+    memory${obj_ext}
+    mutex${obj_ext}
+    mutex_destructor${obj_ext}
+    new${obj_ext}
+    new_handler${obj_ext}
+    new_helpers${obj_ext}
+    operations${obj_ext}
+    optional${obj_ext}
+    path${obj_ext}
+    random${obj_ext}
+    random_shuffle${obj_ext}
+    regex${obj_ext}
+    shared_mutex${obj_ext}
+    stdexcept${obj_ext}
+    string${obj_ext}
+    strstream${obj_ext}
+    system_error${obj_ext}
+    thread${obj_ext}
+    typeinfo${obj_ext}
+    valarray${obj_ext}
+    variant${obj_ext}
+    vector${obj_ext}
+    verbose_abort${obj_ext}
 )
 
 if(WIN32)
@@ -183,7 +260,8 @@ set_target_properties(libc++abi PROPERTIES IMPORTED_OBJECTS_DEBUG "${libc++abi_o
 # M106: branch-heads/5249
 # M110: branch-heads/5481
 # M114: branch-heads/5735
-set(WEBRTC_REVISION branch-heads/5735)
+# M150: branch-heads/7871
+set(WEBRTC_REVISION branch-heads/7871)
 
 # file(STRINGS nix.gni NIX_GN_GEN_ARGS)
 list(APPEND GN_GEN_ARGS
@@ -192,7 +270,7 @@ list(APPEND GN_GEN_ARGS
   rtc_enable_protobuf=false
   rtc_include_pulse_audio=false
   rtc_include_tests=false
-  use_lld=false
+  use_lld=true
   "${NIX_GN_GEN_ARGS}"
 )
 
@@ -250,17 +328,12 @@ if (WIN32)
   set(byproducts
     ${libc++_objects}
     ${libwebrtc_binary_dir}/obj/webrtc.lib
-    ${libwebrtc_binary_dir}/obj/api/libjingle_peerconnection_api.lib
   )
 else()
   set(byproducts
     ${libc++_objects}
     ${libc++abi_objects}
     ${libwebrtc_binary_dir}/obj/libwebrtc.a
-    ${libwebrtc_binary_dir}/obj/api/libjingle_peerconnection_api.a
-    ${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_encoder_factory.a
-    ${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_decoder_factory.a
-    ${libwebrtc_binary_dir}/obj/media/librtc_internal_video_codecs.a
   )
 endif()
 
@@ -299,33 +372,11 @@ else()
   set_property(TARGET libwebrtc PROPERTY IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/libwebrtc.a")
 endif()
 
-add_library(libpeerconnection STATIC IMPORTED)
-add_dependencies(libpeerconnection project_libwebrtc)
-
-if(WIN32)
-  set_property(TARGET libpeerconnection PROPERTY IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/api/libjingle_peerconnection_api.lib")
-else()
-  set_property(TARGET libpeerconnection PROPERTY IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/api/libjingle_peerconnection_api.a")
-endif()
-
-# Video codec factories (audio factories are already in libwebrtc.a)
-add_library(libbuiltin_video_encoder_factory STATIC IMPORTED)
-add_dependencies(libbuiltin_video_encoder_factory project_libwebrtc)
-set_property(TARGET libbuiltin_video_encoder_factory PROPERTY IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_encoder_factory.a")
-
-add_library(libbuiltin_video_decoder_factory STATIC IMPORTED)
-add_dependencies(libbuiltin_video_decoder_factory project_libwebrtc)
-set_property(TARGET libbuiltin_video_decoder_factory PROPERTY IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_decoder_factory.a")
-
-add_library(librtc_internal_video_codecs STATIC IMPORTED)
-add_dependencies(librtc_internal_video_codecs project_libwebrtc)
-set_property(TARGET librtc_internal_video_codecs PROPERTY IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/media/librtc_internal_video_codecs.a")
-
 set(libc++_include_dir
-  "${libwebrtc_source_dir}/src/buildtools/third_party/libc++/trunk/include"
+  "${libwebrtc_source_dir}/src/third_party/libc++/src/include"
   "${libwebrtc_source_dir}/src/buildtools/third_party/libc++"
 )
-set(libc++abi_include_dir "${libwebrtc_source_dir}/src/buildtools/third_party/libc++abi/trunk/include")
+set(libc++abi_include_dir "${libwebrtc_source_dir}/src/third_party/libc++abi/src/include")
 
 # NOTE(mroberts): I would like this to be INTERFACE.
 #
@@ -365,6 +416,10 @@ set(catch2_install_dir ${SOURCE_DIR})
 # node-webrtc
 # -----------------------------------------------------------------------------
 
+# Use the Clang that libwebrtc just built (not the system clang or gcc)
+# set(CMAKE_CXX_COMPILER ${libwebrtc_source_dir}/webrtc/third_party/llvm-build/Release+Asserts/bin/clang++)
+# set(CMAKE_C_COMPILER ${libwebrtc_source_dir}/webrtc/third_party/llvm-build/Release+Asserts/bin/clang)
+
 file(GLOB_RECURSE MODULE_SRC src/*.cc src/*.hh)
 add_library(${MODULE} SHARED ${MODULE_SRC} ${CMAKE_JS_SRC})
 set_target_properties(${MODULE} PROPERTIES PREFIX "" SUFFIX ".node")
@@ -398,17 +453,17 @@ target_include_directories(${MODULE} PRIVATE
 
 target_link_libraries(${MODULE} PRIVATE
   ${CMAKE_THREAD_LIBS_INIT}
-  libpeerconnection
   libwebrtc
-  libbuiltin_video_encoder_factory
-  libbuiltin_video_decoder_factory
-  librtc_internal_video_codecs
+  "${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_encoder_factory.a"
+  "${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_decoder_factory.a"
+  "${libwebrtc_binary_dir}/obj/media/librtc_internal_video_codecs.a"
   ${CMAKE_JS_LIB}
 )
 
 target_compile_definitions(${MODULE} PRIVATE
   -DNAPI_VERSION=3
   -DUSE_BUILTIN_SW_CODECS
+  -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE
 )
 
 if(WIN32)
@@ -464,7 +519,10 @@ else()
     -lc
     -lm
   )
-
+  target_link_options(${MODULE} PRIVATE 
+    "-B${libwebrtc_source_dir}/webrtc/third_party/llvm-build/Release+Asserts/bin" # prefer the lld built by webrtc 
+    "-fuse-ld=lld" # force LLVM linker, required because libwebrtc is using Compact Relocation and GNU LD does not support it
+  )
   target_compile_options(${MODULE} PRIVATE
     -fno-rtti
     -fvisibility=hidden
@@ -481,7 +539,7 @@ else()
 
   target_compile_definitions(${MODULE} PRIVATE
     -DWEBRTC_POSIX=1
-    "$<$<CONFIG:Debug>:-DDEBUG>"
+    "$<$<CONFIG:Debug>:DEBUG>"
   )
 
   if (${use_custom_libcxx})
@@ -528,6 +586,7 @@ else()
       -Wno-documentation
       -Wno-exit-time-destructors
       -Wno-float-conversion
+      -Wno-unused-parameter
       -Wno-global-constructors
       -Wno-padded
       -Wno-shadow
@@ -553,3 +612,12 @@ else()
     )
   endif()
 endif()
+
+set(INCLUDE_DIRECTORIES
+  ./
+  ${CMAKE_SOURCE_DIR}/node_modules/node-addon-api
+  ${libwebrtc_source_dir}
+  ${libwebrtc_source_dir}/webrtc
+  ${libwebrtc_source_dir}/webrtc/third_party/abseil-cpp
+  ${libwebrtc_source_dir}/webrtc/third_party/libyuv/include
+)

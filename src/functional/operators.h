@@ -43,7 +43,7 @@ static T<A> operator|(const T<A> left, const T<A> right) {
  * @return an applicative of a value of type B
  */
 template <template <typename> class T, typename F, typename A>
-static T<typename std::result_of<F(A)>::type> operator*(const T<F> f, const T<A> a) {
+static T<std::invoke_result_t<F, A>> operator*(const T<F> f, const T<A> a) {
   return a.Apply(f);
 }
 
@@ -57,7 +57,7 @@ static T<typename std::result_of<F(A)>::type> operator*(const T<F> f, const T<A>
  * @return a functor of a value of type B
  */
 template <template <typename> class T, typename F, typename A>
-static T<typename std::result_of<F(A)>::type> operator%(const F f, const T<A> a) {
+static T<std::invoke_result_t<F,A>> operator%(const F f, const T<A> a) {
   return a.Map(f);
 }
 

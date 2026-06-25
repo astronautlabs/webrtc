@@ -4,7 +4,7 @@
 
 namespace node_webrtc {
 
-TO_NAPI_IMPL(rtc::Buffer*, pair) {
+TO_NAPI_IMPL(webrtc::Buffer*, pair) {
   auto env = pair.first;
   Napi::EscapableHandleScope scope(env);
   auto buffer = pair.second;

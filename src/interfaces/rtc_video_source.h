@@ -25,13 +25,13 @@ namespace webrtc { class VideoFrame; }
 
 namespace node_webrtc {
 
-class RTCVideoTrackSource : public rtc::AdaptedVideoTrackSource {
+class RTCVideoTrackSource : public webrtc::AdaptedVideoTrackSource {
  public:
   RTCVideoTrackSource()
-    : rtc::AdaptedVideoTrackSource(), _is_screencast(false) {}
+    : webrtc::AdaptedVideoTrackSource(), _is_screencast(false) {}
 
   RTCVideoTrackSource(const bool is_screencast, const absl::optional<bool> needs_denoising)
-    : rtc::AdaptedVideoTrackSource(), _is_screencast(is_screencast), _needs_denoising(needs_denoising) {}
+    : webrtc::AdaptedVideoTrackSource(), _is_screencast(is_screencast), _needs_denoising(needs_denoising) {}
 
   ~RTCVideoTrackSource() override {
     PeerConnectionFactory::Release();
@@ -82,7 +82,7 @@ class RTCVideoSource
   Napi::Value CreateTrack(const Napi::CallbackInfo&);
   Napi::Value OnFrame(const Napi::CallbackInfo&);
 
-  rtc::scoped_refptr<RTCVideoTrackSource> _source;
+  webrtc::scoped_refptr<RTCVideoTrackSource> _source;
   std::set<MediaStreamTrack*> _tracks;
 };
 

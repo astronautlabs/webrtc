@@ -1,84 +1,71 @@
 #!/usr/bin/env node
-/* eslint no-console:0, no-process-env:0 */
 "use strict";
 
 const os = require("os");
 const path = require("path");
 const { spawnSync } = require("child_process");
-const { platform, arch, buildFolder } = require("./build-vars.js");
 
-const args = ["-O", buildFolder, "-a", arch];
+const CMAKE_JS = path.resolve(__dirname, "..", "node_modules", ".bin", "cmake-js");
 
-// if (!['win32', 'linux'].includes(os.platform())) {
-//     console.error(`Currently only Win32 and Linux are supported. If you need other platforms, you must provide a ninja executable`);
-//     console.error(`under scripts/ninja/${os.platform()}`);
-//     process.exit(1);
-// }
+function main(args) {
+    const isDevWorkspace = args[0] === 'workspace';
+    const platform = os.platform();
+    const arch = process.env.TARGET_ARCH ?? os.arch();
+    const buildFolder = isDevWorkspace ? `build` : `build-${platform}-${arch}`;
+    const cmakeJsArgs = ["-O", buildFolder, "-a", arch];
 
-process.env.PATH = [
-    ...(process.env.PATH ? process.env.PATH.split(path.delimiter) : []),
-    path.resolve(__dirname, 'ninja', os.platform())
-].join(path.delimiter)
+    if (isDevWorkspace)
+        cmakeJsArgs.push("--debug", "--CDCMAKE_EXPORT_COMPILE_COMMANDS=1");
 
-//process.env.RC = "C:/Program Files/LLVM/bin/llvm-rc.exe";
+    prependToPath(path.resolve(__dirname, 'ninja', os.platform()));
 
-if (process.env.DEBUG) {
-  args.push(...["--debug", "--CDCMAKE_EXPORT_COMPILE_COMMANDS=1"]);
-}
+    if (platform === "win32") {
+        cmakeJsArgs.push(...['--toolset=ClangCL']);
 
-if (platform === "win32") {
-  //args.push(...["-G", "Ninja"]);
-  args.push(...['--toolset=ClangCL']);
-}
-
-if (arch !== os.arch()) {
-  args.push(
-    `--CDCMAKE_TOOLCHAIN_FILE=toolchains/${platform}-${arch}.toolchain`,
-  );
-}
-
-function main() {
-  // Resolve cmake-js path before modifying PATH, since it lives in node_modules/.bin
-  const cmakeJs = path.resolve(
-    __dirname,
-    "..",
-    "node_modules",
-    ".bin",
-    "cmake-js",
-  );
-
-  if (platform === "win32") {
-    // Explicitly find the real rc.exe from the Windows SDK and pass it to
-    // CMake, since cmake-js may still find the npm "rc" package otherwise.
-    const { stdout } = spawnSync("where", ["rc.exe"], { encoding: "utf-8" });
-    if (stdout) {
-      args.push(`--CDCMAKE_RC_COMPILER="${stdout.replace(/\\/g, "/")}"`);
+        // Explicitly find the real rc.exe from the Windows SDK and pass it to
+        // CMake, since cmake-js may still find the npm "rc" package otherwise.
+        const { stdout } = spawnSync("where", ["rc.exe"], { encoding: "utf-8" });
+        if (stdout) {
+            cmakeJsArgs.push(`--CDCMAKE_RC_COMPILER="${stdout.replace(/\\/g, "/")}"`);
+        }
+    } else {
+        // currently cannot use ninja for the top level because it tries to resolve the RTC libraries we depend on 
+        // for the main wrtc.node target, but those aren't available until after we've built libwebrtc.
+        cmakeJsArgs.push(...["-G", "'Unix Makefiles'"]);
     }
-  }
 
-  console.log("Running cmake-js " + args.join(" "));
-  let { status } = spawnSync(cmakeJs, ["configure", ...args], {
-    shell: true,
-    stdio: "inherit",
-  });
-  if (status) {
-    throw new Error("cmake-js configure failed for wrtc");
-  }
+    if (arch !== os.arch()) {
+        cmakeJsArgs.push(
+            `--CDCMAKE_TOOLCHAIN_FILE=toolchains/${platform}-${arch}.toolchain`,
+        );
+    }
 
-  console.log("Running cmake-js build");
-  status = spawnSync(cmakeJs, ["build", ...args], {
-    shell: true,
-    stdio: "inherit",
-  }).status;
-  if (status) {
-    throw new Error("cmake-js build failed for wrtc");
-  }
+    console.log();
+    console.log(`------------------------------------------------`);
+    console.log("Running: cmake-js configure " + cmakeJsArgs.join(" "));
+    let { status } = spawnSync(CMAKE_JS, ["configure", ...cmakeJsArgs], {
+        shell: true,
+        stdio: "inherit",
+    });
+    if (status)
+        throw new Error("cmake-js configure failed for wrtc");
 
-  console.log("Built wrtc");
+    console.log();
+    console.log(`------------------------------------------------`);
+    console.log("Running: cmake-js build " + cmakeJsArgs.join(" "));
+    status = spawnSync(CMAKE_JS, ["build", ...cmakeJsArgs], {
+        shell: true,
+        stdio: "inherit",
+    }).status;
+    if (status)
+        throw new Error("cmake-js build failed for wrtc");
 }
 
-module.exports = main;
-
-if (require.main === module) {
-  main();
+function prependToPath(dir) {
+    process.env.PATH = [
+        ...(process.env.PATH ? process.env.PATH.split(path.delimiter) : []),
+        dir
+    ].join(path.delimiter);
 }
+
+main(process.argv.slice(2))

@@ -9,8 +9,10 @@
  */
 #include "src/methods/get_user_media.h"
 
+#include <src/api/scoped_refptr.h>
 #include <webrtc/api/audio_options.h>
 #include <webrtc/api/peer_connection_interface.h>
+#include <webrtc/rtc_base/crypto_random.h>
 
 #include "src/converters.h"
 #include "src/converters/arguments.h"
@@ -109,8 +111,8 @@ Napi::Value node_webrtc::GetUserMedia::GetUserMediaImpl(const Napi::CallbackInfo
 
   CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, constraints, MediaStreamConstraints)
 
-  auto factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault();
-  auto stream = factory->factory()->CreateLocalMediaStream(rtc::CreateRandomUuid());
+  auto* factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault();
+  auto stream = factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid());
 
   auto audio = constraints.audio.Map([](auto constraint) {
     return constraint.FromLeft(true);
@@ -121,15 +123,15 @@ Napi::Value node_webrtc::GetUserMedia::GetUserMediaImpl(const Napi::CallbackInfo
   }).FromMaybe(false);
 
   if (audio) {
-    cricket::AudioOptions options;
+    webrtc::AudioOptions options;
     auto source = factory->factory()->CreateAudioSource(options);
-    auto track = factory->factory()->CreateAudioTrack(rtc::CreateRandomUuid(), source);
+    auto track = factory->factory()->CreateAudioTrack(webrtc::CreateRandomUuid(), source.get());
     stream->AddTrack(track);
   }
 
   if (video) {
-    auto source = new rtc::RefCountedObject<node_webrtc::RTCVideoTrackSource>();
-    auto track = factory->factory()->CreateVideoTrack(rtc::CreateRandomUuid(), source);
+    auto source = webrtc::scoped_refptr { new webrtc::RefCountedObject<node_webrtc::RTCVideoTrackSource>() };
+    auto track = factory->factory()->CreateVideoTrack(source, webrtc::CreateRandomUuid());
     stream->AddTrack(track);
   }
 

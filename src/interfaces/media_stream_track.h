@@ -41,11 +41,11 @@ class MediaStreamTrack
 
   bool active() { return _ended ? false : _track->state() == webrtc::MediaStreamTrackInterface::TrackState::kLive; }
   PeerConnectionFactory* factory() { return _factory; }
-  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track() { return _track; }
+  webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track() { return _track; }
 
   static ::node_webrtc::Wrap <
   MediaStreamTrack*,
-  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface>,
+  webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>,
   PeerConnectionFactory*
   > * wrap();
 
@@ -61,7 +61,7 @@ class MediaStreamTrack
  private:
   static MediaStreamTrack* Create(
       PeerConnectionFactory*,
-      rtc::scoped_refptr<webrtc::MediaStreamTrackInterface>);
+      webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>);
 
   Napi::Value GetEnabled(const Napi::CallbackInfo&);
   void SetEnabled(const Napi::CallbackInfo&, const Napi::Value&);
@@ -76,14 +76,14 @@ class MediaStreamTrack
   bool _ended = false;
   bool _enabled;
   PeerConnectionFactory* _factory;
-  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> _track;
+  webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> _track;
 };
 
-DECLARE_CONVERTER(MediaStreamTrack*, rtc::scoped_refptr<webrtc::AudioTrackInterface>)
-DECLARE_CONVERTER(MediaStreamTrack*, rtc::scoped_refptr<webrtc::VideoTrackInterface>)
+DECLARE_CONVERTER(MediaStreamTrack*, webrtc::scoped_refptr<webrtc::AudioTrackInterface>)
+DECLARE_CONVERTER(MediaStreamTrack*, webrtc::scoped_refptr<webrtc::VideoTrackInterface>)
 
 DECLARE_TO_AND_FROM_NAPI(MediaStreamTrack*)
-DECLARE_FROM_NAPI(rtc::scoped_refptr<webrtc::AudioTrackInterface>)
-DECLARE_FROM_NAPI(rtc::scoped_refptr<webrtc::VideoTrackInterface>)
+DECLARE_FROM_NAPI(webrtc::scoped_refptr<webrtc::AudioTrackInterface>)
+DECLARE_FROM_NAPI(webrtc::scoped_refptr<webrtc::VideoTrackInterface>)
 
 }  // namespace node_webrtc

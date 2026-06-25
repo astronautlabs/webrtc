@@ -30,14 +30,14 @@ RTCSctpTransport::RTCSctpTransport(const Napi::CallbackInfo& info)
   }
 
   auto factory = PeerConnectionFactory::Unwrap(info[0].ToObject());
-  auto transport = *info[1].As<Napi::External<rtc::scoped_refptr<webrtc::SctpTransportInterface>>>().Data();
+  auto transport = *info[1].As<Napi::External<webrtc::scoped_refptr<webrtc::SctpTransportInterface>>>().Data();
 
   _factory = factory;
   _factory->Ref();
 
   _transport = std::move(transport);
 
-  _factory->_workerThread->Invoke<void>(RTC_FROM_HERE, [this]() {
+  _factory->_workerThread->BlockingCall([this]() {
     _dtls_transport = _transport->dtls_transport();
     _transport->RegisterObserver(this);
   });
@@ -61,12 +61,12 @@ void RTCSctpTransport::Stop() {
 
 Wrap <
 RTCSctpTransport*,
-rtc::scoped_refptr<webrtc::SctpTransportInterface>,
+webrtc::scoped_refptr<webrtc::SctpTransportInterface>,
 PeerConnectionFactory*
 > * RTCSctpTransport::wrap() {
   static auto wrap = new node_webrtc::Wrap <
   RTCSctpTransport*,
-  rtc::scoped_refptr<webrtc::SctpTransportInterface>,
+  webrtc::scoped_refptr<webrtc::SctpTransportInterface>,
   PeerConnectionFactory*
   > (RTCSctpTransport::Create);
   return wrap;
@@ -74,13 +74,13 @@ PeerConnectionFactory*
 
 RTCSctpTransport* RTCSctpTransport::Create(
     PeerConnectionFactory* factory,
-    rtc::scoped_refptr<webrtc::SctpTransportInterface> transport) {
+    webrtc::scoped_refptr<webrtc::SctpTransportInterface> transport) {
   auto env = constructor().Env();
   Napi::HandleScope scope(env);
 
   auto object = constructor().New({
     factory->Value(),
-    Napi::External<rtc::scoped_refptr<webrtc::SctpTransportInterface>>::New(env, &transport)
+    Napi::External<webrtc::scoped_refptr<webrtc::SctpTransportInterface>>::New(env, &transport)
   });
 
   auto unwrapped = Unwrap(object);

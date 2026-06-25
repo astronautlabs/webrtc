@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <iosfwd>
+#include <map>
 #include <string>
 #include <vector>
 #include <utility>
@@ -42,17 +43,48 @@
 
 namespace node_webrtc {
 
+/**
+ * Declares a converter function that can produce a Javascript value (Napi::Value) for a given C++ type.
+ * This goes in the header. It is implemented in the corresponding compilation unit via a TO_NAPI_IMPL macro.
+ * @param T The type being converted from.
+ */
 #define DECLARE_TO_NAPI(T) DECLARE_CONVERTER(std::pair<Napi::Env COMMA T>, Napi::Value)
 
+/**
+ * Declares a converter function that can produce a C++ object for a given Javascript value (Napi::Value).
+ * This goes in the header. It is implemented in the corresponding compilation unit via a FROM_NAPI_IMPL macro.
+ * @param T The type being converted to
+ */
 #define DECLARE_FROM_NAPI(T) DECLARE_CONVERTER(Napi::Value, T)
 
 #define DECLARE_TO_AND_FROM_NAPI(T) \
   DECLARE_TO_NAPI(T) \
   DECLARE_FROM_NAPI(T)
 
+/**
+ * Provide the implementation for a converter function declared with DECLARE_TO_NAPI which can create a Javascript value (Napi::Value) from objects
+ * of the given type.
+ *
+ * Example:
+ * TO_NAPI_IMPL(const webrtc::RTCStatsMemberInterface*, pair) {
+ *     // Implement conversion
+ *     return ...; // an object of Napi::Value
+ * }
+ *
+ * @param T The type to convert
+ * @param V The name of the parameter for the conversion function.
+ */
 #define TO_NAPI_IMPL(T, V) CONVERTER_IMPL(std::pair<Napi::Env COMMA T>, Napi::Value, V)
 
+/**
+ * Define a conversion function for converting a Javascript value (Napi::Value) into a corresponding C++ object.
+ * This is the implementation part of DECLARE_FROM_NAPI().
+ * @param T
+ * @param V
+ */
 #define FROM_NAPI_IMPL(T, V) CONVERTER_IMPL(Napi::Value, T, V)
+
+// Conversions for primitives, fundamental types, and identity conversions
 
 DECLARE_TO_AND_FROM_NAPI(bool)
 DECLARE_TO_AND_FROM_NAPI(double)
@@ -90,6 +122,19 @@ struct Converter<std::pair<Napi::Env, Maybe<T>>, Napi::Value> {
   }
 };
 
+// template <typename T>
+// struct Converter<std::pair<Napi::Env, std::optional<T>>, Napi::Value> {
+//   static Validation<Napi::Value> Convert(const std::pair<Napi::Env, std::optional<T>> pair) {
+//     Napi::Env env = pair.first;
+//     auto value = pair.second;
+
+//     if (!value.has_value())
+//         return Validation { env.Undefined() }; // TODO(liam): Debate null vs undefined
+
+//     return Converter<T, Napi::Value>::Convert(value);
+//   }
+// };
+
 template <>
 struct Converter<Napi::Value, Napi::Array> {
   static Validation<Napi::Array> Convert(Napi::Value value) {
@@ -99,10 +144,16 @@ struct Converter<Napi::Value, Napi::Array> {
   }
 };
 
+/**
+ * Converts Napi::Array into std::vector, calling back into the conversion system for converting each element of the
+ * vector.
+ *
+ * @tparam T
+ */
 template <typename T>
 struct Converter<Napi::Array, std::vector<T>> {
   static Validation<std::vector<T>> Convert(const Napi::Array array) {
-    auto validated = std::vector<T>();
+    std::vector<T> validated;
     validated.reserve(array.Length());
     for (uint32_t i = 0; i < array.Length(); i++) {
       auto maybeValue = array.Get(i);
@@ -126,6 +177,10 @@ struct Converter<Napi::Value, std::vector<T>> {
   }
 };
 
+/**
+ * Convert a std::vector to a Napi::Value within the provided Node environment.
+ * @tparam T
+ */
 template <typename T>
 struct Converter<std::pair<Napi::Env, std::vector<T>>, Napi::Value> {
   static Validation<Napi::Value> Convert(std::pair<Napi::Env, std::vector<T>> pair) {
@@ -148,6 +203,39 @@ struct Converter<std::pair<Napi::Env, std::vector<T>>, Napi::Value> {
       }
     }
     return Pure(scope.Escape(maybeArray));
+  }
+};
+
+
+/**
+ * Convert a std::map with string keys to a Napi::Value within the provided Node environment. The result will be an
+ * object.
+ * @tparam T
+ */
+template <typename T>
+struct Converter<std::pair<Napi::Env, std::map<std::string, T>>, Napi::Value> {
+  static Validation<Napi::Value> Convert(std::pair<Napi::Env, std::map<std::string, T>> pair) {
+    auto env = pair.first;
+    Napi::EscapableHandleScope scope(env);
+    auto values = pair.second;
+    auto maybeObject = Napi::Object::New(env);
+
+    if (env.IsExceptionPending()) {
+      return Validation<Napi::Value>::Invalid(env.GetAndClearPendingException().Message());
+    }
+
+    // Convert the elements of the map into object properties
+    for (const auto& entry : values) {
+      auto maybeValue = From<Napi::Value>(std::make_pair(env, entry.second));
+      if (maybeValue.IsInvalid()) {
+        return Validation<Napi::Value>::Invalid(maybeValue.ToErrors());
+      }
+      maybeObject.Set(entry.first, maybeValue.UnsafeFromValid());
+      if (env.IsExceptionPending()) {
+        return Validation<Napi::Value>::Invalid(env.GetAndClearPendingException().Message());
+      }
+    }
+    return Pure(scope.Escape(maybeObject));
   }
 };
 

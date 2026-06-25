@@ -35,11 +35,11 @@ RTCVideoSink::RTCVideoSink(const Napi::CallbackInfo& info)
     Napi::TypeError::New(info.Env(), "Use the new operator to construct an RTCVideoSink.").ThrowAsJavaScriptException();
     return;
   }
-  CONVERT_ARGS_OR_THROW_AND_RETURN_VOID_NAPI(info, track, rtc::scoped_refptr<webrtc::VideoTrackInterface>)
+  CONVERT_ARGS_OR_THROW_AND_RETURN_VOID_NAPI(info, track, webrtc::scoped_refptr<webrtc::VideoTrackInterface>)
 
   _track = std::move(track);
 
-  rtc::VideoSinkWants wants;
+  webrtc::VideoSinkWants wants;
   _track->AddOrUpdateSink(this, wants);
 }
 

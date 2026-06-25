@@ -21,7 +21,7 @@ class ZeroCapturer: public TestAudioDeviceModule::Capturer {
     return _sampling_frequency_in_hz;
   }
 
-  bool Capture(rtc::BufferT<int16_t>* buffer) override {
+  bool Capture(webrtc::BufferT<int16_t>* buffer) override {
     // NOTE(mroberts): If we don't fill this buffer once we trigger an assert.
     if (!_produced_output) {
       buffer->SetSize(TestAudioDeviceModule::SamplesPerFrame(_sampling_frequency_in_hz));

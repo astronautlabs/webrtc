@@ -3,6 +3,7 @@
 #include <iosfwd>
 #include <string>
 
+#include <webrtc/api/scoped_refptr.h>
 #include "src/converters.h"
 #include "src/enums/node_webrtc/rtc_sdp_type.h"
 
@@ -26,13 +27,13 @@ namespace node_webrtc {
 static inline RTC_SESSION_DESCRIPTION_INIT CreateRTCSessionDescriptionInit(
     const RTCSdpType type,
     const std::string& sdp) {
-  return {type, sdp};
+  return {.type=type, .sdp=sdp};
 }
 
-DECLARE_CONVERTER(RTCSessionDescriptionInit, webrtc::SessionDescriptionInterface*)
-DECLARE_CONVERTER(const webrtc::SessionDescriptionInterface*, RTCSessionDescriptionInit)
+DECLARE_CONVERTER(RTCSessionDescriptionInit, std::shared_ptr<webrtc::SessionDescriptionInterface>)
+DECLARE_CONVERTER(std::shared_ptr<const webrtc::SessionDescriptionInterface>, RTCSessionDescriptionInit)
 
-DECLARE_FROM_NAPI(webrtc::SessionDescriptionInterface*)
-DECLARE_TO_NAPI(const webrtc::SessionDescriptionInterface*)
+DECLARE_FROM_NAPI(std::shared_ptr<webrtc::SessionDescriptionInterface>)
+DECLARE_TO_NAPI(std::shared_ptr<const webrtc::SessionDescriptionInterface>)
 
 }  // namespace node_webrtc

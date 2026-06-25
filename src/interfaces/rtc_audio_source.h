@@ -82,7 +82,7 @@ class RTCAudioSource
   Napi::Value CreateTrack(const Napi::CallbackInfo&);
   Napi::Value OnData(const Napi::CallbackInfo&);
 
-  rtc::scoped_refptr<RTCAudioTrackSource> _source;
+  webrtc::scoped_refptr<RTCAudioTrackSource> _source;
   std::set<MediaStreamTrack*> _tracks;
 };
 

@@ -4,9 +4,9 @@
 
 #include "src/converters/napi.h"
 
-namespace webrtc { class IceCandidateInterface; }
+namespace webrtc { class IceCandidate; }
 
-#define ICE_CANDIDATE_INTERFACE webrtc::IceCandidateInterface*
+#define ICE_CANDIDATE_INTERFACE webrtc::IceCandidate*
 
 #define DICT(X) ICE_CANDIDATE_INTERFACE ## X
 #include "src/dictionaries/macros/decls.h"
@@ -14,6 +14,6 @@ namespace webrtc { class IceCandidateInterface; }
 
 namespace node_webrtc {
 
-DECLARE_FROM_NAPI(std::shared_ptr<webrtc::IceCandidateInterface>)
+DECLARE_FROM_NAPI(std::shared_ptr<webrtc::IceCandidate>)
 
 }  // namespace node_webrtc

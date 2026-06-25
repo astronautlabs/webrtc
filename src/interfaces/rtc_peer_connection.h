@@ -29,7 +29,6 @@
 namespace webrtc {
 
 	class DataChannelInterface;
-	class IceCandidateInterface;
 	class MediaStreamInterface;
 	class RtpReceiverInterface;
 	class RtpTransceiverInterface;
@@ -55,18 +54,18 @@ namespace node_webrtc {
 		void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new_state) override;
 		void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
 		void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState new_state) override;
-		void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
-		void OnIceCandidateError(const std::string& host_candidate, const std::string& url, int error_code, const std::string& error_text) override;
+		void OnIceCandidate(const webrtc::IceCandidate* candidate) override;
+		void OnIceCandidateError(const std::string &, int, const std::string &, int, const std::string &) override;
 		void OnRenegotiationNeeded() override;
 
-		void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
+		void OnDataChannel(webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
 
-		void OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
-		void OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
+		void OnAddStream(webrtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
+		void OnRemoveStream(webrtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
 
-		void OnAddTrack(rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
-			const std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>>& streams) override;
-		void OnTrack(rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
+		void OnAddTrack(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
+			const std::vector<webrtc::scoped_refptr<webrtc::MediaStreamInterface>>& streams) override;
+		void OnTrack(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
 
 		static void Init(Napi::Env, Napi::Object);
 
@@ -76,9 +75,9 @@ namespace node_webrtc {
 
 		void onSetDescriptionComplete();
 
-		rtc::scoped_refptr<webrtc::RtpSenderInterface> getUnderlying(RTCRtpSender* sender);
-		rtc::scoped_refptr<webrtc::RtpReceiverInterface> getUnderlying(RTCRtpReceiver* receiver);
-		rtc::scoped_refptr<webrtc::RtpTransceiverInterface> getUnderlying(RTCRtpTransceiver* transceiver);
+		webrtc::scoped_refptr<webrtc::RtpSenderInterface> getUnderlying(RTCRtpSender* sender);
+		webrtc::scoped_refptr<webrtc::RtpReceiverInterface> getUnderlying(RTCRtpReceiver* receiver);
+		webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> getUnderlying(RTCRtpTransceiver* transceiver);
 		inline bool isClosed() {
 			return !_factory || !_jinglePeerConnection;
 		}
@@ -88,13 +87,13 @@ namespace node_webrtc {
 		void processStateChangesUnifiedPlan();
 		bool validateConfiguration(webrtc::PeerConnectionInterface::RTCConfiguration configuration);
 		
-		inline bool isPlanB() { 
+		bool isPlanB() {
 			return _jinglePeerConnection 
-				? (_jinglePeerConnection->GetConfiguration().sdp_semantics == webrtc::SdpSemantics::kPlanB) 
+				? (_jinglePeerConnection->GetConfiguration().sdp_semantics == webrtc::SdpSemantics::kPlanB_DEPRECATED)
 				: false; 
 		}
 
-		inline bool isUnifiedPlan() { 
+		bool isUnifiedPlan() {
 			return _jinglePeerConnection
 				? (_jinglePeerConnection->GetConfiguration().sdp_semantics == webrtc::SdpSemantics::kUnifiedPlan)
 				: false;
@@ -144,7 +143,7 @@ namespace node_webrtc {
 
 		UnsignedShortRange _port_range;
 		ExtendedRTCConfiguration _cached_configuration;
-		rtc::scoped_refptr<webrtc::PeerConnectionInterface> _jinglePeerConnection;
+		webrtc::scoped_refptr<webrtc::PeerConnectionInterface> _jinglePeerConnection;
 
 		PeerConnectionFactory* _factory = nullptr;
 		bool _shouldReleaseFactory = false;
@@ -165,11 +164,11 @@ namespace node_webrtc {
 		 */
 		std::map<std::string, MediaStreamTrack*> _externalTracks;
 
-		RTCRtpTransceiver* createOrUpdateTransceiver(rtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver);
-		RTCRtpReceiver* createOrUpdateReceiver(rtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver);
-		RTCRtpSender* createOrUpdateSender(rtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender, std::string kind);
-		MediaStreamTrack* getTrack(rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack);
-		MediaStreamTrack* getKnownTrack(rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack);
+		RTCRtpTransceiver* createOrUpdateTransceiver(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver);
+		RTCRtpReceiver* createOrUpdateReceiver(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver);
+		RTCRtpSender* createOrUpdateSender(webrtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender, std::string kind);
+		MediaStreamTrack* getTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack);
+		MediaStreamTrack* getKnownTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack);
 		bool isOwned(MediaStreamTrack* track);
 		bool isOwned(RTCRtpSender* sender);
 

@@ -37,11 +37,11 @@ class MediaStream
 
   static ::node_webrtc::Wrap <
   MediaStream*,
-  rtc::scoped_refptr<webrtc::MediaStreamInterface>,
+  webrtc::scoped_refptr<webrtc::MediaStreamInterface>,
   PeerConnectionFactory*
   > * wrap();
 
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> stream();
+  webrtc::scoped_refptr<webrtc::MediaStreamInterface> stream();
 
  private:
   class Impl {
@@ -65,18 +65,18 @@ class MediaStream
 
     Impl(std::vector<MediaStreamTrack*>&& tracks, PeerConnectionFactory* factory = nullptr);
 
-    Impl(rtc::scoped_refptr<webrtc::MediaStreamInterface>&& stream, PeerConnectionFactory* factory = nullptr);
+    Impl(webrtc::scoped_refptr<webrtc::MediaStreamInterface>&& stream, PeerConnectionFactory* factory = nullptr);
 
     Impl(const RTCMediaStreamInit& init, PeerConnectionFactory* factory = nullptr);
 
     PeerConnectionFactory* _factory;
-    rtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;
+    webrtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;
     bool _shouldReleaseFactory;
   };
 
   static MediaStream* Create(
       PeerConnectionFactory*,
-      rtc::scoped_refptr<webrtc::MediaStreamInterface>);
+      webrtc::scoped_refptr<webrtc::MediaStreamInterface>);
 
   Napi::Value GetId(const Napi::CallbackInfo&);
   Napi::Value GetActive(const Napi::CallbackInfo&);
@@ -89,7 +89,7 @@ class MediaStream
   Napi::Value RemoveTrack(const Napi::CallbackInfo&);
   Napi::Value Clone(const Napi::CallbackInfo&);
 
-  std::vector<rtc::scoped_refptr<webrtc::MediaStreamTrackInterface>> tracks();
+  std::vector<webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>> tracks();
 
   Impl _impl;
 };

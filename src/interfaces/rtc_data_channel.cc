@@ -20,6 +20,7 @@
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 #include "src/node/error_factory.h"
 #include "src/node/events.h"
+#include "src/converters/absl.h"
 
 namespace node_webrtc {
 
@@ -29,7 +30,7 @@ Napi::FunctionReference& RTCDataChannel::constructor() {
 }
 
 DataChannelObserver::DataChannelObserver(PeerConnectionFactory* factory,
-    rtc::scoped_refptr<webrtc::DataChannelInterface> jingleDataChannel)
+    webrtc::scoped_refptr<webrtc::DataChannelInterface> jingleDataChannel)
   : _factory(factory)
   , _jingleDataChannel(std::move(jingleDataChannel)) {
   _factory->Ref();
@@ -107,8 +108,8 @@ void RTCDataChannel::CleanupInternals() {
   _jingleDataChannel->UnregisterObserver();
   _cached_id = _jingleDataChannel->id();
   _cached_label = _jingleDataChannel->label();
-  _cached_max_packet_life_time = _jingleDataChannel->maxRetransmitTime();
-  _cached_max_retransmits = _jingleDataChannel->maxRetransmits();
+  _cached_max_packet_life_time = _jingleDataChannel->maxPacketLifeTime().value_or(0); // TODO(liam): optional handling?
+  _cached_max_retransmits = _jingleDataChannel->maxRetransmitsOpt().value_or(0); // TODO(liam): optional handling?
   _cached_negotiated = _jingleDataChannel->negotiated();
   _cached_ordered = _jingleDataChannel->ordered();
   _cached_protocol = _jingleDataChannel->protocol();
@@ -214,7 +215,7 @@ Napi::Value RTCDataChannel::Send(const Napi::CallbackInfo& info) {
       }
 
       auto content = static_cast<char*>(arraybuffer.Data());
-      rtc::CopyOnWriteBuffer buffer(content + byte_offset, byte_length);
+      webrtc::CopyOnWriteBuffer buffer(content + byte_offset, byte_length);
 
       webrtc::DataBuffer data_buffer(buffer, true);
       _jingleDataChannel->Send(data_buffer);
@@ -260,7 +261,7 @@ Napi::Value RTCDataChannel::GetLabel(const Napi::CallbackInfo& info) {
 
 Napi::Value RTCDataChannel::GetMaxPacketLifeTime(const Napi::CallbackInfo& info) {
   auto max_packet_life_time = _jingleDataChannel
-      ? _jingleDataChannel->maxRetransmitTime()
+      ? _jingleDataChannel->maxPacketLifeTime()
       : _cached_max_packet_life_time;
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), max_packet_life_time, result, Napi::Value)
   return result;
@@ -268,7 +269,7 @@ Napi::Value RTCDataChannel::GetMaxPacketLifeTime(const Napi::CallbackInfo& info)
 
 Napi::Value RTCDataChannel::GetMaxRetransmits(const Napi::CallbackInfo& info) {
   auto max_retransmits = _jingleDataChannel
-      ? _jingleDataChannel->maxRetransmits()
+      ? _jingleDataChannel->maxRetransmitsOpt()
       : _cached_max_retransmits;
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), max_retransmits, result, Napi::Value)
   return result;
@@ -328,12 +329,12 @@ void RTCDataChannel::SetBinaryType(const Napi::CallbackInfo& info, const Napi::V
 
 Wrap <
 RTCDataChannel*,
-rtc::scoped_refptr<webrtc::DataChannelInterface>,
+webrtc::scoped_refptr<webrtc::DataChannelInterface>,
 node_webrtc::DataChannelObserver*
 > * RTCDataChannel::wrap() {
-  static auto wrap = new node_webrtc::Wrap <
+  static auto* wrap = new node_webrtc::Wrap <
   RTCDataChannel*,
-  rtc::scoped_refptr<webrtc::DataChannelInterface>,
+  webrtc::scoped_refptr<webrtc::DataChannelInterface>,
   node_webrtc::DataChannelObserver*
   > (RTCDataChannel::Create);
   return wrap;
@@ -341,7 +342,7 @@ node_webrtc::DataChannelObserver*
 
 RTCDataChannel* RTCDataChannel::Create(
     node_webrtc::DataChannelObserver* observer,
-    rtc::scoped_refptr<webrtc::DataChannelInterface>) {
+    webrtc::scoped_refptr<webrtc::DataChannelInterface>) {
   auto env = constructor().Env();
   Napi::HandleScope scope(env);
 
@@ -349,7 +350,7 @@ RTCDataChannel* RTCDataChannel::Create(
     Napi::External<node_webrtc::DataChannelObserver>::New(env, observer)
   });
 
-  auto unwrapped = Unwrap(object);
+  auto* unwrapped = Unwrap(object);
   unwrapped->Ref();
   return unwrapped;
 }

@@ -54,7 +54,7 @@ static Maybe<Errors> DoSet(Napi::Object map, std::string key, T value) {
   return SetMap(map, maybeKey.UnsafeFromValid(), maybeValue.UnsafeFromValid());
 }
 
-TO_NAPI_IMPL(rtc::scoped_refptr<webrtc::RTCStatsReport>, pair) {
+TO_NAPI_IMPL(webrtc::scoped_refptr<webrtc::RTCStatsReport>, pair) {
   return CreateMap(pair.first).FlatMap<Napi::Value>([value = pair.second](auto map) {
     auto env = map.Env();
     Napi::EscapableHandleScope scope(env);

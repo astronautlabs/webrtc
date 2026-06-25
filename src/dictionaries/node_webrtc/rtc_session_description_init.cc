@@ -1,6 +1,8 @@
 #include "src/dictionaries/node_webrtc/rtc_session_description_init.h"
 
+#include <src/api/scoped_refptr.h>
 #include <utility>
+#include <memory>
 
 #include <node-addon-api/napi.h>
 #include <webrtc/api/jsep.h>
@@ -14,9 +16,8 @@ namespace node_webrtc {
 
 #define RTC_SESSION_DESCRIPTION_INIT_FN CreateValidRTCSessionDescriptionInit
 
-static Validation<RTC_SESSION_DESCRIPTION_INIT> RTC_SESSION_DESCRIPTION_INIT_FN(
-    const RTCSdpType type,
-    const std::string& sdp) {
+static Validation<RTC_SESSION_DESCRIPTION_INIT>
+RTC_SESSION_DESCRIPTION_INIT_FN(const RTCSdpType type, const std::string &sdp) {
   return Pure(CreateRTCSessionDescriptionInit(type, sdp));
 }
 
@@ -29,56 +30,67 @@ TO_NAPI_IMPL(RTCSessionDescriptionInit, pair) {
   return Pure(scope.Escape(object));
 }
 
-CONVERTER_IMPL(RTCSessionDescriptionInit, webrtc::SessionDescriptionInterface*, init) {
-  std::string type_;
+CONVERTER_IMPL(RTCSessionDescriptionInit,
+               std::shared_ptr<webrtc::SessionDescriptionInterface>,
+               init) {
+  webrtc::SdpType type_ {};
   switch (init.type) {
-    case RTCSdpType::kOffer:
-      type_ = "offer";
-      break;
-    case RTCSdpType::kPrAnswer:
-      type_ = "pranswer";
-      break;
-    case RTCSdpType::kAnswer:
-      type_ = "answer";
-      break;
-    case RTCSdpType::kRollback:
-      type_ = "rollback";
+  case RTCSdpType::kOffer:
+    type_ = webrtc::SdpType::kOffer;
+    break;
+  case RTCSdpType::kPrAnswer:
+    type_ = webrtc::SdpType::kPrAnswer;
+    break;
+  case RTCSdpType::kAnswer:
+    type_ = webrtc::SdpType::kAnswer;
+    break;
+  case RTCSdpType::kRollback:
+    type_ = webrtc::SdpType::kRollback;
   }
   webrtc::SdpParseError error;
   auto description = webrtc::CreateSessionDescription(type_, init.sdp, &error);
   if (!description) {
-    return Validation<webrtc::SessionDescriptionInterface*>::Invalid(error.description);
+    return Validation<std::shared_ptr<
+        webrtc::SessionDescriptionInterface>>::Invalid(error.description);
   }
-  return Pure(description);
+
+  return Pure(std::shared_ptr<webrtc::SessionDescriptionInterface> { std::move(description) });
 }
 
-CONVERTER_IMPL(const webrtc::SessionDescriptionInterface*, RTCSessionDescriptionInit, description) {
+CONVERTER_IMPL(std::shared_ptr<const webrtc::SessionDescriptionInterface>,
+               RTCSessionDescriptionInit, description) {
   if (!description) {
-    return Validation<RTCSessionDescriptionInit>::Invalid("RTCSessionDescription is null");
+    return Validation<RTCSessionDescriptionInit>::Invalid(
+        "RTCSessionDescription is null");
   }
   std::string sdp;
   if (!description->ToString(&sdp)) {
     return Validation<RTCSessionDescriptionInit>::Invalid(
-            "Failed to print the SDP. This is pretty weird. File a bug on https://github.com/astronautlabs/webrtc");
+        "Failed to print the SDP. This is pretty weird. File a bug on "
+        "https://github.com/astronautlabs/webrtc");
   }
-  return curry(CreateRTCSessionDescriptionInit)
-      % From<RTCSdpType>(description->type())
-      * Pure(sdp);
+  return curry(CreateRTCSessionDescriptionInit) %
+         From<RTCSdpType>(description->type()) * Pure(sdp);
 }
 
-FROM_NAPI_IMPL(webrtc::SessionDescriptionInterface*, pair) {
+FROM_NAPI_IMPL(std::shared_ptr<webrtc::SessionDescriptionInterface>,
+               pair) {
   return From<RTCSessionDescriptionInit>(pair)
-      .FlatMap<webrtc::SessionDescriptionInterface*>(Converter<RTCSessionDescriptionInit, webrtc::SessionDescriptionInterface*>::Convert);
+      .FlatMap<std::shared_ptr<webrtc::SessionDescriptionInterface>>(
+          Converter<RTCSessionDescriptionInit,
+                    std::shared_ptr<
+                        webrtc::SessionDescriptionInterface>>::Convert);
 }
 
-TO_NAPI_IMPL(const webrtc::SessionDescriptionInterface*, pair) {
-  return From<RTCSessionDescriptionInit>(pair.second).FlatMap<Napi::Value>([env = pair.first](auto value) {
-    return From<Napi::Value>(std::make_pair(env, value));
-  });
+TO_NAPI_IMPL(std::shared_ptr<const webrtc::SessionDescriptionInterface>, pair) {
+  return From<RTCSessionDescriptionInit>(pair.second)
+      .FlatMap<Napi::Value>([env = pair.first](auto value) {
+        return From<Napi::Value>(std::make_pair(env, value));
+      });
 }
 
-}  // namespace node_webrtc
+} // namespace node_webrtc
 
-#define DICT(X) RTC_SESSION_DESCRIPTION_INIT ## X
+#define DICT(X) RTC_SESSION_DESCRIPTION_INIT##X
 #include "src/dictionaries/macros/impls.h"
 #undef DICT

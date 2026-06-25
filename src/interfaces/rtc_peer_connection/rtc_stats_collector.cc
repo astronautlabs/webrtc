@@ -13,6 +13,6 @@
 
 #include "src/dictionaries/webrtc/rtc_stats_report.h"  // IWYU pragma: keep
 
-void node_webrtc::RTCStatsCollector::OnStatsDelivered(const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+void node_webrtc::RTCStatsCollector::OnStatsDelivered(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
   Resolve(report->Copy());
 }
