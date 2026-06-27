@@ -59,10 +59,6 @@ class PeerConnectionFactory
    */
   webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory() { return _factory; }
 
-  webrtc::NetworkManager* getNetworkManager() { return _networkManager.get(); }
-
-  webrtc::PacketSocketFactory* getSocketFactory() { return _socketFactory.get(); }
-
   static void Init(Napi::Env, Napi::Object);
 
   static Napi::FunctionReference& constructor();
@@ -80,10 +76,6 @@ class PeerConnectionFactory
 
   webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
   webrtc::scoped_refptr<webrtc::AudioDeviceModule> _audioDeviceModule;
-
-  std::unique_ptr<webrtc::PhysicalSocketServer> _socketServer;
-  std::unique_ptr<webrtc::NetworkManager> _networkManager;
-  std::unique_ptr<webrtc::PacketSocketFactory> _socketFactory;
 };
 
 }  // namespace node_webrtc
