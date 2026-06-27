@@ -13,6 +13,7 @@ class Deferrer {
 
  protected:
   virtual void Execute(Napi::Env) = 0;
+ public:
   void Queue();
 
  private:
