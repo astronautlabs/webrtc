@@ -68,6 +68,9 @@ namespace node_webrtc {
 			MediaStreamTrack* track,
 			std::vector<MediaStream*> streams
 		);
+
+		MediaStreamTrack* getTrack();
+
 	private:
 		static webrtc::RtpCapabilities audioCapabilities;
 		static webrtc::RtpCapabilities videoCapabilities;

@@ -52,6 +52,10 @@ namespace node_webrtc {
 			return info.Env().Null();
 		return track->Value();
 	}
+    
+	MediaStreamTrack* RTCRtpReceiver::getTrack() {
+		return track;
+    }
 
 	Napi::Value RTCRtpReceiver::GetTransport(const Napi::CallbackInfo& info) {
 		if (!transport)
@@ -134,6 +138,7 @@ namespace node_webrtc {
 		auto factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault();
 		setAudioCapabilities(factory->factory()->GetRtpReceiverCapabilities(webrtc::MediaType::AUDIO));
 		setVideoCapabilities(factory->factory()->GetRtpReceiverCapabilities(webrtc::MediaType::VIDEO));
+        factory->Release();
 
 		auto func = DefineClass(env, "RTCRtpReceiver", {
 		  InstanceAccessor("track", &RTCRtpReceiver::GetTrack, nullptr),
