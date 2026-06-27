@@ -198,7 +198,7 @@ namespace node_webrtc {
 		auto factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault();
 		setAudioCapabilities(factory->factory()->GetRtpSenderCapabilities(webrtc::MediaType::AUDIO));
 		setVideoCapabilities(factory->factory()->GetRtpSenderCapabilities(webrtc::MediaType::VIDEO));
-
+        factory->Release();
 		Napi::Function func = DefineClass(env, "RTCRtpSender", {
 		  InstanceAccessor("track", &RTCRtpSender::GetTrack, nullptr),
 		  InstanceAccessor("transport", &RTCRtpSender::GetTransport, nullptr),
