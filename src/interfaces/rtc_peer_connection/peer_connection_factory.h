@@ -71,6 +71,7 @@ class PeerConnectionFactory
 
   std::unique_ptr<webrtc::Thread> _signalingThread;
   std::unique_ptr<webrtc::Thread> _workerThread;
+  std::unique_ptr<webrtc::Thread> _networkThread;
 
  private:
   static PeerConnectionFactory* _default;

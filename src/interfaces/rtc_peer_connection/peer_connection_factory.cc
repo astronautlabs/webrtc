@@ -54,29 +54,18 @@ PeerConnectionFactory::PeerConnectionFactory(const Napi::CallbackInfo &info)
     return;
   }
 
-  std::unique_ptr<webrtc::Thread> signalThread = webrtc::Thread::Create();
-  assert(signalThread);
-
-  result = signalThread->SetName("pcf:signaling", nullptr);
-  assert(result);
-
-  result = signalThread->Start();
-  assert(result);
-
-  this->_signalingThread = std::move(signalThread);
-
   // TODO(mroberts): Read `audioLayer` from some PeerConnectionFactoryOptions?
   auto audioLayer = MakeNothing<webrtc::AudioDeviceModule::AudioLayer>();
 
-  _workerThread = webrtc::Thread::CreateWithSocketServer();
-  assert(_workerThread);
+  // Network thread
+  _networkThread = webrtc::Thread::CreateWithSocketServer();
+  _networkThread->SetName("pcf:network", nullptr);
+  _networkThread->Start();
 
-  result = _workerThread->SetName("pcf:worker", nullptr);
-  assert(result);
-
-  result = _workerThread->Start();
-  assert(result);
-
+  // Worker thread
+  _workerThread = webrtc::Thread::Create();
+  _workerThread->SetName("pcf:worker", nullptr);
+  _workerThread->Start();
   _workerThread->BlockingCall([&] {
     _audioDeviceModule =
         audioLayer
@@ -95,8 +84,16 @@ PeerConnectionFactory::PeerConnectionFactory(const Napi::CallbackInfo &info)
             });
   });
 
+  // Signaling thread
+  _signalingThread = webrtc::Thread::Create();
+  _signalingThread->SetName("pcf:signaling", nullptr);
+  _signalingThread->Start();
+
+  // Factory
   _factory = webrtc::CreatePeerConnectionFactory(
-      _workerThread.get(), _workerThread.get(), _signalingThread.get(),
+      _networkThread.get(), 
+      _workerThread.get(), 
+      _signalingThread.get(),
       _audioDeviceModule, webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(),
       webrtc::CreateBuiltinVideoEncoderFactory(),
@@ -106,15 +103,6 @@ PeerConnectionFactory::PeerConnectionFactory(const Napi::CallbackInfo &info)
   webrtc::PeerConnectionFactoryInterface::Options options;
   options.network_ignore_mask = 0;
   _factory->SetOptions(options);
-
-  _socketServer = std::make_unique<webrtc::PhysicalSocketServer>();
-  _networkManager = std::make_unique<webrtc::BasicNetworkManager>(
-      webrtc::CreateEnvironment(), _socketServer.get());
-  assert(_networkManager != nullptr);
-
-  _socketFactory =
-      std::make_unique<webrtc::BasicPacketSocketFactory>(_socketServer.get());
-  assert(_socketFactory != nullptr);
 }
 
 PeerConnectionFactory::~PeerConnectionFactory() {
