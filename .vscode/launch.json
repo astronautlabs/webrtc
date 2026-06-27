@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch Tests",
+            "name": "Launch Tests (and Debug C++)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/usr/bin/node",
-            "args": ["${workspaceFolder}/dist/nodejs/test/test.js"],
+            "program": "/home/liam/.nvm/versions/node/v18.19.0/bin/node",
+            "args": ["${workspaceFolder}/node_modules/.bin/jest", "--runInBand", "rtpsender"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
@@ -51,14 +51,14 @@
         ]
     },
     {
-        "type": "pwa-node",
+        "type": "node",
         "request": "launch",
-        "name": "Launch Program",
+        "name": "Launch Tests (and debug Javascript)",
         "skipFiles": [
             "<node_internals>/**"
         ],
-        "program": "${workspaceFolder}\\dist\\nodejs\\test\\test.js",
-        "args": ["--verbose"],
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["--runInBand", "rtpsender"],
         "preLaunchTask": "tsc: build - tsconfig.json",
         "outFiles": [
             "${workspaceFolder}/dist/**/*.js"

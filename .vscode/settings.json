@@ -128,5 +128,13 @@
         "xtree": "cpp",
         "xutility": "cpp"
     },
-    "js/ts.tsdk.path": "node_modules\\typescript\\lib"
+    "js/ts.tsdk.path": "node_modules\\typescript\\lib",
+    "files.exclude": {
+        "-build/**": true
+    },
+    "editor.detectIndentation": false,
+    "C_Cpp.clang_format_sortIncludes": null,
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, IndentWidth: 4, TabWidth: 4 }",
+    "C_Cpp.formatting": "clangFormat",
+    "C_Cpp.clang_format_path": "/usr/bin/clang-format"
 }
