@@ -1,0 +1,30 @@
+---
+BasedOnStyle: WebKit
+IndentWidth: 4
+TabWidth: 4
+#BreakBeforeBraces: Attach
+BreakBeforeBraces: Custom
+BraceWrapping:
+  # This is the magic key you need:
+  AfterControlStatement: Never
+  AfterClass: false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterObjCDeclaration: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+BreakConstructorInitializers: AfterColon
+PackConstructorInitializers: Never
+# PackParameters:
+#   BinPack: OnePerLine
+BinPackParameters: false
+#AlignAfterOpenBracket: AlwaysBreak
+AlignAfterOpenBracket: BlockIndent
+BinPackArguments: false
+AllowAllConstructorInitializersOnNextLine: true
+NamespaceIndentation: All
