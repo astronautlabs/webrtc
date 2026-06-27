@@ -13,3 +13,4 @@ private/
 .env
 build-*/
 coverage/
+*.tsbuildinfo
