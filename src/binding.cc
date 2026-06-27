@@ -25,6 +25,7 @@
 #include "src/interfaces/rtc_rtp_sender.h"
 #include "src/interfaces/rtc_rtp_transceiver.h"
 #include "src/interfaces/rtc_sctp_transport.h"
+#include "src/interfaces/rtc_session_description.h"
 #include "src/interfaces/rtc_stats_response.h"
 #include "src/interfaces/rtc_video_sink.h"
 #include "src/interfaces/rtc_video_source.h"
@@ -65,6 +66,7 @@ static Napi::Object Init(Napi::Env env, Napi::Object exports) {
   node_webrtc::RTCIceTransport::Init(env, exports);
   node_webrtc::RTCDtlsTransport::Init(env, exports);
   node_webrtc::RTCPeerConnection::Init(env, exports);
+  node_webrtc::RTCSessionDescription::Init(env, exports);
   node_webrtc::RTCRtpReceiver::Init(env, exports);
   node_webrtc::RTCRtpSender::Init(env, exports);
   node_webrtc::RTCRtpTransceiver::Init(env, exports);
