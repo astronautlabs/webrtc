@@ -15,7 +15,7 @@ namespace node_webrtc {
 static ExtendedRTCConfiguration CreateExtendedRTCConfiguration(
     const webrtc::PeerConnectionInterface::RTCConfiguration& configuration,
     const UnsignedShortRange portRange) {
-  return ExtendedRTCConfiguration(configuration, portRange);
+  return { configuration, portRange };
 }
 
 FROM_NAPI_IMPL(ExtendedRTCConfiguration, value) {
