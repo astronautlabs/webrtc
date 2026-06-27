@@ -103,22 +103,9 @@ namespace node_webrtc {
 		_factory = PeerConnectionFactory::GetOrCreateDefault();
 		_shouldReleaseFactory = true;
 
-		auto portAllocator = std::unique_ptr<webrtc::PortAllocator>(new webrtc::BasicPortAllocator(
-            webrtc::CreateEnvironment(),
-			_factory->getNetworkManager(),
-			_factory->getSocketFactory()));
-		_port_range = configuration.portRange;
-		portAllocator->SetPortRange(
-			_port_range.min.FromMaybe(0),
-			_port_range.max.FromMaybe(65535));
-
-		webrtc::PeerConnectionDependencies deps(this);
-		deps.allocator = std::move(portAllocator);
-		deps.cert_generator = nullptr;
-
 		auto result = _factory->factory()->CreatePeerConnectionOrError(
 			configuration.configuration,
-			std::move(deps));
+			webrtc::PeerConnectionDependencies { this });
 
 		if (!result.ok()) {
 			CONVERT_OR_THROW_AND_RETURN_VOID_NAPI(env, &result.error(), error, Napi::Value)
