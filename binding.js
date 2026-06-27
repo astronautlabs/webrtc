@@ -1,1 +1,20 @@
+const { EventEmitter } = require('./dist/nodejs/event-emitter');
+
 module.exports = require('bindings')('wrtc.node');
+module.exports.setDOMException(DOMException);
+EventEmitter.mixin(module.exports.MediaStream);
+EventEmitter.mixin(module.exports.MediaStreamTrack);
+EventEmitter.mixin(module.exports.RTCPeerConnectionFactory);
+EventEmitter.mixin(module.exports.RTCDataChannel);
+EventEmitter.mixin(module.exports.RTCIceTransport);
+EventEmitter.mixin(module.exports.RTCDtlsTransport);
+EventEmitter.mixin(module.exports.RTCPeerConnection);
+EventEmitter.mixin(module.exports.RTCRtpReceiver);
+EventEmitter.mixin(module.exports.RTCRtpSender);
+EventEmitter.mixin(module.exports.RTCRtpTransceiver);
+EventEmitter.mixin(module.exports.RTCSctpTransport);
+EventEmitter.mixin(module.exports.RTCStatsResponse);
+EventEmitter.mixin(module.exports.RTCVideoSink);
+EventEmitter.mixin(module.exports.RTCVideoSource);
+EventEmitter.mixin(module.exports.RTCAudioSink);
+EventEmitter.mixin(module.exports.RTCAudioSource);
