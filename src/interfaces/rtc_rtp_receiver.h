@@ -34,31 +34,31 @@ namespace node_webrtc {
 		explicit RTCRtpReceiver(const Napi::CallbackInfo&);
 		static void Init(Napi::Env, Napi::Object);
 
-		inline void setTransport(RTCDtlsTransport* transport) {
+		void setTransport(RTCDtlsTransport* transport) {
 			this->transport = transport;
 		}
 
-		inline void setSources(std::vector<webrtc::RtpSource> value) {
+		void setSources(std::vector<webrtc::RtpSource> value) {
 			sources = value;
 		}
 
-		inline void setTransceiver(RTCRtpTransceiver* value) {
+		void setTransceiver(RTCRtpTransceiver* value) {
 			transceiver = value;
 		}
 
-		inline std::string getId() {
+		std::string getId() {
 			return id;
 		}
 
-		inline void setId(std::string value) {
+		void setId(std::string value) {
 			id = value;
 		}
 
-		static inline void setVideoCapabilities(webrtc::RtpCapabilities caps) {
+		static void setVideoCapabilities(webrtc::RtpCapabilities caps) {
 			videoCapabilities = caps;
 		}
 
-		static inline void setAudioCapabilities(webrtc::RtpCapabilities caps) {
+		static void setAudioCapabilities(webrtc::RtpCapabilities caps) {
 			audioCapabilities = caps;
 		}
 
