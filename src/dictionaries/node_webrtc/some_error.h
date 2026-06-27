@@ -43,6 +43,9 @@ class SomeError {
 
 DECLARE_CONVERTER(webrtc::RTCError*, SomeError)
 DECLARE_CONVERTER(const webrtc::RTCError*, SomeError)
+DECLARE_CONVERTER(webrtc::RTCError, SomeError)
+DECLARE_CONVERTER(const webrtc::RTCError, SomeError)
 DECLARE_TO_NAPI(SomeError)
+DECLARE_TO_NAPI(webrtc::RTCError)
 
 }  // namespace node_webrtc

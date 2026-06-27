@@ -144,6 +144,20 @@ struct Converter<Napi::Value, Napi::Array> {
   }
 };
 
+template <>
+struct Converter<std::pair<Napi::Env, Napi::String>, Napi::Value> {
+  static Validation<Napi::Value> Convert(std::pair<Napi::Env, Napi::String> pair) {
+    return Validation<Napi::Value> { pair.second };
+  }
+};
+
+template <>
+struct Converter<std::pair<Napi::Env, Napi::Object>, Napi::Value> {
+  static Validation<Napi::Value> Convert(std::pair<Napi::Env, Napi::Object> pair) {
+    return Validation<Napi::Value> { pair.second };
+  }
+};
+
 /**
  * Converts Napi::Array into std::vector, calling back into the conversion system for converting each element of the
  * vector.
