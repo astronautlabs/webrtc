@@ -84,7 +84,7 @@
     "rimraf": "^2.6.2",
     "semver": "^5.5.0",
     "server-destroy": "^1.0.1",
-    "simple-peer": "~9.7.0",
+    "simple-peer": "~9.11.1",
     "tap-spec": "^5.0.0",
     "tape": "^4.9.1",
     "temp": "^0.9.0",
@@ -93,6 +93,7 @@
     "typescript": "^5.9.3",
     "which": "^2.0.2",
     "ws": "^5.2.0",
+    "wtfnode": "^0.10.1",
     "zone.js": "^0.11.8"
   },
   "scripts": {
@@ -110,6 +111,7 @@
     "publish:binary": "twine publish",
     "prepublishOnly": "npm run test",
     "test": "jest",
+    "test:wtf": "wtfnode node_modules/.bin/jest",
     "test:cpp": "node --expose-gc --enable-source-maps dist/nodejs/test/cpp-test.js",
     "test:gdb": "cd build/external/libwebrtc/build/Debug && gdb --args node ../../../../../dist/nodejs/test/test.js",
     "test:gdb:verbose": "cd build/external/libwebrtc/build/Debug && gdb --args node ../../../../../dist/nodejs/test/test.js --verbose",
