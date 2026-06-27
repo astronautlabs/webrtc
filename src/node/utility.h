@@ -21,6 +21,13 @@
 
 namespace node_webrtc {
 
+inline void LogToConsole(Napi::Env env, const std::string& message) {
+    Napi::HandleScope scope(env);
+    env.Global().Get("console").As<Napi::Object>()
+        .Get("log").As<Napi::Function>()
+        .Call({ Napi::String::New(env, message) });
+}
+
 template <typename T>
 bool Resolve(Napi::Promise::Deferred deferred, T input) {
   auto env = deferred.Env();
