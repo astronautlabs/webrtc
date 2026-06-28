@@ -46,6 +46,7 @@
   "devDependencies": {
     "@fidm/x509": "^1.2.1",
     "@types/chai": "^4.3.1",
+    "@types/debug": "^4.1.13",
     "@types/js-yaml": "^4.0.9",
     "@types/jsdom": "^16.2.10",
     "@types/mocha-sugar-free": "^1.4.8",
@@ -60,6 +61,7 @@
     "canvas": "^2.5.0",
     "chai": "^4.3.6",
     "cross-env": "^5.1.4",
+    "debug": "^4.4.3",
     "dotenv": "^16.0.1",
     "eslint": "^4.14.0",
     "express": "^4.16.2",
