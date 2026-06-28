@@ -53,7 +53,6 @@
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 #include "src/interfaces/rtc_peer_connection/rtc_stats_collector.h"
 #include "src/interfaces/rtc_peer_connection/set_session_description_observer.h"
-#include "src/interfaces/rtc_peer_connection/stats_observer.h"
 #include "src/interfaces/rtc_rtp_receiver.h"
 #include "src/interfaces/rtc_rtp_sender.h"
 #include "src/interfaces/rtc_rtp_transceiver.h"

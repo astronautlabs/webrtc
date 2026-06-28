@@ -11,7 +11,6 @@
 #include <node-addon-api/napi.h>
 #include <uv.h>
 
-#include "src/interfaces/legacy_rtc_stats_report.h"
 #include "src/interfaces/media_stream.h"
 #include "src/interfaces/media_stream_track.h"
 #include "src/interfaces/rtc_audio_sink.h"
@@ -27,7 +26,6 @@
 #include "src/interfaces/rtc_rtp_transceiver.h"
 #include "src/interfaces/rtc_sctp_transport.h"
 #include "src/interfaces/rtc_session_description.h"
-#include "src/interfaces/rtc_stats_response.h"
 #include "src/interfaces/rtc_video_sink.h"
 #include "src/interfaces/rtc_video_source.h"
 #include "src/methods/get_display_media.h"
