@@ -106,18 +106,28 @@ PeerConnectionFactory::PeerConnectionFactory(const Napi::CallbackInfo &info)
 }
 
 PeerConnectionFactory::~PeerConnectionFactory() {
-  _factory = nullptr;
+  Destruct();
+}
 
-  _workerThread->BlockingCall([&] { this->_audioDeviceModule = nullptr; });
+void PeerConnectionFactory::Destruct() {
+    if (_destructed)
+        return;
+    _factory = nullptr;
 
-  _workerThread->Stop();
-  _signalingThread->Stop();
+    _destructed = true;
+    _workerThread->BlockingCall([&] { this->_audioDeviceModule = nullptr; });
 
-  _workerThread = nullptr;
-  _signalingThread = nullptr;
+    _workerThread->Stop();
+    _signalingThread->Stop();
+    _networkThread->Stop();
 
-  _networkManager = nullptr;
-  _socketFactory = nullptr;
+    _workerThread = nullptr;
+    _signalingThread = nullptr;
+    _networkThread = nullptr;
+}
+
+void PeerConnectionFactory::Finalize(Napi::Env env) {
+    Destruct();
 }
 
 PeerConnectionFactory *PeerConnectionFactory::GetOrCreateDefault() {
@@ -142,6 +152,7 @@ void PeerConnectionFactory::Release() {
   assert(_references >= 0);
   if (!_references) {
     assert(_default != nullptr);
+    _default->Destruct();
     _default->Unref();
     _default = nullptr;
   }

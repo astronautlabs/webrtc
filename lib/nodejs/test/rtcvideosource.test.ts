@@ -61,6 +61,11 @@ describe('RTCVideoSource', () => {
     }
   });
   
+  // TODO(liam):
+  //     Fatal error in: ../../download/src/pc/ice_transport.cc, line 28
+  //     last system error: 0
+  //     Check failed: (creator_thread_)->IsCurrent()
+  //     Aborted
   it.skip('getStats()', async () => {
     const source = new RTCVideoSource();
     const track = source.createTrack();

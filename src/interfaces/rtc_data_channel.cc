@@ -15,6 +15,8 @@
 #include <webrtc/api/scoped_refptr.h>
 #include <webrtc/rtc_base/copy_on_write_buffer.h>
 
+#include "src/node/envelope.h"
+#include "src/utilities/log.h"
 #include "src/enums/node_webrtc/binary_type.h"
 #include "src/enums/webrtc/data_state.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
@@ -29,39 +31,6 @@ Napi::FunctionReference& RTCDataChannel::constructor() {
   return constructor;
 }
 
-DataChannelObserver::DataChannelObserver(PeerConnectionFactory* factory,
-    webrtc::scoped_refptr<webrtc::DataChannelInterface> jingleDataChannel)
-  : _factory(factory)
-  , _jingleDataChannel(std::move(jingleDataChannel)) {
-  _factory->Ref();
-  _jingleDataChannel->RegisterObserver(this);
-}
-
-DataChannelObserver::~DataChannelObserver() {
-  Napi::HandleScope scope(PeerConnectionFactory::constructor().Env());
-  _factory->Unref();
-  _factory = nullptr;
-}  // NOLINT
-
-void DataChannelObserver::OnStateChange() {
-  auto state = _jingleDataChannel->state();
-  Enqueue(Callback1<RTCDataChannel>::Create([state](RTCDataChannel & channel) {
-    RTCDataChannel::HandleStateChange(channel, state);
-  }));
-}
-
-void DataChannelObserver::OnMessage(const webrtc::DataBuffer& buffer) {
-  Enqueue(Callback1<RTCDataChannel>::Create([buffer](RTCDataChannel & channel) {
-    RTCDataChannel::HandleMessage(channel, buffer);
-  }));
-}
-
-static void requeue(DataChannelObserver& observer, RTCDataChannel& channel) {
-  while (auto event = observer.Dequeue()) {
-    channel.Dispatch(std::move(event));
-  }
-}
-
 RTCDataChannel::RTCDataChannel(const Napi::CallbackInfo& info)
   : AsyncObjectWrapWithLoop<RTCDataChannel>("RTCDataChannel", *this, info)
   , _binaryType(BinaryType::kArrayBuffer) {
@@ -72,18 +41,19 @@ RTCDataChannel::RTCDataChannel(const Napi::CallbackInfo& info)
     return;
   }
 
-  auto observer = info[0].As<Napi::External<node_webrtc::DataChannelObserver>>().Data();
+  // In previous versions we had some complexity around connecting an observer early and replaying events.
+  // In M150 this is not necessary, the data is already queued until an observer is registered, and state() is a blocking 
+  // call to the network thread. So just register the observer, and if we haven't sent an open state event yet after
+  // that (and we're already open), just synthesize an OnStateChange() event. 
 
-  _factory = observer->_factory;
+  _factory = Napi::Envelope<PeerConnectionFactory*>::Open(info[0]);
   _factory->Ref();
 
-  _jingleDataChannel = observer->_jingleDataChannel;
+  _jingleDataChannel = Napi::Envelope<webrtc::scoped_refptr<webrtc::DataChannelInterface>>::Open(info[1]);
   _jingleDataChannel->RegisterObserver(this);
-
-  // Re-queue cached observer events
-  requeue(*observer, *this);
-
-  delete observer;
+  
+  if (!hasOpened && _jingleDataChannel->state() == webrtc::DataChannelInterface::kOpen)
+    OnStateChange();
 
   // NOTE(mroberts): These doesn't actually matter yet.
   _cached_id = 0;
@@ -95,10 +65,9 @@ RTCDataChannel::RTCDataChannel(const Napi::CallbackInfo& info)
 }
 
 void RTCDataChannel::Finalize(Napi::Env env) {
+  wrap()->Release(this);
   _factory->Unref();
   _factory = nullptr;
-
-  wrap()->Release(this);
 }
 
 void RTCDataChannel::CleanupInternals() {
@@ -115,19 +84,31 @@ void RTCDataChannel::CleanupInternals() {
   _cached_protocol = _jingleDataChannel->protocol();
   _cached_buffered_amount = _jingleDataChannel->buffered_amount();
   _jingleDataChannel = nullptr;
+  wrap()->Release(this);
 }
 
 void RTCDataChannel::OnPeerConnectionClosed() {
   if (_jingleDataChannel != nullptr) {
     Stop();
+    CleanupInternals();
   }
 }
 
 void RTCDataChannel::OnStateChange() {
   auto state = _jingleDataChannel->state();
-  if (state == webrtc::DataChannelInterface::kClosed) {
-    CleanupInternals();
+  Log(this, "RTCDataChannel::OnStateChange(" + std::to_string(state) + ")");
+
+//   if (state == webrtc::DataChannelInterface::kClosed) {
+//     CleanupInternals();
+//   }
+
+  // Only send one open event, even if we encounter one later. 
+  if (state == webrtc::DataChannelInterface::kOpen) {
+    if (hasOpened)
+        return;
+    hasOpened = true;
   }
+
   Dispatch(CreateCallback<RTCDataChannel>([this, state]() {
     RTCDataChannel::HandleStateChange(*this, state);
   }));
@@ -139,13 +120,15 @@ void RTCDataChannel::HandleStateChange(RTCDataChannel& channel, webrtc::DataChan
   auto object = Napi::Object::New(env);
   if (state == webrtc::DataChannelInterface::kClosed) {
     object.Set("type", Napi::String::New(env, "close"));
+    channel.CleanupInternals();
   } else if (state == webrtc::DataChannelInterface::kOpen) {
     object.Set("type", Napi::String::New(env, "open"));
   }
-  channel.MakeCallback("dispatchEvent", { object });
   if (state == webrtc::DataChannelInterface::kClosed) {
     channel.Stop();
+    channel._jingleDataChannel = nullptr;
   }
+  channel.MakeCallback("dispatchEvent", { object });
 }
 
 void RTCDataChannel::OnMessage(const webrtc::DataBuffer& buffer) {
@@ -214,7 +197,7 @@ Napi::Value RTCDataChannel::Send(const Napi::CallbackInfo& info) {
         return env.Undefined();
       }
 
-      auto content = static_cast<char*>(arraybuffer.Data());
+      char* content = static_cast<char*>(arraybuffer.Data());
       webrtc::CopyOnWriteBuffer buffer(content + byte_offset, byte_length);
 
       webrtc::DataBuffer data_buffer(buffer, true);
@@ -327,27 +310,19 @@ void RTCDataChannel::SetBinaryType(const Napi::CallbackInfo& info, const Napi::V
   _binaryType = maybeBinaryType.UnsafeFromValid();
 }
 
-Wrap <
-RTCDataChannel*,
-webrtc::scoped_refptr<webrtc::DataChannelInterface>,
-node_webrtc::DataChannelObserver*
-> * RTCDataChannel::wrap() {
-  static auto* wrap = new node_webrtc::Wrap <
-  RTCDataChannel*,
-  webrtc::scoped_refptr<webrtc::DataChannelInterface>,
-  node_webrtc::DataChannelObserver*
-  > (RTCDataChannel::Create);
+Wrap <RTCDataChannel*, webrtc::scoped_refptr<webrtc::DataChannelInterface>, node_webrtc::PeerConnectionFactory*> * RTCDataChannel::wrap() {
+  static auto* wrap = new node_webrtc::Wrap<RTCDataChannel*, webrtc::scoped_refptr<webrtc::DataChannelInterface>, 
+    node_webrtc::PeerConnectionFactory*>(RTCDataChannel::Create);
   return wrap;
 }
 
-RTCDataChannel* RTCDataChannel::Create(
-    node_webrtc::DataChannelObserver* observer,
-    webrtc::scoped_refptr<webrtc::DataChannelInterface>) {
+RTCDataChannel* RTCDataChannel::Create(PeerConnectionFactory* factory, webrtc::scoped_refptr<webrtc::DataChannelInterface> channel) {
   auto env = constructor().Env();
   Napi::HandleScope scope(env);
 
   auto object = constructor().New({
-    Napi::External<node_webrtc::DataChannelObserver>::New(env, observer)
+    Napi::CreateEnvelope(env, factory),
+    Napi::CreateEnvelope(env, channel)
   });
 
   auto* unwrapped = Unwrap(object);
@@ -369,7 +344,7 @@ void RTCDataChannel::Init(Napi::Env env, Napi::Object exports) {
     InstanceAccessor("binaryType", &RTCDataChannel::GetBinaryType, &RTCDataChannel::SetBinaryType),
     InstanceAccessor("readyState", &RTCDataChannel::GetReadyState, nullptr),
     InstanceMethod("close", &RTCDataChannel::Close),
-    InstanceMethod("_send", &RTCDataChannel::Send)
+    InstanceMethod("send", &RTCDataChannel::Send)
   });
 
   constructor() = Napi::Persistent(func);

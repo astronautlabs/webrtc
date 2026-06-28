@@ -43,6 +43,9 @@ class PeerConnectionFactory
 
   ~PeerConnectionFactory();
 
+  void Destruct();
+  void Finalize(Napi::Env env) override;
+
   /**
    * Get or create the default PeerConnectionFactory. The default uses
    * webrtc::AudioDeviceModule::AudioLayer::kDummyAudio. Call {@link Release} when done.
@@ -68,8 +71,9 @@ class PeerConnectionFactory
   std::unique_ptr<webrtc::Thread> _signalingThread;
   std::unique_ptr<webrtc::Thread> _workerThread;
   std::unique_ptr<webrtc::Thread> _networkThread;
-
+  
  private:
+  bool _destructed = false;
   static PeerConnectionFactory* _default;
   static std::mutex _mutex;
   static int _references;

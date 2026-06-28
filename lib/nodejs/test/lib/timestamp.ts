@@ -1,4 +1,4 @@
-import { RTCVideoFrame } from "../../videoframe";
+import { RTCVideoFrame } from "../..";
 import { I420Frame } from "./frame";
 
 export function printBitsI420(frame: I420Frame, bits: boolean[]) {

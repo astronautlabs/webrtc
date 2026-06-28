@@ -18,6 +18,7 @@
 #include "src/interfaces/rtc_audio_source.h"
 #include "src/interfaces/rtc_data_channel.h"
 #include "src/interfaces/rtc_dtls_transport.h"
+#include "src/interfaces/rtc_ice_candidate.h"
 #include "src/interfaces/rtc_ice_transport.h"
 #include "src/interfaces/rtc_peer_connection.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
@@ -46,7 +47,15 @@ static void dispose(void*) {
 static Napi::Object Init(Napi::Env env, Napi::Object exports) {
   #ifdef DEBUG
     // Comment this out when needed, but do not commit.
-    webrtc::LogMessage::SetLogToStderr(false);
+
+    const char* debugVar = std::getenv("LIBWEBRTC_DEBUG");
+    if (debugVar && std::string { debugVar } == "1") {
+        webrtc::LogMessage::SetLogToStderr(true);
+        webrtc::LogMessage::LogToDebug(webrtc::LoggingSeverity::LS_VERBOSE);
+    } else {
+        webrtc::LogMessage::SetLogToStderr(false);
+    }
+    
   #else
     webrtc::LogMessage::SetLogToStderr(false);
   #endif 
@@ -63,6 +72,7 @@ static Napi::Object Init(Napi::Env env, Napi::Object exports) {
   node_webrtc::RTCAudioSink::Init(env, exports);
   node_webrtc::RTCAudioSource::Init(env, exports);
   node_webrtc::RTCDataChannel::Init(env, exports);
+  node_webrtc::RTCIceCandidate::Init(env, exports);
   node_webrtc::RTCIceTransport::Init(env, exports);
   node_webrtc::RTCDtlsTransport::Init(env, exports);
   node_webrtc::RTCPeerConnection::Init(env, exports);

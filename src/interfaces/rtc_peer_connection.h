@@ -53,7 +53,8 @@ namespace node_webrtc {
 		//
 		void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new_state) override;
 		void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
-		void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState new_state) override;
+        void OnConnectionChange(webrtc::PeerConnectionInterface::PeerConnectionState) override;
+        void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState new_state) override;
 		void OnIceCandidate(const webrtc::IceCandidate* candidate) override;
 		void OnIceCandidateError(const std::string &, int, const std::string &, int, const std::string &) override;
 		void OnRenegotiationNeeded() override;

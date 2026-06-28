@@ -3,6 +3,9 @@
  * @author Jesús Leganés Combarro "Piranna" <piranna@gmail.com>
  */
 
+import { debug as debugSetup } from 'debug';
+
+const debug = debugSetup('webrtc');
 type EventHandler = ((event: Event) => void) | { handleEvent(event: Event): void; };
 
 const EMITTER = Symbol('EMITTER');
@@ -44,7 +47,6 @@ export class EventEmitter {
 
     dispatchEvent(event: Event) {
         let listenerMap = this._listeners ??= {};
-        console.log(`DISPATCH ${event.type} on next tick `);
         process.nextTick(() => {
             let listeners = new Set(listenerMap[event.type] || []);
             const dummyListener = this.subject['on' + event.type];
@@ -52,7 +54,7 @@ export class EventEmitter {
                 listeners.add(dummyListener);
             }
 
-            console.log(`DISPATCH ${event.type} NOW to ${listeners.size}`);
+            debug(`dispatch event ${event.type} to ${listeners.size} listeners: ${JSON.stringify(event, undefined, 2)}`);
             listeners.forEach((listener: EventHandler) => {
                 if (typeof listener === 'object' && typeof listener.handleEvent === 'function') {
                     listener.handleEvent(event);

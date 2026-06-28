@@ -1,8 +1,7 @@
 /* eslint no-undefined:0 */
 
 import { expect } from 'chai';
-import { describe, it } from 'razmin';
-
+import { describe, it } from '@jest/globals';
 import { RTCAudioSink, RTCAudioSource } from '..';
 
 function createData(bitsPerSample: number) {

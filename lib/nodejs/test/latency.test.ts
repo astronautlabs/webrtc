@@ -1,4 +1,4 @@
-import { describe, it } from 'razmin';
+import { describe, it } from '@jest/globals';
 import { performance } from 'perf_hooks';
 
 import { RTCVideoSink, RTCVideoSource } from '..';

@@ -1,5 +1,4 @@
-import { RTCPeerConnection, RTCStatsReportExtension, RTCVideoSource } from '../..';
-import { RTCVideoFrame } from '../../videoframe';
+import { RTCPeerConnection, RTCStatsReport, RTCVideoSource, RTCVideoFrame } from '../..';
 
 export function createRTCPeerConnections(configuration1 = {}, configuration2 = {}, options: any = {}) {
   options = {
@@ -83,7 +82,7 @@ export async function negotiateRTCPeerConnections(
   }
 }
 
-export async function getLocalTrackStats(pc: RTCPeerConnection, track: MediaStreamTrack, check = (stats: RTCStatsReport & RTCStatsReportExtension) => true) {
+export async function getLocalTrackStats(pc: RTCPeerConnection, track: MediaStreamTrack, check = (stats: RTCStatsReport) => true) {
   let stats;
   do {
     const report = await pc.getStats();

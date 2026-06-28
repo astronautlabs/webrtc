@@ -7,45 +7,52 @@ import { describe, it } from '@jest/globals';
 
 var log = process.env.LOG ? console.log : function() {};
 
+/**
+ * These tests take quite some time, it is mainly stress testing the connection process that simple-peer uses.
+ * simple-peer is a good test case because it uses a lot of functionality to ensure the connection is working correctly:
+ * - normal ICE candidate exchange / peer connection establishment
+ * - data channel creation with message passing
+ * - getStats
+ */
 describe('multiconnect', () => {
-  it('connect once', () => {
-    log('###########################\n');
-    connect((err: Error) => { if (err) throw err; });
+  it('connect once', done => {
+    connect(err => done(err));
   });
-  it('connect loop', () => {
-    log('###########################\n');
-    connectLoop(10, (err: Error) => { if (err) throw err; });
+  it('connect once and then later', done => {
+    connect(err => {
+        setTimeout(() => {
+            connect(err => {
+                done(err)
+            });
+        }, 3000);
+    });
   });
-  it('connect concurrent', () => {
+  it('connect loop', done => {
+    connectLoop(10, err => done(err));
+  });
+  it('connect concurrent', done => {
     var n = 10;
-    log('###########################\n');
     for (let i = 0; i < n; i += 1)
-      connect((err: Error) => { if (err) throw err; });
+      connect(err => done(err));
   });
-  it('connect loop concurrent', () => {
+  it('connect loop concurrent', done => {
     var n = 10;
-    log('###########################\n');
     for (var i = 0; i < n; i += 1)
-      connectLoop(10, (err: Error) => { if (err) throw err; });
+      connectLoop(10, (err: Error) => done(err));
   });
 });
 
 var connIdGen = 1;
 
-function connect(callback: any) {
+function connect(callback: (err?: Error) => void) {
   var connId = connIdGen;
   var connName = 'CONNECTION-' + connId;
   connIdGen += 1;
   log(connName, 'starting');
 
   // setup two peers with simple-peer
-  var peer1: simplepeer.Instance | null = new SimplePeer(<any>{
-    wrtc: wrtc
-  });
-  var peer2: simplepeer.Instance | null = new SimplePeer(<any>{
-    wrtc: wrtc,
-    initiator: true
-  });
+  var peer1: simplepeer.Instance | null = new SimplePeer(<any>{ wrtc: wrtc });
+  var peer2: simplepeer.Instance | null = new SimplePeer(<any>{ wrtc: wrtc, initiator: true });
 
   function cleanup() {
     if (peer1) {
@@ -60,13 +67,11 @@ function connect(callback: any) {
 
   // when peer1 has signaling data, give it to peer2, and vice versa
   peer1.on('signal', function(data) {
-    log(connName, 'signal peer1 -> peer2:');
-    log(' ', data);
+    log(connName, `signal peer1 -> peer2: ${JSON.stringify(data, undefined, 2)}`);
     peer2?.signal(data);
   });
   peer2.on('signal', function(data) {
-    log(connName, 'signal peer2 -> peer1:');
-    log(' ', data);
+    log(connName, `signal peer2 -> peer1: ${JSON.stringify(data, undefined, 2)}`);
     peer1?.signal(data);
   });
 
@@ -99,7 +104,7 @@ function connectLoop(count: number, callback: (err?: any) => void) {
     callback();
   } else {
     log('connect loop remain', count);
-    connect(function(err: Error) {
+    connect(err => {
       if (err) {
         callback(err);
       } else {

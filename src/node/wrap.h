@@ -13,6 +13,11 @@
 
 namespace node_webrtc {
 
+/**
+ * T: the Napi wrapper type
+ * U: the object being wrapped
+ * V: additional arguments passed to the Create function
+ */
 template<typename T, typename U, typename ...V>
 class Wrap {
  public:

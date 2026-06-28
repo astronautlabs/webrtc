@@ -112,15 +112,20 @@ describe('RTCRTPSender', () => {
     pc.close();
   });
   
-  it('.addTrack(track, stream) called twice', async () => {
+  it.only('.addTrack(track, stream) called twice', async () => {
     let stream = await getMediaStream();
+    console.log(`making pc`);
     const pc = new RTCPeerConnection();
+    console.log(`getting track`);
     const [track] = stream.getTracks();
+    console.log(`adding track`);
     pc.addTrack(track, stream);
 
+    console.log(`adding track second time`);
     expect(() => pc.addTrack(track, stream))
       .to.throw(/Sender already exists for track/);
 
+    console.log(`closing final pc`);
     pc.close();
   });
   
@@ -143,12 +148,16 @@ describe('RTCRTPSender', () => {
 
 async function getMediaStream() {
   var pc = new RTCPeerConnection();
-  var offer = new RTCSessionDescription({ type: 'offer', sdp: sdp });
+  var offer = new RTCSessionDescription({ type: 'offer', sdp });
   var trackEventPromise = new Promise<RTCTrackEvent>(function(resolve) {
     pc.ontrack = resolve;
   });
+  console.log(`wait for remote desc`);
   await pc.setRemoteDescription(offer);
+  console.log(`wait for track event`);
   let trackEvent = await trackEventPromise;
+  console.log(`closing pc`);
   pc.close();
+  console.log(`returning stream`);
   return trackEvent.streams[0];
 }

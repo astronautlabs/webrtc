@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { describe, it } from '@jest/globals';
-import { RTCVideoSink, RTCVideoSource } from '..';
-import { RTCVideoFrame } from '../videoframe';
+import { RTCVideoSink, RTCVideoSource, RTCVideoFrame } from '..';
 import { I420Frame } from './lib/frame';
 
 describe('RTCVideoSink', () => {

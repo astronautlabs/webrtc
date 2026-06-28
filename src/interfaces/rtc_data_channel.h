@@ -16,19 +16,18 @@
 #include <webrtc/api/scoped_refptr.h>
 
 #include "src/enums/node_webrtc/binary_type.h"
-#include "src/node/event_queue.h"
 #include "src/node/async_object_wrap_with_loop.h"
 #include "src/node/wrap.h"
 
 namespace node_webrtc {
-
-class DataChannelObserver;
 class PeerConnectionFactory;
 
+/**
+ * Represents the RTCDataChannel Javascript object, and manages all state related to webrtc::DataChannelInterface.
+ */
 class RTCDataChannel
   : public AsyncObjectWrapWithLoop<RTCDataChannel>
   , public webrtc::DataChannelObserver {
-  friend class node_webrtc::DataChannelObserver;
  public:
   explicit RTCDataChannel(const Napi::CallbackInfo&);
 
@@ -38,24 +37,18 @@ class RTCDataChannel
 
   static void Init(Napi::Env, Napi::Object);
 
-  //
-  // DataChannelObserver implementation.
-  //
+  bool hasOpened = false;
+
+  // ~ Begin DataChannelObserver interface.
   void OnStateChange() override;
   void OnMessage(const webrtc::DataBuffer& buffer) override;
+  // ~ End DataChannelObserver interface
 
   void OnPeerConnectionClosed();
 
-  static ::node_webrtc::Wrap <
-  RTCDataChannel*,
-  webrtc::scoped_refptr<webrtc::DataChannelInterface>,
-  node_webrtc::DataChannelObserver*
-  > * wrap();
-
+  static ::node_webrtc::Wrap <RTCDataChannel*, webrtc::scoped_refptr<webrtc::DataChannelInterface>, PeerConnectionFactory*> * wrap();
  private:
-  static RTCDataChannel* Create(
-      node_webrtc::DataChannelObserver*,
-      webrtc::scoped_refptr<webrtc::DataChannelInterface>);
+  static RTCDataChannel* Create(PeerConnectionFactory*, webrtc::scoped_refptr<webrtc::DataChannelInterface>);
 
   static void HandleStateChange(RTCDataChannel&, webrtc::DataChannelInterface::DataState);
   static void HandleMessage(RTCDataChannel&, const webrtc::DataBuffer& buffer);
@@ -87,27 +80,6 @@ class RTCDataChannel
   bool _cached_ordered;
   std::string _cached_protocol;
   uint64_t _cached_buffered_amount;
-  PeerConnectionFactory* _factory;
-  webrtc::scoped_refptr<webrtc::DataChannelInterface> _jingleDataChannel;
-};
-
-class DataChannelObserver
-  : public EventQueue<RTCDataChannel>
-  , public webrtc::DataChannelObserver {
-  friend class RTCDataChannel;
- public:
-  DataChannelObserver(
-      PeerConnectionFactory* factory,
-      webrtc::scoped_refptr<webrtc::DataChannelInterface> jingleDataChannel);
-
-  ~DataChannelObserver() override;
-
-  void OnStateChange() override;
-  void OnMessage(const webrtc::DataBuffer& buffer) override;
-
-  webrtc::scoped_refptr<webrtc::DataChannelInterface> channel() { return _jingleDataChannel; }
-
- private:
   PeerConnectionFactory* _factory;
   webrtc::scoped_refptr<webrtc::DataChannelInterface> _jingleDataChannel;
 };

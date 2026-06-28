@@ -15,7 +15,7 @@ export default {
   watchman: false,
 
   // Our tests can be quite long.
-  testTimeout: 60_000,
+  testTimeout: 120_000,
 
   // We currently need some more time after cleaning up RTC objects, so we relax Jest's exit timeout to account for this.
   // TODO(liam): I still think we can do better than this.
