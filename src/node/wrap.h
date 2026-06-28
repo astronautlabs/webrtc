@@ -13,39 +13,40 @@
 
 namespace node_webrtc {
 
-/**
- * T: the Napi wrapper type
- * U: the object being wrapped
- * V: additional arguments passed to the Create function
- */
-template<typename T, typename U, typename ...V>
-class Wrap {
- public:
-  Wrap() = delete;
+    /**
+     * T: the Napi wrapper type
+     * U: the object being wrapped
+     * V: additional arguments passed to the Create function
+     */
+    template <typename T, typename U, typename... V>
+    class Wrap {
+    public:
+        Wrap() = delete;
 
-  explicit Wrap(T(*Create)(V..., U)): _Create(Create) {}
+        explicit Wrap(T (*Create)(V..., U)) :
+            _Create(Create) { }
 
-  Wrap(Wrap const&) = delete;
+        Wrap(Wrap const&) = delete;
 
-  Wrap& operator=(Wrap const&) = delete;
+        Wrap& operator=(Wrap const&) = delete;
 
-  T GetOrCreate(V... args, U key) {
-    return _map.computeIfAbsent(key, [this, key, args...]() {
-      return _Create(args..., key);
-    });
-  }
+        T GetOrCreate(V... args, U key) {
+            return _map.computeIfAbsent(key, [this, key, args...]() {
+                return _Create(args..., key);
+            });
+        }
 
-  T Get(U key) {
-    return _map.get(key).FromMaybe(nullptr);
-  }
+        T Get(U key) {
+            return _map.get(key).FromMaybe(nullptr);
+        }
 
-  void Release(T value) {
-    _map.reverseRemove(value);
-  }
+        void Release(T value) {
+            _map.reverseRemove(value);
+        }
 
- private:
-  T(*_Create)(V..., U);
-  BidiMap<U, T> _map;
-};
+    private:
+        T (*_Create)(V..., U);
+        BidiMap<U, T> _map;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

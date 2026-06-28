@@ -6,6 +6,6 @@
 
 namespace node_webrtc {
 
-DECLARE_TO_NAPI(webrtc::Buffer*)
+    DECLARE_TO_NAPI(webrtc::Buffer*)
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

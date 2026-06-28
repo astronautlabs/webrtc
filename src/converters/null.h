@@ -4,11 +4,11 @@
 
 namespace node_webrtc {
 
-class Null {
- public:
-  Null() = default;
-};
+    class Null {
+    public:
+        Null() = default;
+    };
 
-DECLARE_FROM_NAPI(Null)
+    DECLARE_FROM_NAPI(Null)
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

@@ -28,3 +28,5 @@ AlignAfterOpenBracket: BlockIndent
 BinPackArguments: false
 AllowAllConstructorInitializersOnNextLine: true
 NamespaceIndentation: All
+AllowShortLambdasOnASingleLine: true
+LambdaBodyIndentation: OuterScope

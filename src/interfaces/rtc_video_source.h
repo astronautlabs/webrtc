@@ -18,72 +18,77 @@
 #include <webrtc/media/base/adapted_video_track_source.h>
 
 #include "src/dictionaries/node_webrtc/rtc_video_source_init.h"
-#include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 #include "src/interfaces/media_stream_track.h"
+#include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 
-namespace webrtc { class VideoFrame; }
+namespace webrtc {
+    class VideoFrame;
+}
 
 namespace node_webrtc {
 
-class RTCVideoTrackSource : public webrtc::AdaptedVideoTrackSource {
- public:
-  RTCVideoTrackSource()
-    : webrtc::AdaptedVideoTrackSource(), _is_screencast(false) {}
+    class RTCVideoTrackSource : public webrtc::AdaptedVideoTrackSource {
+    public:
+        RTCVideoTrackSource() :
+            webrtc::AdaptedVideoTrackSource(),
+            _is_screencast(false) { }
 
-  RTCVideoTrackSource(const bool is_screencast, const absl::optional<bool> needs_denoising)
-    : webrtc::AdaptedVideoTrackSource(), _is_screencast(is_screencast), _needs_denoising(needs_denoising) {}
+        RTCVideoTrackSource(const bool is_screencast, const absl::optional<bool> needs_denoising) :
+            webrtc::AdaptedVideoTrackSource(),
+            _is_screencast(is_screencast),
+            _needs_denoising(needs_denoising) { }
 
-  ~RTCVideoTrackSource() override {
-    PeerConnectionFactory::Release();
-    _factory = nullptr;
-  }
+        ~RTCVideoTrackSource() override {
+            PeerConnectionFactory::Release();
+            _factory = nullptr;
+        }
 
-  SourceState state() const override {
-    return webrtc::MediaSourceInterface::SourceState::kLive;
-  }
+        SourceState state() const override {
+            return webrtc::MediaSourceInterface::SourceState::kLive;
+        }
 
-  bool remote() const override {
-    return false;
-  }
+        bool remote() const override {
+            return false;
+        }
 
-  bool is_screencast() const override {
-    return _is_screencast;
-  }
+        bool is_screencast() const override {
+            return _is_screencast;
+        }
 
-  absl::optional<bool> needs_denoising() const override {
-    return _needs_denoising;
-  }
+        absl::optional<bool> needs_denoising() const override {
+            return _needs_denoising;
+        }
 
-  void PushFrame(const webrtc::VideoFrame& frame) {
-    this->OnFrame(frame);
-  }
+        void PushFrame(const webrtc::VideoFrame& frame) {
+            this->OnFrame(frame);
+        }
 
- private:
-  PeerConnectionFactory* _factory = PeerConnectionFactory::GetOrCreateDefault();
-  const bool _is_screencast;
-  const absl::optional<bool> _needs_denoising;
-};
+    private:
+        PeerConnectionFactory* _factory = PeerConnectionFactory::GetOrCreateDefault();
+        const bool _is_screencast;
+        const absl::optional<bool> _needs_denoising;
+    };
 
-class RTCVideoSource
-  : public Napi::ObjectWrap<RTCVideoSource> {
- public:
-  explicit RTCVideoSource(const Napi::CallbackInfo&);
-  static void Init(Napi::Env, Napi::Object);
-  void Finalize(Napi::Env env) override;
+    class RTCVideoSource
+        : public Napi::ObjectWrap<RTCVideoSource> {
+    public:
+        explicit RTCVideoSource(const Napi::CallbackInfo&);
+        static void Init(Napi::Env, Napi::Object);
+        void Finalize(Napi::Env env) override;
 
- private:
-  static Napi::FunctionReference& constructor();
+    private:
+        static Napi::FunctionReference& constructor();
 
-  Napi::Value New(const Napi::CallbackInfo&);
+        Napi::Value New(const Napi::CallbackInfo&);
 
-  Napi::Value GetIsScreencast(const Napi::CallbackInfo&);
-  Napi::Value GetNeedsDenoising(const Napi::CallbackInfo&);
+        Napi::Value GetIsScreencast(const Napi::CallbackInfo&);
+        Napi::Value GetNeedsDenoising(const Napi::CallbackInfo&);
 
-  Napi::Value CreateTrack(const Napi::CallbackInfo&);
-  Napi::Value OnFrame(const Napi::CallbackInfo&);
+        Napi::Value CreateTrack(const Napi::CallbackInfo&);
+        Napi::Value OnFrame(const Napi::CallbackInfo&);
 
-  webrtc::scoped_refptr<RTCVideoTrackSource> _source;
-  std::set<MediaStreamTrack*> _tracks;
-};
+        webrtc::scoped_refptr<RTCVideoTrackSource> _source;
+        std::set<MediaStreamTrack*> _tracks;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

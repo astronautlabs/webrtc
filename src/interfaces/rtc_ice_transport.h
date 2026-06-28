@@ -20,61 +20,64 @@
 #include "src/node/async_object_wrap_with_loop.h"
 #include "src/node/wrap.h"
 
-namespace webrtc { class IceTransportInternal; }
+namespace webrtc {
+    class IceTransportInternal;
+}
 
 namespace node_webrtc {
 
-	class PeerConnectionFactory;
+    class PeerConnectionFactory;
 
-	class RTCIceTransport: public AsyncObjectWrapWithLoop<RTCIceTransport> {
-	public:
-		explicit RTCIceTransport(const Napi::CallbackInfo&);
+    class RTCIceTransport : public AsyncObjectWrapWithLoop<RTCIceTransport> {
+    public:
+        explicit RTCIceTransport(const Napi::CallbackInfo&);
 
-		void Finalize(Napi::Env env) override;
+        void Finalize(Napi::Env env) override;
 
-		static void Init(Napi::Env, Napi::Object);
+        static void Init(Napi::Env, Napi::Object);
 
-		static Wrap <
-			RTCIceTransport*,
-			webrtc::scoped_refptr<webrtc::IceTransportInterface>,
-			PeerConnectionFactory*
-		>* wrap();
+        static Wrap<
+            RTCIceTransport*,
+            webrtc::scoped_refptr<webrtc::IceTransportInterface>,
+            PeerConnectionFactory*>*
+        wrap();
 
-		void OnRTCDtlsTransportStopped();
+        void OnRTCDtlsTransportStopped();
 
-	protected:
-		void Stop() override;
+    protected:
+        void Stop() override;
 
-	private:
-		static Napi::FunctionReference& constructor();
+    private:
+        static Napi::FunctionReference& constructor();
 
-		static RTCIceTransport* Create(
-			PeerConnectionFactory*,
-			webrtc::scoped_refptr<webrtc::IceTransportInterface>);
+        static RTCIceTransport* Create(
+            PeerConnectionFactory*,
+            webrtc::scoped_refptr<webrtc::IceTransportInterface>
+        );
 
-		void OnStateChanged(webrtc::IceTransportInternal*);
-		void OnGatheringStateChanged(webrtc::IceTransportInternal*);
+        void OnStateChanged(webrtc::IceTransportInternal*);
+        void OnGatheringStateChanged(webrtc::IceTransportInternal*);
 
-		void TakeSnapshot();
+        void TakeSnapshot();
 
-		Napi::Value GetRole(const Napi::CallbackInfo&);
-		Napi::Value GetComponent(const Napi::CallbackInfo&);
-		Napi::Value GetState(const Napi::CallbackInfo&);
-		Napi::Value GetGatheringState(const Napi::CallbackInfo&);
+        Napi::Value GetRole(const Napi::CallbackInfo&);
+        Napi::Value GetComponent(const Napi::CallbackInfo&);
+        Napi::Value GetState(const Napi::CallbackInfo&);
+        Napi::Value GetGatheringState(const Napi::CallbackInfo&);
 
-		Napi::Value GetLocalCandidates(const Napi::CallbackInfo&);
-		Napi::Value GetRemoteCandidates(const Napi::CallbackInfo&);
-		Napi::Value GetSelectedCandidatePair(const Napi::CallbackInfo&);
-		Napi::Value GetLocalParameters(const Napi::CallbackInfo&);
-		Napi::Value GetRemoteParameters(const Napi::CallbackInfo&);
+        Napi::Value GetLocalCandidates(const Napi::CallbackInfo&);
+        Napi::Value GetRemoteCandidates(const Napi::CallbackInfo&);
+        Napi::Value GetSelectedCandidatePair(const Napi::CallbackInfo&);
+        Napi::Value GetLocalParameters(const Napi::CallbackInfo&);
+        Napi::Value GetRemoteParameters(const Napi::CallbackInfo&);
 
-		RTCIceComponent _component = RTCIceComponent::kRtp;
-		PeerConnectionFactory* _factory;
-		webrtc::IceGatheringState _gathering_state = webrtc::IceGatheringState::kIceGatheringNew;
-		std::mutex _mutex{};
-		webrtc::IceRole _role = webrtc::IceRole::ICEROLE_UNKNOWN;
-		webrtc::IceTransportState _state = webrtc::IceTransportState::kNew;
-		webrtc::scoped_refptr<webrtc::IceTransportInterface> _transport;
-	};
+        RTCIceComponent _component = RTCIceComponent::kRtp;
+        PeerConnectionFactory* _factory;
+        webrtc::IceGatheringState _gathering_state = webrtc::IceGatheringState::kIceGatheringNew;
+        std::mutex _mutex { };
+        webrtc::IceRole _role = webrtc::IceRole::ICEROLE_UNKNOWN;
+        webrtc::IceTransportState _state = webrtc::IceTransportState::kNew;
+        webrtc::scoped_refptr<webrtc::IceTransportInterface> _transport;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

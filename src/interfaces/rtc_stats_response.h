@@ -17,22 +17,22 @@
 
 namespace node_webrtc {
 
-class RTCStatsResponse
-  : public Napi::ObjectWrap<RTCStatsResponse> {
- public:
-  explicit RTCStatsResponse(const Napi::CallbackInfo&);
+    class RTCStatsResponse
+        : public Napi::ObjectWrap<RTCStatsResponse> {
+    public:
+        explicit RTCStatsResponse(const Napi::CallbackInfo&);
 
-  static void Init(Napi::Env, Napi::Object);
+        static void Init(Napi::Env, Napi::Object);
 
-  static RTCStatsResponse* Create(double timestamp, const std::vector<std::map<std::string, std::string>>& reports);
+        static RTCStatsResponse* Create(double timestamp, const std::vector<std::map<std::string, std::string>>& reports);
 
- private:
-  static Napi::FunctionReference& constructor();
+    private:
+        static Napi::FunctionReference& constructor();
 
-  Napi::Value Result(const Napi::CallbackInfo&);
+        Napi::Value Result(const Napi::CallbackInfo&);
 
-  double _timestamp;
-  std::vector<std::map<std::string, std::string>> _reports;
-};
+        double _timestamp;
+        std::vector<std::map<std::string, std::string>> _reports;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

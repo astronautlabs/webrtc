@@ -6,11 +6,11 @@
 #include <node-addon-api/napi.h>
 
 #include "src/node/async_object_wrap.h"
-#include "src/node/event_loop.h"
 #include "src/node/event_builder.h"
+#include "src/node/event_loop.h"
 
 namespace node_webrtc {
-    
+
     template <typename T>
     class AsyncObjectWrapWithLoop
         : public AsyncObjectWrap<T>,
@@ -35,10 +35,9 @@ namespace node_webrtc {
         EventBuilder Event(const char* type) {
             return EventBuilder { this->Env() }
                 .With("type", type)
-                .DispatchTo([&] (Napi::Object event) {
-                    this->MakeCallback("dispatchEvent", { event });
-                })
-            ;
+                .DispatchTo([&](Napi::Object event) {
+                this->MakeCallback("dispatchEvent", { event });
+            });
         }
 
     protected:

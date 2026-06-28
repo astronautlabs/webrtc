@@ -18,52 +18,55 @@
 #include "src/node/async_object_wrap_with_loop.h"
 #include "src/node/wrap.h"
 
-namespace webrtc { class RTCError; }
+namespace webrtc {
+    class RTCError;
+}
 
 namespace node_webrtc {
 
-class PeerConnectionFactory;
+    class PeerConnectionFactory;
 
-class RTCDtlsTransport
-  : public AsyncObjectWrapWithLoop<RTCDtlsTransport>
-  , public webrtc::DtlsTransportObserverInterface {
- public:
-  explicit RTCDtlsTransport(const Napi::CallbackInfo&);
+    class RTCDtlsTransport
+        : public AsyncObjectWrapWithLoop<RTCDtlsTransport>,
+          public webrtc::DtlsTransportObserverInterface {
+    public:
+        explicit RTCDtlsTransport(const Napi::CallbackInfo&);
 
-  void Finalize(Napi::Env env) override;
+        void Finalize(Napi::Env env) override;
 
-  static void Init(Napi::Env, Napi::Object);
+        static void Init(Napi::Env, Napi::Object);
 
-  static ::node_webrtc::Wrap <
-  RTCDtlsTransport*,
-  webrtc::scoped_refptr<webrtc::DtlsTransportInterface>,
-  PeerConnectionFactory*
-  > * wrap();
+        static ::node_webrtc::Wrap<
+            RTCDtlsTransport*,
+            webrtc::scoped_refptr<webrtc::DtlsTransportInterface>,
+            PeerConnectionFactory*>*
+        wrap();
 
-  void OnStateChange(webrtc::DtlsTransportInformation) override;
+        void OnStateChange(webrtc::DtlsTransportInformation) override;
 
-  void OnError(webrtc::RTCError) override;
+        void OnError(webrtc::RTCError) override;
 
- protected:
-  void Stop() override;
+    protected:
+        void Stop() override;
 
- private:
-  static Napi::FunctionReference& constructor();
+    private:
+        static Napi::FunctionReference& constructor();
 
-  Napi::Value GetIceTransport(const Napi::CallbackInfo&);
-  Napi::Value GetState(const Napi::CallbackInfo&);
-  Napi::Value GetRemoteCertificates(const Napi::CallbackInfo&);
+        Napi::Value GetIceTransport(const Napi::CallbackInfo&);
+        Napi::Value GetState(const Napi::CallbackInfo&);
+        Napi::Value GetRemoteCertificates(const Napi::CallbackInfo&);
 
-  static RTCDtlsTransport* Create(
-      PeerConnectionFactory*,
-      webrtc::scoped_refptr<webrtc::DtlsTransportInterface>);
+        static RTCDtlsTransport* Create(
+            PeerConnectionFactory*,
+            webrtc::scoped_refptr<webrtc::DtlsTransportInterface>
+        );
 
-  std::mutex _mutex;
-  webrtc::DtlsTransportState _state;
-  std::vector<webrtc::Buffer> _certs;
+        std::mutex _mutex;
+        webrtc::DtlsTransportState _state;
+        std::vector<webrtc::Buffer> _certs;
 
-  PeerConnectionFactory* _factory;
-  webrtc::scoped_refptr<webrtc::DtlsTransportInterface> _transport;
-};
+        PeerConnectionFactory* _factory;
+        webrtc::scoped_refptr<webrtc::DtlsTransportInterface> _transport;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

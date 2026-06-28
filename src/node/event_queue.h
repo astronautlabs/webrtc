@@ -17,44 +17,44 @@
 
 namespace node_webrtc {
 
-/**
- * EventQueue is a thread-safe Event queue. It allows you to enqueue events
- * from one thread and dequeue them from another (or the same).
- * @tparam T the Event target type
- */
-template <typename T>
-class EventQueue {
- public:
-  /**
-   * Enqueue an Event.
-   * @param event the event to enqueue
-   */
-  void Enqueue(std::unique_ptr<Event<T>> event) {
-    _mutex.lock();
-    _events.push(std::move(event));
-    _mutex.unlock();
-  }
+    /**
+     * EventQueue is a thread-safe Event queue. It allows you to enqueue events
+     * from one thread and dequeue them from another (or the same).
+     * @tparam T the Event target type
+     */
+    template <typename T>
+    class EventQueue {
+    public:
+        /**
+         * Enqueue an Event.
+         * @param event the event to enqueue
+         */
+        void Enqueue(std::unique_ptr<Event<T>> event) {
+            _mutex.lock();
+            _events.push(std::move(event));
+            _mutex.unlock();
+        }
 
-  /**
-   * Attempt to dequeue an Event. If the EventQueue is empty, this method
-   * returns nullptr.
-   * @return the dequeued Event or nullptr
-   */
-  std::unique_ptr<Event<T>> Dequeue() {
-    _mutex.lock();
-    if (_events.empty()) {
-      _mutex.unlock();
-      return nullptr;
-    }
-    auto event = std::move(_events.front());
-    _events.pop();
-    _mutex.unlock();
-    return event;
-  }
+        /**
+         * Attempt to dequeue an Event. If the EventQueue is empty, this method
+         * returns nullptr.
+         * @return the dequeued Event or nullptr
+         */
+        std::unique_ptr<Event<T>> Dequeue() {
+            _mutex.lock();
+            if (_events.empty()) {
+                _mutex.unlock();
+                return nullptr;
+            }
+            auto event = std::move(_events.front());
+            _events.pop();
+            _mutex.unlock();
+            return event;
+        }
 
- private:
-  std::queue<std::unique_ptr<Event<T>>> _events;
-  std::mutex _mutex{};
-};
+    private:
+        std::queue<std::unique_ptr<Event<T>>> _events;
+        std::mutex _mutex { };
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

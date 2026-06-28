@@ -32,113 +32,110 @@
 
 // TODO(mroberts): Expand support for other members.
 struct MediaTrackConstraintSet {
-  node_webrtc::Maybe<uint16_t> width;
-  node_webrtc::Maybe<uint16_t> height;
+    node_webrtc::Maybe<uint16_t> width;
+    node_webrtc::Maybe<uint16_t> height;
 
-  static MediaTrackConstraintSet Create(
-      const node_webrtc::Maybe<uint16_t> width,
-      const node_webrtc::Maybe<uint16_t> height
-  ) {
-    return {width, height};
-  }
+    static MediaTrackConstraintSet Create(
+        const node_webrtc::Maybe<uint16_t> width,
+        const node_webrtc::Maybe<uint16_t> height
+    ) {
+        return { width, height };
+    }
 };
 
 template <>
 struct node_webrtc::Converter<Napi::Value, MediaTrackConstraintSet> {
-  static node_webrtc::Validation<MediaTrackConstraintSet> Convert(const Napi::Value value) {
-    return node_webrtc::From<Napi::Object>(value).FlatMap<MediaTrackConstraintSet>([](auto object) {
-      return curry(MediaTrackConstraintSet::Create)
-          % node_webrtc::GetOptional<uint16_t>(object, "width")
-          * node_webrtc::GetOptional<uint16_t>(object, "height");
-    });
-  }
+    static node_webrtc::Validation<MediaTrackConstraintSet> Convert(const Napi::Value value) {
+        return node_webrtc::From<Napi::Object>(value).FlatMap<MediaTrackConstraintSet>([](auto object) {
+            return curry(MediaTrackConstraintSet::Create)
+                % node_webrtc::GetOptional<uint16_t>(object, "width")
+                * node_webrtc::GetOptional<uint16_t>(object, "height");
+        });
+    }
 };
 
-struct MediaTrackConstraints: public MediaTrackConstraintSet {
-  std::vector<MediaTrackConstraintSet> advanced;
+struct MediaTrackConstraints : public MediaTrackConstraintSet {
+    std::vector<MediaTrackConstraintSet> advanced;
 
-  static MediaTrackConstraints Create(
-      const MediaTrackConstraintSet set,
-      const std::vector<MediaTrackConstraintSet>& advanced
-  ) {
-    MediaTrackConstraints constraints;
-    constraints.width = set.width;
-    constraints.height = set.height;
-    constraints.advanced = advanced;
-    return constraints;
-  }
+    static MediaTrackConstraints Create(
+        const MediaTrackConstraintSet set,
+        const std::vector<MediaTrackConstraintSet>& advanced
+    ) {
+        MediaTrackConstraints constraints;
+        constraints.width = set.width;
+        constraints.height = set.height;
+        constraints.advanced = advanced;
+        return constraints;
+    }
 };
 
 template <>
 struct node_webrtc::Converter<Napi::Value, MediaTrackConstraints> {
-  static node_webrtc::Validation<MediaTrackConstraints> Convert(const Napi::Value value) {
-    return node_webrtc::From<Napi::Object>(value).FlatMap<MediaTrackConstraints>([&value](auto object) {
-      return curry(MediaTrackConstraints::Create)
-          % node_webrtc::From<MediaTrackConstraintSet>(value)
-          * node_webrtc::GetOptional<std::vector<MediaTrackConstraintSet>>(object, "advanced", std::vector<MediaTrackConstraintSet>());
-    });
-  }
+    static node_webrtc::Validation<MediaTrackConstraints> Convert(const Napi::Value value) {
+        return node_webrtc::From<Napi::Object>(value).FlatMap<MediaTrackConstraints>([&value](auto object) {
+            return curry(MediaTrackConstraints::Create)
+                % node_webrtc::From<MediaTrackConstraintSet>(value)
+                * node_webrtc::GetOptional<std::vector<MediaTrackConstraintSet>>(object, "advanced", std::vector<MediaTrackConstraintSet>());
+        });
+    }
 };
 
-
 struct MediaStreamConstraints {
-  node_webrtc::Maybe<node_webrtc::Either<bool, MediaTrackConstraints>> audio;
-  node_webrtc::Maybe<node_webrtc::Either<bool, MediaTrackConstraints>> video;
+    node_webrtc::Maybe<node_webrtc::Either<bool, MediaTrackConstraints>> audio;
+    node_webrtc::Maybe<node_webrtc::Either<bool, MediaTrackConstraints>> video;
 
-  static node_webrtc::Validation<MediaStreamConstraints> Create(
-      const node_webrtc::Maybe<node_webrtc::Either<bool, MediaTrackConstraints>>& audio,
-      const node_webrtc::Maybe<node_webrtc::Either<bool, MediaTrackConstraints>>& video
-  ) {
-    return audio.IsNothing() && video.IsNothing()
-        ? node_webrtc::Validation<MediaStreamConstraints>::Invalid(R"(Must specify at least "audio" or "video")")
-        : node_webrtc::Validation<MediaStreamConstraints>::Valid({audio, video});
-  }
+    static node_webrtc::Validation<MediaStreamConstraints> Create(
+        const node_webrtc::Maybe<node_webrtc::Either<bool, MediaTrackConstraints>>& audio,
+        const node_webrtc::Maybe<node_webrtc::Either<bool, MediaTrackConstraints>>& video
+    ) {
+        return audio.IsNothing() && video.IsNothing()
+            ? node_webrtc::Validation<MediaStreamConstraints>::Invalid(R"(Must specify at least "audio" or "video")")
+            : node_webrtc::Validation<MediaStreamConstraints>::Valid({ audio, video });
+    }
 };
 
 template <>
 struct node_webrtc::Converter<Napi::Value, MediaStreamConstraints> {
-  static node_webrtc::Validation<MediaStreamConstraints> Convert(const Napi::Value value) {
-    return node_webrtc::From<Napi::Object>(value).FlatMap<MediaStreamConstraints>([](auto object) {
-      return node_webrtc::Validation<MediaStreamConstraints>::Join(curry(MediaStreamConstraints::Create)
-              % node_webrtc::GetOptional<node_webrtc::Either<bool, MediaTrackConstraints>>(object, "audio")
-              * node_webrtc::GetOptional<node_webrtc::Either<bool, MediaTrackConstraints>>(object, "video"));
-    });
-  }
+    static node_webrtc::Validation<MediaStreamConstraints> Convert(const Napi::Value value) {
+        return node_webrtc::From<Napi::Object>(value).FlatMap<MediaStreamConstraints>([](auto object) {
+            return node_webrtc::Validation<MediaStreamConstraints>::Join(curry(MediaStreamConstraints::Create) % node_webrtc::GetOptional<node_webrtc::Either<bool, MediaTrackConstraints>>(object, "audio") * node_webrtc::GetOptional<node_webrtc::Either<bool, MediaTrackConstraints>>(object, "video"));
+        });
+    }
 };
 
 Napi::Value node_webrtc::GetUserMedia::GetUserMediaImpl(const Napi::CallbackInfo& info) {
-  CREATE_DEFERRED(info.Env(), deferred)
+    CREATE_DEFERRED(info.Env(), deferred)
 
-  CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, constraints, MediaStreamConstraints)
+    CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, constraints, MediaStreamConstraints)
 
-  auto* factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault();
-  auto stream = factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid());
+    auto* factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault();
+    auto stream = factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid());
 
-  auto audio = constraints.audio.Map([](auto constraint) {
-    return constraint.FromLeft(true);
-  }).FromMaybe(false);
+    auto audio = constraints.audio.Map([](auto constraint) {
+        return constraint.FromLeft(true);
+    }).FromMaybe(false);
 
-  auto video = constraints.video.Map([](auto constraint) {
-    return constraint.FromLeft(true);
-  }).FromMaybe(false);
+    auto video = constraints.video.Map([](auto constraint) {
+        return constraint.FromLeft(true);
+    }).FromMaybe(false);
 
-  if (audio) {
-    webrtc::AudioOptions options;
-    auto source = factory->factory()->CreateAudioSource(options);
-    auto track = factory->factory()->CreateAudioTrack(webrtc::CreateRandomUuid(), source.get());
-    stream->AddTrack(track);
-  }
+    if (audio) {
+        webrtc::AudioOptions options;
+        auto source = factory->factory()->CreateAudioSource(options);
+        auto track = factory->factory()->CreateAudioTrack(webrtc::CreateRandomUuid(), source.get());
+        stream->AddTrack(track);
+    }
 
-  if (video) {
-    auto source = webrtc::scoped_refptr { new webrtc::RefCountedObject<node_webrtc::RTCVideoTrackSource>() };
-    auto track = factory->factory()->CreateVideoTrack(source, webrtc::CreateRandomUuid());
-    stream->AddTrack(track);
-  }
+    if (video) {
+        auto source = webrtc::scoped_refptr { new webrtc::RefCountedObject<node_webrtc::RTCVideoTrackSource>() };
+        auto track = factory->factory()->CreateVideoTrack(source, webrtc::CreateRandomUuid());
+        stream->AddTrack(track);
+    }
 
-  node_webrtc::Resolve(deferred, MediaStream::wrap()->GetOrCreate(factory, stream));
-  return deferred.Promise();
+    node_webrtc::Resolve(deferred, MediaStream::wrap()->GetOrCreate(factory, stream));
+    return deferred.Promise();
 }
 
 void node_webrtc::GetUserMedia::Init(Napi::Env env, Napi::Object exports) {
-  exports.Set("getUserMedia", Napi::Function::New(env, GetUserMediaImpl));
+    exports.Set("getUserMedia", Napi::Function::New(env, GetUserMediaImpl));
 }

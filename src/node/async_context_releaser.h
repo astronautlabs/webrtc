@@ -11,9 +11,8 @@ namespace node_webrtc {
     class AsyncContextReleaser : public Napi::ObjectWrap<AsyncContextReleaser> {
     public:
         AsyncContextReleaser(const Napi::CallbackInfo& info) :
-            Napi::ObjectWrap<AsyncContextReleaser>(info), 
-            _deferrer(new ReleaserDeferrer(info.Env(), this))
-        {
+            Napi::ObjectWrap<AsyncContextReleaser>(info),
+            _deferrer(new ReleaserDeferrer(info.Env(), this)) {
         }
 
         ~AsyncContextReleaser() override;
@@ -31,18 +30,19 @@ namespace node_webrtc {
     private:
         class ReleaserDeferrer : public Deferrer {
         public:
-            ReleaserDeferrer(Napi::Env env, AsyncContextReleaser* parent): 
-                Deferrer(env), _parent(parent) 
-            {
+            ReleaserDeferrer(Napi::Env env, AsyncContextReleaser* parent) :
+                Deferrer(env),
+                _parent(parent) {
             }
-            
+
             void Execute(Napi::Env env) override {
                 if (_parent) {
                     _parent->Execute(env);
                 }
             }
-            
+
             void Detach() { _parent = nullptr; }
+
         private:
             AsyncContextReleaser* _parent;
         };

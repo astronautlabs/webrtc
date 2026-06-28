@@ -19,60 +19,62 @@
 
 namespace node_webrtc {
 
-template <typename T, typename F>
-class Promise: public Event<T> {
- public:
-  Promise(
-      Napi::Promise::Deferred& deferred,
-      F callback)
-    : _callback(callback),
-      _deferred(deferred) {}
+    template <typename T, typename F>
+    class Promise : public Event<T> {
+    public:
+        Promise(
+            Napi::Promise::Deferred& deferred,
+            F callback
+        ) :
+            _callback(callback),
+            _deferred(deferred) { }
 
-  void Dispatch(T&) override {
-    _callback(_deferred);
-  }
+        void Dispatch(T&) override {
+            _callback(_deferred);
+        }
 
- private:
-  F _callback;
-  Napi::Promise::Deferred _deferred;
-};
+    private:
+        F _callback;
+        Napi::Promise::Deferred _deferred;
+    };
 
-template <typename T, typename F>
-std::unique_ptr<Promise<T, F>> CreatePromise(Napi::Promise::Deferred deferred, F callback) {
-  return std::make_unique<Promise<T, F>>(deferred, callback);
-}
+    template <typename T, typename F>
+    std::unique_ptr<Promise<T, F>> CreatePromise(Napi::Promise::Deferred deferred, F callback) {
+        return std::make_unique<Promise<T, F>>(deferred, callback);
+    }
 
-template <typename T>
-class PromiseCreator {
- public:
-  PromiseCreator(
-      T* target,
-      Napi::Promise::Deferred deferred)
-    : _target(target)
-    , _deferred(deferred) {}
+    template <typename T>
+    class PromiseCreator {
+    public:
+        PromiseCreator(
+            T* target,
+            Napi::Promise::Deferred deferred
+        ) :
+            _target(target),
+            _deferred(deferred) { }
 
-  template <typename F>
-  void Dispatch(F callback) {
-    _target->Dispatch(std::make_unique<Promise<T, F>>(_deferred, callback));
-  }
+        template <typename F>
+        void Dispatch(F callback) {
+            _target->Dispatch(std::make_unique<Promise<T, F>>(_deferred, callback));
+        }
 
-  template <typename F>
-  void Resolve(F value) {
-    Dispatch([value](auto deferred) {
-      node_webrtc::Resolve(deferred, value);
-    });
-  }
+        template <typename F>
+        void Resolve(F value) {
+            Dispatch([value](auto deferred) {
+                node_webrtc::Resolve(deferred, value);
+            });
+        }
 
-  template <typename F>
-  void Reject(F value) {
-    Dispatch([value](auto deferred) {
-      node_webrtc::Reject(deferred, value);
-    });
-  }
+        template <typename F>
+        void Reject(F value) {
+            Dispatch([value](auto deferred) {
+                node_webrtc::Reject(deferred, value);
+            });
+        }
 
- private:
-  T* _target;
-  Napi::Promise::Deferred _deferred;
-};
+    private:
+        T* _target;
+        Napi::Promise::Deferred _deferred;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

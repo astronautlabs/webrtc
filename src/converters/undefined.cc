@@ -8,9 +8,9 @@
 
 namespace node_webrtc {
 
-TO_NAPI_IMPL(Undefined, pair) {
-  Napi::EscapableHandleScope scope(pair.first);
-  return Pure(scope.Escape(pair.first.Undefined()));
-}
+    TO_NAPI_IMPL(Undefined, pair) {
+        Napi::EscapableHandleScope scope(pair.first);
+        return Pure(scope.Escape(pair.first.Undefined()));
+    }
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

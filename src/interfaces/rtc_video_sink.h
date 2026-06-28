@@ -16,32 +16,34 @@
 
 #include "src/node/async_object_wrap_with_loop.h"
 
-namespace webrtc { class VideoFrame; }
+namespace webrtc {
+    class VideoFrame;
+}
 
 namespace node_webrtc {
 
-class RTCVideoSink
-  : public AsyncObjectWrapWithLoop<RTCVideoSink>
-  , public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
- public:
-  explicit RTCVideoSink(const Napi::CallbackInfo&);
+    class RTCVideoSink
+        : public AsyncObjectWrapWithLoop<RTCVideoSink>,
+          public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
+    public:
+        explicit RTCVideoSink(const Napi::CallbackInfo&);
 
-  static void Init(Napi::Env, Napi::Object);
+        static void Init(Napi::Env, Napi::Object);
 
-  void OnFrame(const webrtc::VideoFrame& frame) override;
+        void OnFrame(const webrtc::VideoFrame& frame) override;
 
-  static Napi::FunctionReference& constructor();
+        static Napi::FunctionReference& constructor();
 
- protected:
-  void Stop() override;
+    protected:
+        void Stop() override;
 
- private:
-  Napi::Value GetStopped(const Napi::CallbackInfo&);
+    private:
+        Napi::Value GetStopped(const Napi::CallbackInfo&);
 
-  Napi::Value JsStop(const Napi::CallbackInfo&);
+        Napi::Value JsStop(const Napi::CallbackInfo&);
 
-  bool _stopped = false;
-  webrtc::scoped_refptr<webrtc::VideoTrackInterface> _track;
-};
+        bool _stopped = false;
+        webrtc::scoped_refptr<webrtc::VideoTrackInterface> _track;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

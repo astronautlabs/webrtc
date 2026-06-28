@@ -13,13 +13,13 @@
 
 namespace node_webrtc {
 
-class I420Helpers {
- public:
-  static void Init(Napi::Env, Napi::Object);
+    class I420Helpers {
+    public:
+        static void Init(Napi::Env, Napi::Object);
 
- private:
-  static Napi::Value I420ToRgba(const Napi::CallbackInfo&);
-  static Napi::Value RgbaToI420(const Napi::CallbackInfo&);
-};
+    private:
+        static Napi::Value I420ToRgba(const Napi::CallbackInfo&);
+        static Napi::Value RgbaToI420(const Napi::CallbackInfo&);
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

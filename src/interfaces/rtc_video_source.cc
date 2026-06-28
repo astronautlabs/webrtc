@@ -12,8 +12,8 @@
 #include <webrtc/api/peer_connection_interface.h>
 #include <webrtc/api/video/i420_buffer.h>
 #include <webrtc/api/video/video_frame.h>
-#include <webrtc/rtc_base/ref_counted_object.h>
 #include <webrtc/rtc_base/crypto_random.h>
+#include <webrtc/rtc_base/ref_counted_object.h>
 
 #include "src/converters.h"
 #include "src/converters/absl.h"
@@ -28,100 +28,94 @@
 
 namespace node_webrtc {
 
-Napi::FunctionReference& RTCVideoSource::constructor() {
-  static Napi::FunctionReference constructor;
-  return constructor;
-}
+    Napi::FunctionReference& RTCVideoSource::constructor() {
+        static Napi::FunctionReference constructor;
+        return constructor;
+    }
 
-RTCVideoSource::RTCVideoSource(const Napi::CallbackInfo& info)
-  : Napi::ObjectWrap<RTCVideoSource>(info) {
-  New(info);
-}
+    RTCVideoSource::RTCVideoSource(const Napi::CallbackInfo& info) :
+        Napi::ObjectWrap<RTCVideoSource>(info) {
+        New(info);
+    }
 
-void RTCVideoSource::Finalize(Napi::Env env)
-{
-    // These are the tracks created via CreateTrack().
-    // We will unref them so that they are collectable, 
-    // but note that if they were added to one or more PeerConnections
-    // via addTrack(), that they will still be referenced by those 
-    // PeerConnections and thus will continue to remain uncollectable.
+    void RTCVideoSource::Finalize(Napi::Env env) {
+        // These are the tracks created via CreateTrack().
+        // We will unref them so that they are collectable,
+        // but note that if they were added to one or more PeerConnections
+        // via addTrack(), that they will still be referenced by those
+        // PeerConnections and thus will continue to remain uncollectable.
 
-    for (auto track : _tracks)
-        track->Unref();
-}
+        for (auto track : _tracks)
+            track->Unref();
+    }
 
-Napi::Value RTCVideoSource::New(const Napi::CallbackInfo& info) {
-  auto env = info.Env();
+    Napi::Value RTCVideoSource::New(const Napi::CallbackInfo& info) {
+        auto env = info.Env();
 
-  if (!info.IsConstructCall()) {
-    Napi::TypeError::New(env, "Use the new operator to construct an RTCVideoSource.").ThrowAsJavaScriptException();
-    return info.Env().Undefined();
-  }
+        if (!info.IsConstructCall()) {
+            Napi::TypeError::New(env, "Use the new operator to construct an RTCVideoSource.").ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
 
-  CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, maybeInit, Maybe<RTCVideoSourceInit>)
-  auto init = maybeInit.FromMaybe(RTCVideoSourceInit());
+        CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, maybeInit, Maybe<RTCVideoSourceInit>)
+        auto init = maybeInit.FromMaybe(RTCVideoSourceInit());
 
-  auto needsDenoising = init.needsDenoising
-  .Map([](auto needsDenoising) { return absl::optional<bool>(needsDenoising); })
-  .FromMaybe(absl::optional<bool>());
+        auto needsDenoising = init.needsDenoising
+                                  .Map([](auto needsDenoising) { return absl::optional<bool>(needsDenoising); })
+                                  .FromMaybe(absl::optional<bool>());
 
-  _source = new webrtc::RefCountedObject<RTCVideoTrackSource>(init.isScreencast, needsDenoising);
+        _source = new webrtc::RefCountedObject<RTCVideoTrackSource>(init.isScreencast, needsDenoising);
 
-  return info.Env().Undefined();
-}
+        return info.Env().Undefined();
+    }
 
-Napi::Value RTCVideoSource::CreateTrack(const Napi::CallbackInfo&) {
-  // TODO(mroberts): Again, we have some implicit factory we are threading around. How to handle?
-  auto factory = PeerConnectionFactory::GetOrCreateDefault();
-  auto track = factory->factory()->CreateVideoTrack(_source, webrtc::CreateRandomUuid());
+    Napi::Value RTCVideoSource::CreateTrack(const Napi::CallbackInfo&) {
+        // TODO(mroberts): Again, we have some implicit factory we are threading around. How to handle?
+        auto factory = PeerConnectionFactory::GetOrCreateDefault();
+        auto track = factory->factory()->CreateVideoTrack(_source, webrtc::CreateRandomUuid());
 
-  // Here the default reference will be owned by the RTCVideoSource. 
-  // See RTCPeerConnection::AddTrack() for corresponding referencing logic in that case.
+        // Here the default reference will be owned by the RTCVideoSource.
+        // See RTCPeerConnection::AddTrack() for corresponding referencing logic in that case.
 
-  auto wrappedTrack = MediaStreamTrack::wrap()->GetOrCreate(factory, track);
-  _tracks.insert(wrappedTrack);
-  return wrappedTrack->Value();
-}
+        auto wrappedTrack = MediaStreamTrack::wrap()->GetOrCreate(factory, track);
+        _tracks.insert(wrappedTrack);
+        return wrappedTrack->Value();
+    }
 
-Napi::Value RTCVideoSource::OnFrame(const Napi::CallbackInfo& info) {
-  CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, buffer, webrtc::scoped_refptr<webrtc::I420Buffer>)
+    Napi::Value RTCVideoSource::OnFrame(const Napi::CallbackInfo& info) {
+        CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, buffer, webrtc::scoped_refptr<webrtc::I420Buffer>)
 
-  auto now = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::system_clock::now());
-  uint64_t nowInUs = now.time_since_epoch().count();
+        auto now = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::system_clock::now());
+        uint64_t nowInUs = now.time_since_epoch().count();
 
-  webrtc::VideoFrame::Builder builder;
-  auto frame = builder
-      .set_timestamp_us(nowInUs)
-      .set_video_frame_buffer(buffer)
-      .build();
-  _source->PushFrame(frame);
-  return info.Env().Undefined();
-}
+        webrtc::VideoFrame::Builder builder;
+        auto frame = builder
+                         .set_timestamp_us(nowInUs)
+                         .set_video_frame_buffer(buffer)
+                         .build();
+        _source->PushFrame(frame);
+        return info.Env().Undefined();
+    }
 
-Napi::Value RTCVideoSource::GetNeedsDenoising(const Napi::CallbackInfo& info) {
-  CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _source->needs_denoising(), result, Napi::Value)
-  return result;
-}
+    Napi::Value RTCVideoSource::GetNeedsDenoising(const Napi::CallbackInfo& info) {
+        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _source->needs_denoising(), result, Napi::Value)
+        return result;
+    }
 
-Napi::Value RTCVideoSource::GetIsScreencast(const Napi::CallbackInfo& info) {
-  CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _source->is_screencast(), result, Napi::Value)
-  return result;
-}
+    Napi::Value RTCVideoSource::GetIsScreencast(const Napi::CallbackInfo& info) {
+        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _source->is_screencast(), result, Napi::Value)
+        return result;
+    }
 
-void RTCVideoSource::Init(Napi::Env env, Napi::Object exports) {
-  Napi::HandleScope scope(env);
+    void RTCVideoSource::Init(Napi::Env env, Napi::Object exports) {
+        Napi::HandleScope scope(env);
 
-  Napi::Function func = DefineClass(env, "RTCVideoSource", {
-    InstanceMethod("createTrack", &RTCVideoSource::CreateTrack),
-    InstanceMethod("onFrame", &RTCVideoSource::OnFrame),
-    InstanceAccessor("needsDenoising", &RTCVideoSource::GetNeedsDenoising, nullptr),
-    InstanceAccessor("isScreencast", &RTCVideoSource::GetIsScreencast, nullptr)
-  });
+        Napi::Function func = DefineClass(env, "RTCVideoSource", { InstanceMethod("createTrack", &RTCVideoSource::CreateTrack), InstanceMethod("onFrame", &RTCVideoSource::OnFrame), InstanceAccessor("needsDenoising", &RTCVideoSource::GetNeedsDenoising, nullptr), InstanceAccessor("isScreencast", &RTCVideoSource::GetIsScreencast, nullptr) });
 
-  constructor() = Napi::Persistent(func);
-  constructor().SuppressDestruct();
+        constructor() = Napi::Persistent(func);
+        constructor().SuppressDestruct();
 
-  exports.Set("RTCVideoSource", func);
-}
+        exports.Set("RTCVideoSource", func);
+    }
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

@@ -15,91 +15,92 @@
 #include <webrtc/api/scoped_refptr.h>
 
 #include "src/converters/napi.h"
+#include "src/interfaces/media_stream.h"
+#include "src/interfaces/media_stream_track.h"
+#include "src/interfaces/rtc_dtls_transport.h"
+#include "src/interfaces/rtc_peer_connection.h"
 #include "src/node/async_object_wrap.h"
 #include "src/node/wrap.h"
-#include "src/interfaces/media_stream_track.h"
-#include "src/interfaces/media_stream.h"
-#include "src/interfaces/rtc_peer_connection.h"
-#include "src/interfaces/rtc_dtls_transport.h"
 #include "src/utilities/napi_ref_ptr.h"
 
-namespace webrtc { class RtpReceiverInterface; }
+namespace webrtc {
+    class RtpReceiverInterface;
+}
 
 namespace node_webrtc {
-	class RTCRtpTransceiver;
-	class RTCPeerConnection;
+    class RTCRtpTransceiver;
+    class RTCPeerConnection;
 
-	class RTCRtpReceiver : public Napi::ObjectWrap<RTCRtpReceiver> {
-	public:
-		explicit RTCRtpReceiver(const Napi::CallbackInfo&);
-		static void Init(Napi::Env, Napi::Object);
+    class RTCRtpReceiver : public Napi::ObjectWrap<RTCRtpReceiver> {
+    public:
+        explicit RTCRtpReceiver(const Napi::CallbackInfo&);
+        static void Init(Napi::Env, Napi::Object);
 
-		void setTransport(RTCDtlsTransport* transport) {
-			this->transport = transport;
-		}
+        void setTransport(RTCDtlsTransport* transport) {
+            this->transport = transport;
+        }
 
-		void setSources(std::vector<webrtc::RtpSource> value) {
-			sources = value;
-		}
+        void setSources(std::vector<webrtc::RtpSource> value) {
+            sources = value;
+        }
 
-		void setTransceiver(RTCRtpTransceiver* value) {
-			transceiver = value;
-		}
+        void setTransceiver(RTCRtpTransceiver* value) {
+            transceiver = value;
+        }
 
-		std::string getId() {
-			return id;
-		}
+        std::string getId() {
+            return id;
+        }
 
-		void setId(std::string value) {
-			id = value;
-		}
+        void setId(std::string value) {
+            id = value;
+        }
 
-		static void setVideoCapabilities(webrtc::RtpCapabilities caps) {
-			videoCapabilities = caps;
-		}
+        static void setVideoCapabilities(webrtc::RtpCapabilities caps) {
+            videoCapabilities = caps;
+        }
 
-		static void setAudioCapabilities(webrtc::RtpCapabilities caps) {
-			audioCapabilities = caps;
-		}
+        static void setAudioCapabilities(webrtc::RtpCapabilities caps) {
+            audioCapabilities = caps;
+        }
 
-		static Napi::FunctionReference& constructor();
-		static RTCRtpReceiver* Create(
-			RTCPeerConnection* pc,
-			MediaStreamTrack* track,
-			std::vector<MediaStream*> streams
-		);
+        static Napi::FunctionReference& constructor();
+        static RTCRtpReceiver* Create(
+            RTCPeerConnection* pc,
+            MediaStreamTrack* track,
+            std::vector<MediaStream*> streams
+        );
 
-		MediaStreamTrack* getTrack();
+        MediaStreamTrack* getTrack();
 
-	private:
-		static webrtc::RtpCapabilities audioCapabilities;
-		static webrtc::RtpCapabilities videoCapabilities;
+    private:
+        static webrtc::RtpCapabilities audioCapabilities;
+        static webrtc::RtpCapabilities videoCapabilities;
 
-		Napi::Value GetTrack(const Napi::CallbackInfo&);
-		Napi::Value GetTransport(const Napi::CallbackInfo&);
-		Napi::Value GetRtcpTransport(const Napi::CallbackInfo&);
-		static Napi::Value GetCapabilities(const Napi::CallbackInfo&);
-		Napi::Value GetParameters(const Napi::CallbackInfo&);
-		Napi::Value GetContributingSources(const Napi::CallbackInfo&);
-		Napi::Value GetSynchronizationSources(const Napi::CallbackInfo&);
-		Napi::Value GetStats(const Napi::CallbackInfo&);
+        Napi::Value GetTrack(const Napi::CallbackInfo&);
+        Napi::Value GetTransport(const Napi::CallbackInfo&);
+        Napi::Value GetRtcpTransport(const Napi::CallbackInfo&);
+        static Napi::Value GetCapabilities(const Napi::CallbackInfo&);
+        Napi::Value GetParameters(const Napi::CallbackInfo&);
+        Napi::Value GetContributingSources(const Napi::CallbackInfo&);
+        Napi::Value GetSynchronizationSources(const Napi::CallbackInfo&);
+        Napi::Value GetStats(const Napi::CallbackInfo&);
 
-		webrtc::scoped_refptr<webrtc::RtpReceiverInterface> _receiver;
+        webrtc::scoped_refptr<webrtc::RtpReceiverInterface> _receiver;
 
-		std::string id;
-		napi_ref_ptr<RTCRtpTransceiver> transceiver;
-		napi_ref_ptr<RTCPeerConnection> pc;
-		napi_ref_ptr<MediaStreamTrack> track;
-		napi_ref_ptr<RTCDtlsTransport> transport;
-		std::vector<napi_ref_ptr<MediaStream>> streams;
-		webrtc::RtpParameters parameters;
-		std::vector<webrtc::RtpSource> sources;
+        std::string id;
+        napi_ref_ptr<RTCRtpTransceiver> transceiver;
+        napi_ref_ptr<RTCPeerConnection> pc;
+        napi_ref_ptr<MediaStreamTrack> track;
+        napi_ref_ptr<RTCDtlsTransport> transport;
+        std::vector<napi_ref_ptr<MediaStream>> streams;
+        webrtc::RtpParameters parameters;
+        std::vector<webrtc::RtpSource> sources;
 
-		Napi::Reference<Napi::Value> pcRef;
-		Napi::Reference<Napi::Value> trackRef;
+        Napi::Reference<Napi::Value> pcRef;
+        Napi::Reference<Napi::Value> trackRef;
+    };
 
-	};
+    DECLARE_TO_AND_FROM_NAPI(RTCRtpReceiver*)
 
-	DECLARE_TO_AND_FROM_NAPI(RTCRtpReceiver*)
-
-}  // namespace node_webrtc
+} // namespace node_webrtc

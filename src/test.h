@@ -15,16 +15,16 @@
 
 namespace node_webrtc {
 
-class Test {
- public:
-  static void Init(Napi::Env, Napi::Object);
+    class Test {
+    public:
+        static void Init(Napi::Env, Napi::Object);
 
-  static Napi::Env* env;
+        static Napi::Env* env;
 
- private:
-  static Napi::Value TestImpl(const Napi::CallbackInfo&);
-};
+    private:
+        static Napi::Value TestImpl(const Napi::CallbackInfo&);
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc
 
-#endif  // DEBUG
+#endif // DEBUG

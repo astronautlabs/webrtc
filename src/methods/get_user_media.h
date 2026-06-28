@@ -16,14 +16,15 @@
 
 namespace node_webrtc {
 
-class GetUserMedia {
-  // TODO Remove when `GetDisplayMedia` gets its own implementation
-  friend class node_webrtc::GetDisplayMedia;
- public:
-  static void Init(Napi::Env, Napi::Object);
+    class GetUserMedia {
+        // TODO Remove when `GetDisplayMedia` gets its own implementation
+        friend class node_webrtc::GetDisplayMedia;
 
- private:
-  static Napi::Value GetUserMediaImpl(const Napi::CallbackInfo&);
-};
+    public:
+        static void Init(Napi::Env, Napi::Object);
 
-}  // namespace node_webrtc
+    private:
+        static Napi::Value GetUserMediaImpl(const Napi::CallbackInfo&);
+    };
+
+} // namespace node_webrtc

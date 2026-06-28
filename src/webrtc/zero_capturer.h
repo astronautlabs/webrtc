@@ -13,34 +13,35 @@
 
 namespace node_webrtc {
 
-class ZeroCapturer: public TestAudioDeviceModule::Capturer {
- public:
-  explicit ZeroCapturer(int sampling_frequency_in_hz): _sampling_frequency_in_hz(sampling_frequency_in_hz) {}
+    class ZeroCapturer : public TestAudioDeviceModule::Capturer {
+    public:
+        explicit ZeroCapturer(int sampling_frequency_in_hz) :
+            _sampling_frequency_in_hz(sampling_frequency_in_hz) { }
 
-  int SamplingFrequency() const override {
-    return _sampling_frequency_in_hz;
-  }
+        int SamplingFrequency() const override {
+            return _sampling_frequency_in_hz;
+        }
 
-  bool Capture(webrtc::BufferT<int16_t>* buffer) override {
-    // NOTE(mroberts): If we don't fill this buffer once we trigger an assert.
-    if (!_produced_output) {
-      buffer->SetSize(TestAudioDeviceModule::SamplesPerFrame(_sampling_frequency_in_hz));
-      _produced_output = true;
-    }
-    return false;
-  }
+        bool Capture(webrtc::BufferT<int16_t>* buffer) override {
+            // NOTE(mroberts): If we don't fill this buffer once we trigger an assert.
+            if (!_produced_output) {
+                buffer->SetSize(TestAudioDeviceModule::SamplesPerFrame(_sampling_frequency_in_hz));
+                _produced_output = true;
+            }
+            return false;
+        }
 
-  int NumChannels() const override {
-    return 1;
-  }
+        int NumChannels() const override {
+            return 1;
+        }
 
-  static std::unique_ptr<ZeroCapturer> Create(int sampling_frequency_in_hz) {
-    return std::make_unique<ZeroCapturer>(sampling_frequency_in_hz);
-  }
+        static std::unique_ptr<ZeroCapturer> Create(int sampling_frequency_in_hz) {
+            return std::make_unique<ZeroCapturer>(sampling_frequency_in_hz);
+        }
 
- private:
-  int _sampling_frequency_in_hz;
-  bool _produced_output = false;
-};
+    private:
+        int _sampling_frequency_in_hz;
+        bool _produced_output = false;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

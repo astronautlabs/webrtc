@@ -4,11 +4,11 @@
 
 namespace node_webrtc {
 
-class Undefined {
- public:
-  Undefined() = default;
-};
+    class Undefined {
+    public:
+        Undefined() = default;
+    };
 
-DECLARE_TO_NAPI(Undefined)
+    DECLARE_TO_NAPI(Undefined)
 
-}  // namespace node_webrtc
+} // namespace node_webrtc
