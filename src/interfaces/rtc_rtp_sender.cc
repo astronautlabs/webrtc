@@ -174,12 +174,11 @@ namespace node_webrtc {
         RTCPeerConnection* pc,
         std::string kind,
         MediaStreamTrack* track,
-        std::vector<MediaStream*> streams
-    ) {
+        std::vector<MediaStream*> streams) {
         auto env = constructor().Env();
         Napi::HandleScope scope(env);
 
-        auto object = constructor().New({ Napi::External<RTCPeerConnection>::New(env, pc), Napi::String::New(env, kind), Napi::External<MediaStreamTrack>::New(env, track) });
+        auto object = constructor().New({Napi::External<RTCPeerConnection>::New(env, pc), Napi::String::New(env, kind), Napi::External<MediaStreamTrack>::New(env, track)});
 
         auto* unwrapped = Unwrap(object);
         for (auto* stream : streams)
@@ -193,7 +192,19 @@ namespace node_webrtc {
         setAudioCapabilities(factory->factory()->GetRtpSenderCapabilities(webrtc::MediaType::AUDIO));
         setVideoCapabilities(factory->factory()->GetRtpSenderCapabilities(webrtc::MediaType::VIDEO));
         factory->Release();
-        Napi::Function func = DefineClass(env, "RTCRtpSender", { InstanceAccessor("track", &RTCRtpSender::GetTrack, nullptr), InstanceAccessor("transport", &RTCRtpSender::GetTransport, nullptr), InstanceAccessor("rtcpTransport", &RTCRtpSender::GetRtcpTransport, nullptr), InstanceMethod("getParameters", &RTCRtpSender::GetParameters), InstanceMethod("setParameters", &RTCRtpSender::SetParameters), InstanceMethod("getStats", &RTCRtpSender::GetStats), InstanceMethod("replaceTrack", &RTCRtpSender::ReplaceTrack), InstanceMethod("setStreams", &RTCRtpSender::SetStreams), StaticMethod("getCapabilities", &RTCRtpSender::GetCapabilities) });
+        Napi::Function func = DefineClass(env,
+            "RTCRtpSender",
+            {
+                InstanceAccessor("track", &RTCRtpSender::GetTrack, nullptr),
+                InstanceAccessor("transport", &RTCRtpSender::GetTransport, nullptr),
+                InstanceAccessor("rtcpTransport", &RTCRtpSender::GetRtcpTransport, nullptr),
+                InstanceMethod("getParameters", &RTCRtpSender::GetParameters),
+                InstanceMethod("setParameters", &RTCRtpSender::SetParameters),
+                InstanceMethod("getStats", &RTCRtpSender::GetStats),
+                InstanceMethod("replaceTrack", &RTCRtpSender::ReplaceTrack),
+                InstanceMethod("setStreams", &RTCRtpSender::SetStreams),
+                StaticMethod("getCapabilities", &RTCRtpSender::GetCapabilities),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

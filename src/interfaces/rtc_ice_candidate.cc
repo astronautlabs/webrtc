@@ -8,7 +8,15 @@ namespace node_webrtc {
     }
 
     void RTCIceCandidate::Init(Napi::Env env, Napi::Object exports) {
-        auto func = DefineClass(env, "RTCIceCandidate", { InstanceAccessor("candidate", &RTCIceCandidate::GetCandidate, nullptr), InstanceAccessor("sdpMid", &RTCIceCandidate::GetSdpMid, nullptr), InstanceAccessor("sdpMLineIndex", &RTCIceCandidate::GetSdpMLineIndex, nullptr), InstanceAccessor("usernameFragment", &RTCIceCandidate::GetUsernameFragment, nullptr), InstanceMethod("toJSON", &RTCIceCandidate::ToJSON) });
+        auto func = DefineClass(env,
+            "RTCIceCandidate",
+            {
+                InstanceAccessor("candidate", &RTCIceCandidate::GetCandidate, nullptr),
+                InstanceAccessor("sdpMid", &RTCIceCandidate::GetSdpMid, nullptr),
+                InstanceAccessor("sdpMLineIndex", &RTCIceCandidate::GetSdpMLineIndex, nullptr),
+                InstanceAccessor("usernameFragment", &RTCIceCandidate::GetUsernameFragment, nullptr),
+                InstanceMethod("toJSON", &RTCIceCandidate::ToJSON),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

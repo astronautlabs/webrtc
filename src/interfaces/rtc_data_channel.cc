@@ -115,7 +115,7 @@ namespace node_webrtc {
         auto object = Napi::Object::New(env);
         object.Set("type", "message");
         object.Set("data", value);
-        channel.MakeCallback("dispatchEvent", { object });
+        channel.MakeCallback("dispatchEvent", {object});
     }
 
     Napi::Value RTCDataChannel::Send(const Napi::CallbackInfo& info) {
@@ -272,7 +272,7 @@ namespace node_webrtc {
 
         Napi::HandleScope scope(env);
 
-        auto object = constructor().New({ factory->Value(), Napi::CreateEnvelope(env, channel) });
+        auto object = constructor().New({factory->Value(), Napi::CreateEnvelope(env, channel)});
 
         auto* unwrapped = Unwrap(object);
         unwrapped->Ref();
@@ -284,7 +284,7 @@ namespace node_webrtc {
 
         Napi::HandleScope scope(env);
 
-        auto object = constructor().New({ PeerConnectionFactory::GetOrCreateDefault()->Value(), Napi::CreateEnvelope(env, channel) });
+        auto object = constructor().New({PeerConnectionFactory::GetOrCreateDefault()->Value(), Napi::CreateEnvelope(env, channel)});
 
         auto* unwrapped = Unwrap(object);
         unwrapped->Ref();
@@ -292,7 +292,23 @@ namespace node_webrtc {
     }
 
     void RTCDataChannel::Init(Napi::Env env, Napi::Object exports) {
-        auto func = DefineClass(env, "RTCDataChannel", { InstanceAccessor("bufferedAmount", &RTCDataChannel::GetBufferedAmount, nullptr), InstanceAccessor("id", &RTCDataChannel::GetId, nullptr), InstanceAccessor("label", &RTCDataChannel::GetLabel, nullptr), InstanceAccessor("maxPacketLifeTime", &RTCDataChannel::GetMaxPacketLifeTime, nullptr), InstanceAccessor("maxRetransmits", &RTCDataChannel::GetMaxRetransmits, nullptr), InstanceAccessor("negotiated", &RTCDataChannel::GetNegotiated, nullptr), InstanceAccessor("ordered", &RTCDataChannel::GetOrdered, nullptr), InstanceAccessor("priority", &RTCDataChannel::GetPriority, nullptr), InstanceAccessor("protocol", &RTCDataChannel::GetProtocol, nullptr), InstanceAccessor("binaryType", &RTCDataChannel::GetBinaryType, &RTCDataChannel::SetBinaryType), InstanceAccessor("readyState", &RTCDataChannel::GetReadyState, nullptr), InstanceMethod("close", &RTCDataChannel::Close), InstanceMethod("send", &RTCDataChannel::Send) });
+        auto func = DefineClass(env,
+            "RTCDataChannel",
+            {
+                InstanceAccessor("bufferedAmount", &RTCDataChannel::GetBufferedAmount, nullptr),
+                InstanceAccessor("id", &RTCDataChannel::GetId, nullptr),
+                InstanceAccessor("label", &RTCDataChannel::GetLabel, nullptr),
+                InstanceAccessor("maxPacketLifeTime", &RTCDataChannel::GetMaxPacketLifeTime, nullptr),
+                InstanceAccessor("maxRetransmits", &RTCDataChannel::GetMaxRetransmits, nullptr),
+                InstanceAccessor("negotiated", &RTCDataChannel::GetNegotiated, nullptr),
+                InstanceAccessor("ordered", &RTCDataChannel::GetOrdered, nullptr),
+                InstanceAccessor("priority", &RTCDataChannel::GetPriority, nullptr),
+                InstanceAccessor("protocol", &RTCDataChannel::GetProtocol, nullptr),
+                InstanceAccessor("binaryType", &RTCDataChannel::GetBinaryType, &RTCDataChannel::SetBinaryType),
+                InstanceAccessor("readyState", &RTCDataChannel::GetReadyState, nullptr),
+                InstanceMethod("close", &RTCDataChannel::Close),
+                InstanceMethod("send", &RTCDataChannel::Send),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

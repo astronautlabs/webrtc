@@ -115,12 +115,11 @@ namespace node_webrtc {
     RTCRtpReceiver* RTCRtpReceiver::Create(
         RTCPeerConnection* pc,
         MediaStreamTrack* track,
-        std::vector<MediaStream*> streams
-    ) {
+        std::vector<MediaStream*> streams) {
         auto env = constructor().Env();
         Napi::HandleScope scope(env);
 
-        auto object = constructor().New({ Napi::External<RTCPeerConnection>::New(env, pc), Napi::External<MediaStreamTrack>::New(env, track) });
+        auto object = constructor().New({Napi::External<RTCPeerConnection>::New(env, pc), Napi::External<MediaStreamTrack>::New(env, track)});
 
         auto unwrapped = Unwrap(object);
         for (auto stream : streams)
@@ -135,7 +134,18 @@ namespace node_webrtc {
         setVideoCapabilities(factory->factory()->GetRtpReceiverCapabilities(webrtc::MediaType::VIDEO));
         factory->Release();
 
-        auto func = DefineClass(env, "RTCRtpReceiver", { InstanceAccessor("track", &RTCRtpReceiver::GetTrack, nullptr), InstanceAccessor("transport", &RTCRtpReceiver::GetTransport, nullptr), InstanceAccessor("rtcpTransport", &RTCRtpReceiver::GetRtcpTransport, nullptr), InstanceMethod("getParameters", &RTCRtpReceiver::GetParameters), InstanceMethod("getContributingSources", &RTCRtpReceiver::GetContributingSources), InstanceMethod("getSynchronizationSources", &RTCRtpReceiver::GetSynchronizationSources), InstanceMethod("getStats", &RTCRtpReceiver::GetStats), StaticMethod("getCapabilities", &RTCRtpReceiver::GetCapabilities) });
+        auto func = DefineClass(env,
+            "RTCRtpReceiver",
+            {
+                InstanceAccessor("track", &RTCRtpReceiver::GetTrack, nullptr),
+                InstanceAccessor("transport", &RTCRtpReceiver::GetTransport, nullptr),
+                InstanceAccessor("rtcpTransport", &RTCRtpReceiver::GetRtcpTransport, nullptr),
+                InstanceMethod("getParameters", &RTCRtpReceiver::GetParameters),
+                InstanceMethod("getContributingSources", &RTCRtpReceiver::GetContributingSources),
+                InstanceMethod("getSynchronizationSources", &RTCRtpReceiver::GetSynchronizationSources),
+                InstanceMethod("getStats", &RTCRtpReceiver::GetStats),
+                StaticMethod("getCapabilities", &RTCRtpReceiver::GetCapabilities),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

@@ -70,8 +70,7 @@ namespace node_webrtc {
         int bits_per_sample,
         int sample_rate,
         size_t number_of_channels,
-        size_t number_of_frames
-    ) {
+        size_t number_of_frames) {
         auto byte_length = number_of_channels * number_of_frames * bits_per_sample / 8;
         std::unique_ptr<uint8_t[]> audio_data_copy(new uint8_t[byte_length]);
         if (!audio_data_copy) {
@@ -81,7 +80,7 @@ namespace node_webrtc {
         memcpy(audio_data_copy.get(), audio_data, byte_length);
 
         Dispatch(CreateCallback<RTCAudioSink>([this, audio_data_copy = std::move(audio_data_copy), bits_per_sample, sample_rate, number_of_channels, number_of_frames]() mutable {
-            RTCOnDataEventDict dict({ audio_data_copy.release(), static_cast<uint8_t>(bits_per_sample), static_cast<uint16_t>(sample_rate), static_cast<uint8_t>(number_of_channels), MakeJust<uint16_t>(static_cast<uint16_t>(number_of_frames)) });
+            RTCOnDataEventDict dict({audio_data_copy.release(), static_cast<uint8_t>(bits_per_sample), static_cast<uint16_t>(sample_rate), static_cast<uint8_t>(number_of_channels), MakeJust<uint16_t>(static_cast<uint16_t>(number_of_frames))});
 
             auto env = Env();
             Napi::HandleScope scope(env);
@@ -94,12 +93,17 @@ namespace node_webrtc {
             }
             auto object = maybeValue.UnsafeFromValid().ToObject();
             object.Set("type", Napi::String::New(env, "data"));
-            MakeCallback("dispatchEvent", { object });
+            MakeCallback("dispatchEvent", {object});
         }));
     }
 
     void RTCAudioSink::Init(Napi::Env env, Napi::Object exports) {
-        auto func = DefineClass(env, "RTCAudioSink", { InstanceAccessor("stopped", &RTCAudioSink::GetStopped, nullptr), InstanceMethod("stop", &RTCAudioSink::JsStop) });
+        auto func = DefineClass(env,
+            "RTCAudioSink",
+            {
+                InstanceAccessor("stopped", &RTCAudioSink::GetStopped, nullptr),
+                InstanceMethod("stop", &RTCAudioSink::JsStop),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

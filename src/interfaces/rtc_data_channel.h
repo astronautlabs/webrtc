@@ -9,17 +9,11 @@
  */
 #pragma once
 
-#include <iosfwd>
-#include <memory>
-
 #include <webrtc/api/data_channel_interface.h>
 #include <webrtc/api/scoped_refptr.h>
 
 #include "src/enums/node_webrtc/binary_type.h"
-#include "src/node/async_object_wrap_with_loop.h"
 #include "src/node/proxy.h"
-#include "src/node/proxy_registry.h"
-#include "src/node/wrap.h"
 #include "src/utilities/napi_ref_ptr.h"
 
 namespace node_webrtc {

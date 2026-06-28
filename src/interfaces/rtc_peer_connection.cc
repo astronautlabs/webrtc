@@ -66,7 +66,7 @@
 namespace {
     template <typename T>
     std::shared_ptr<T> clone_and_share(T* value) {
-        return std::shared_ptr<T> { value->Clone() };
+        return std::shared_ptr<T> {value->Clone()};
     }
 }
 
@@ -107,8 +107,7 @@ namespace node_webrtc {
 
         auto result = _factory->factory()->CreatePeerConnectionOrError(
             configuration.configuration,
-            webrtc::PeerConnectionDependencies { this }
-        );
+            webrtc::PeerConnectionDependencies {this});
 
         if (!result.ok()) {
             CONVERT_OR_THROW_AND_RETURN_VOID_NAPI(env, &result.error(), error, Napi::Value)
@@ -119,8 +118,7 @@ namespace node_webrtc {
         _jinglePeerConnection = result.MoveValue();
         _cached_configuration = ExtendedRTCConfiguration(
             _jinglePeerConnection->GetConfiguration(),
-            _port_range
-        );
+            _port_range);
         // Now that we have an underlying PeerConnection allocated, this object must stay alive until its status becomes
         // "closed"
         // https://w3c.github.io/webrtc-pc/#garbage-collection
@@ -136,7 +134,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) {
-        Log(this, "RTCPeerConnection::OnSignalingChange(" + std::string { webrtc::PeerConnectionInterface::AsString(state) } + ")");
+        Log(this, "RTCPeerConnection::OnSignalingChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
         OnNodeThread([this, state]() {
             Event("signalingstatechange").Dispatch();
             if (state == webrtc::PeerConnectionInterface::kClosed) {
@@ -146,7 +144,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) {
-        Log(this, "RTCPeerConnection::OnIceConnectionChange(" + std::string { webrtc::PeerConnectionInterface::AsString(state) } + ")");
+        Log(this, "RTCPeerConnection::OnIceConnectionChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
         OnNodeThread([this, state]() {
             Event("iceconnectionstatechange")
                 .With("_state", state)
@@ -158,7 +156,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnConnectionChange(webrtc::PeerConnectionInterface::PeerConnectionState state) {
-        Log(this, "RTCPeerConnection::OnConnectionChange(" + std::string { webrtc::PeerConnectionInterface::AsString(state) } + ")");
+        Log(this, "RTCPeerConnection::OnConnectionChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
         OnNodeThread([this, state]() {
             Event("connectionstatechange")
                 .With("_state", state)
@@ -167,7 +165,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState state) {
-        Log(this, "RTCPeerConnection::OnIceGatheringChange(" + std::string { webrtc::PeerConnectionInterface::AsString(state) } + ")");
+        Log(this, "RTCPeerConnection::OnIceGatheringChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
 
         using IceGatheringState = webrtc::PeerConnectionInterface::IceGatheringState;
         using PeerConnectionState = webrtc::PeerConnectionInterface::PeerConnectionState;
@@ -206,8 +204,7 @@ namespace node_webrtc {
             ice_candidate->sdp_mid(),
             ice_candidate->sdp_mline_index(),
             sdp,
-            &parseError
-        ));
+            &parseError));
         if (!parseError.description.empty()) {
             error = parseError.description;
         } else if (!candidate) {
@@ -387,9 +384,8 @@ namespace node_webrtc {
         }
 
         return createOrUpdateSender(
-                   rtpSender,
-                   mediaStreamTrack->track()->kind() == webrtc::MediaStreamTrackInterface::kAudioKind ? "audio" : "video"
-        )
+            rtpSender,
+            mediaStreamTrack->track()->kind() == webrtc::MediaStreamTrackInterface::kAudioKind ? "audio" : "video")
             ->Value();
     }
 
@@ -557,8 +553,7 @@ namespace node_webrtc {
 
         _jinglePeerConnection->SetLocalDescription(
             description->Clone(),
-            webrtc::make_ref_counted<SetSessionDescriptionObserver>(this, deferred)
-        );
+            webrtc::make_ref_counted<SetSessionDescriptionObserver>(this, deferred));
 
         return deferred.Promise();
     }
@@ -579,8 +574,7 @@ namespace node_webrtc {
         auto* observer = new webrtc::RefCountedObject<SetSessionDescriptionObserver>(this, deferred);
         _jinglePeerConnection->SetRemoteDescription(
             description->Clone(),
-            webrtc::make_ref_counted<SetSessionDescriptionObserver>(this, deferred)
-        );
+            webrtc::make_ref_counted<SetSessionDescriptionObserver>(this, deferred));
 
         return deferred.Promise(); // NOLINT
     }
@@ -627,7 +621,7 @@ namespace node_webrtc {
 
         auto result = _jinglePeerConnection->CreateDataChannelOrError(label, &dataChannelInit);
         if (!result.ok()) {
-            Napi::Error(env, ErrorFactory::CreateInvalidStateError(env, std::string { "Failed to create data channel: " } + result.error().message())).ThrowAsJavaScriptException();
+            Napi::Error(env, ErrorFactory::CreateInvalidStateError(env, std::string {"Failed to create data channel: "} + result.error().message())).ThrowAsJavaScriptException();
             return env.Undefined();
         }
 
@@ -712,8 +706,7 @@ namespace node_webrtc {
             for (const auto& sender : _jinglePeerConnection->GetSenders()) {
                 auto track = sender->track();
                 auto wrappedSender = createOrUpdateSender(
-                    sender, sender->media_type() == webrtc::MediaType::AUDIO ? "audio" : "video"
-                );
+                    sender, sender->media_type() == webrtc::MediaType::AUDIO ? "audio" : "video");
                 senders.emplace_back(wrappedSender);
             }
         }
@@ -737,27 +730,6 @@ namespace node_webrtc {
         _jinglePeerConnection->GetStats(callback);
 
         return deferred.Promise(); // NOLINT
-    }
-
-    Napi::Value RTCPeerConnection::LegacyGetStats(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::LegacyGetStats()");
-        auto env = info.Env();
-
-        CREATE_DEFERRED(env, deferred)
-
-        if (!_jinglePeerConnection) {
-            Reject(deferred, Napi::Error::New(env, "RTCPeerConnection is closed"));
-            return deferred.Promise();
-        }
-
-        // TODO(liam): Migrate to the new spec-compliant stats observer
-        auto* statsObserver = new webrtc::RefCountedObject<StatsObserver>(this, deferred);
-        if (!_jinglePeerConnection->GetStats(statsObserver, nullptr, webrtc::PeerConnectionInterface::kStatsOutputLevelStandard)) {
-            Reject(deferred, Napi::Error::New(env, "Failed to execute getStats"));
-            return deferred.Promise();
-        }
-
-        return deferred.Promise();
     }
 
     Napi::Value RTCPeerConnection::GetTransceivers(const Napi::CallbackInfo& info) {
@@ -785,8 +757,7 @@ namespace node_webrtc {
         if (_jinglePeerConnection) {
             _cached_configuration = ExtendedRTCConfiguration(
                 _jinglePeerConnection->GetConfiguration(),
-                _port_range
-            );
+                _port_range);
 
             // Now that we are in a closed state, it is OK for us to be garbage collected.
             // Note however that if any MediaStreamTracks or DataChannels were created, those will
@@ -894,8 +865,7 @@ namespace node_webrtc {
                 env,
                 clone_and_share(_jinglePeerConnection->current_local_description()),
                 description,
-                Napi::Value
-            )
+                Napi::Value)
             result = description;
         }
         return result;
@@ -910,8 +880,7 @@ namespace node_webrtc {
                 env,
                 clone_and_share(_jinglePeerConnection->local_description()),
                 description,
-                Napi::Value
-            )
+                Napi::Value)
             result = description;
         }
         return result;
@@ -926,8 +895,7 @@ namespace node_webrtc {
                 env,
                 clone_and_share(_jinglePeerConnection->pending_local_description()),
                 description,
-                Napi::Value
-            )
+                Napi::Value)
             result = description;
         }
         return result;
@@ -942,8 +910,7 @@ namespace node_webrtc {
                 env,
                 clone_and_share(_jinglePeerConnection->current_remote_description()),
                 description,
-                Napi::Value
-            )
+                Napi::Value)
             result = description;
         }
         return result;
@@ -958,8 +925,7 @@ namespace node_webrtc {
                 env,
                 clone_and_share(_jinglePeerConnection->remote_description()),
                 description,
-                Napi::Value
-            )
+                Napi::Value)
             result = description;
         }
         return result;
@@ -974,8 +940,7 @@ namespace node_webrtc {
                 env,
                 clone_and_share(_jinglePeerConnection->pending_remote_description()),
                 description,
-                Napi::Value
-            )
+                Napi::Value)
             result = description;
         }
         return result;
@@ -1051,7 +1016,7 @@ namespace node_webrtc {
 
         RTCRtpReceiver* receiver = nullptr;
         if (iter == _receivers.end()) {
-            receiver = RTCRtpReceiver::Create(this, track, { });
+            receiver = RTCRtpReceiver::Create(this, track, {});
             receiver->Ref();
             // TODO(liam): Set muted state by default as in Chromium
             // https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/modules/peerconnection/rtc_peer_connection.cc;l=2320;drc=a8029174f1140518a446524b318fef5dda3fba79;bpv=1;bpt=1
@@ -1083,7 +1048,7 @@ namespace node_webrtc {
         RTCRtpSender* sender = nullptr;
 
         if (iter == _senders.end()) {
-            sender = RTCRtpSender::Create(this, kind, track, { });
+            sender = RTCRtpSender::Create(this, kind, track, {});
             sender->Ref();
             sender->setId(id);
             _senders[id] = sender;
@@ -1229,7 +1194,41 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::Init(Napi::Env env, Napi::Object exports) {
-        auto func = DefineClass(env, "RTCPeerConnection", { InstanceMethod("addTrack", &RTCPeerConnection::AddTrack), InstanceMethod("addTransceiver", &RTCPeerConnection::AddTransceiver), InstanceMethod("removeTrack", &RTCPeerConnection::RemoveTrack), InstanceMethod("createOffer", &RTCPeerConnection::CreateOffer), InstanceMethod("createAnswer", &RTCPeerConnection::CreateAnswer), InstanceMethod("setLocalDescription", &RTCPeerConnection::SetLocalDescription), InstanceMethod("setRemoteDescription", &RTCPeerConnection::SetRemoteDescription), InstanceMethod("getConfiguration", &RTCPeerConnection::GetConfiguration), InstanceMethod("setConfiguration", &RTCPeerConnection::SetConfiguration), InstanceMethod("restartIce", &RTCPeerConnection::RestartIce), InstanceMethod("getReceivers", &RTCPeerConnection::GetReceivers), InstanceMethod("getSenders", &RTCPeerConnection::GetSenders), InstanceMethod("getStats", &RTCPeerConnection::GetStats), InstanceMethod("legacyGetStats", &RTCPeerConnection::LegacyGetStats), InstanceMethod("getTransceivers", &RTCPeerConnection::GetTransceivers), InstanceMethod("updateIce", &RTCPeerConnection::UpdateIce), InstanceMethod("addIceCandidate", &RTCPeerConnection::AddIceCandidate), InstanceMethod("createDataChannel", &RTCPeerConnection::CreateDataChannel), InstanceMethod("close", &RTCPeerConnection::Close), InstanceAccessor("canTrickleIceCandidates", &RTCPeerConnection::GetCanTrickleIceCandidates, nullptr), InstanceAccessor("connectionState", &RTCPeerConnection::GetConnectionState, nullptr), InstanceAccessor("currentLocalDescription", &RTCPeerConnection::GetCurrentLocalDescription, nullptr), InstanceAccessor("localDescription", &RTCPeerConnection::GetLocalDescription, nullptr), InstanceAccessor("pendingLocalDescription", &RTCPeerConnection::GetPendingLocalDescription, nullptr), InstanceAccessor("currentRemoteDescription", &RTCPeerConnection::GetCurrentRemoteDescription, nullptr), InstanceAccessor("remoteDescription", &RTCPeerConnection::GetRemoteDescription, nullptr), InstanceAccessor("pendingRemoteDescription", &RTCPeerConnection::GetPendingRemoteDescription, nullptr), InstanceAccessor("sctp", &RTCPeerConnection::GetSctp, nullptr), InstanceAccessor("signalingState", &RTCPeerConnection::GetSignalingState, nullptr), InstanceAccessor("iceConnectionState", &RTCPeerConnection::GetIceConnectionState, nullptr), InstanceAccessor("iceGatheringState", &RTCPeerConnection::GetIceGatheringState, nullptr) });
+        auto func = DefineClass(env,
+            "RTCPeerConnection",
+            {
+                InstanceMethod("addTrack", &RTCPeerConnection::AddTrack),
+                InstanceMethod("addTransceiver", &RTCPeerConnection::AddTransceiver),
+                InstanceMethod("removeTrack", &RTCPeerConnection::RemoveTrack),
+                InstanceMethod("createOffer", &RTCPeerConnection::CreateOffer),
+                InstanceMethod("createAnswer", &RTCPeerConnection::CreateAnswer),
+                InstanceMethod("setLocalDescription", &RTCPeerConnection::SetLocalDescription),
+                InstanceMethod("setRemoteDescription", &RTCPeerConnection::SetRemoteDescription),
+                InstanceMethod("getConfiguration", &RTCPeerConnection::GetConfiguration),
+                InstanceMethod("setConfiguration", &RTCPeerConnection::SetConfiguration),
+                InstanceMethod("restartIce", &RTCPeerConnection::RestartIce),
+                InstanceMethod("getReceivers", &RTCPeerConnection::GetReceivers),
+                InstanceMethod("getSenders", &RTCPeerConnection::GetSenders),
+                InstanceMethod("getStats", &RTCPeerConnection::GetStats),
+                InstanceMethod("legacyGetStats", &RTCPeerConnection::LegacyGetStats),
+                InstanceMethod("getTransceivers", &RTCPeerConnection::GetTransceivers),
+                InstanceMethod("updateIce", &RTCPeerConnection::UpdateIce),
+                InstanceMethod("addIceCandidate", &RTCPeerConnection::AddIceCandidate),
+                InstanceMethod("createDataChannel", &RTCPeerConnection::CreateDataChannel),
+                InstanceMethod("close", &RTCPeerConnection::Close),
+                InstanceAccessor("canTrickleIceCandidates", &RTCPeerConnection::GetCanTrickleIceCandidates, nullptr),
+                InstanceAccessor("connectionState", &RTCPeerConnection::GetConnectionState, nullptr),
+                InstanceAccessor("currentLocalDescription", &RTCPeerConnection::GetCurrentLocalDescription, nullptr),
+                InstanceAccessor("localDescription", &RTCPeerConnection::GetLocalDescription, nullptr),
+                InstanceAccessor("pendingLocalDescription", &RTCPeerConnection::GetPendingLocalDescription, nullptr),
+                InstanceAccessor("currentRemoteDescription", &RTCPeerConnection::GetCurrentRemoteDescription, nullptr),
+                InstanceAccessor("remoteDescription", &RTCPeerConnection::GetRemoteDescription, nullptr),
+                InstanceAccessor("pendingRemoteDescription", &RTCPeerConnection::GetPendingRemoteDescription, nullptr),
+                InstanceAccessor("sctp", &RTCPeerConnection::GetSctp, nullptr),
+                InstanceAccessor("signalingState", &RTCPeerConnection::GetSignalingState, nullptr),
+                InstanceAccessor("iceConnectionState", &RTCPeerConnection::GetIceConnectionState, nullptr),
+                InstanceAccessor("iceGatheringState", &RTCPeerConnection::GetIceGatheringState, nullptr),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

@@ -63,7 +63,12 @@ namespace node_webrtc {
     void RTCAudioSource::Init(Napi::Env env, Napi::Object exports) {
         Napi::HandleScope scope(env);
 
-        Napi::Function func = DefineClass(env, "RTCAudioSource", { InstanceMethod("createTrack", &RTCAudioSource::CreateTrack), InstanceMethod("onData", &RTCAudioSource::OnData) });
+        Napi::Function func = DefineClass(env,
+            "RTCAudioSource",
+            {
+                InstanceMethod("createTrack", &RTCAudioSource::CreateTrack),
+                InstanceMethod("onData", &RTCAudioSource::OnData),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

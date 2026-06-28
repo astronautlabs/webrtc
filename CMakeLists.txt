@@ -556,6 +556,8 @@ else()
     -Wno-missing-field-initializers
     -Wno-uninitialized
     -Wno-unused-local-typedefs
+    -Wno-unused-parameter
+    -Wno-deprecated-declarations
     -Wno-unused-variable
     "$<$<CONFIG:Debug>:-g>"
   )

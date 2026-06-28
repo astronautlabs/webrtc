@@ -73,12 +73,11 @@ namespace node_webrtc {
 
     RTCSctpTransport* RTCSctpTransport::Create(
         PeerConnectionFactory* factory,
-        webrtc::scoped_refptr<webrtc::SctpTransportInterface> transport
-    ) {
+        webrtc::scoped_refptr<webrtc::SctpTransportInterface> transport) {
         auto env = constructor().Env();
         Napi::HandleScope scope(env);
 
-        auto object = constructor().New({ factory->Value(), Napi::External<webrtc::scoped_refptr<webrtc::SctpTransportInterface>>::New(env, &transport) });
+        auto object = constructor().New({factory->Value(), Napi::External<webrtc::scoped_refptr<webrtc::SctpTransportInterface>>::New(env, &transport)});
 
         auto unwrapped = Unwrap(object);
 
@@ -93,7 +92,7 @@ namespace node_webrtc {
             Napi::HandleScope scope(env);
             auto event = Napi::Object::New(env);
             event.Set("type", Napi::String::New(env, "statechange"));
-            MakeCallback("dispatchEvent", { event });
+            MakeCallback("dispatchEvent", {event});
         }));
 
         if (info.state() == webrtc::SctpTransportState::kClosed) {
@@ -121,7 +120,14 @@ namespace node_webrtc {
     }
 
     void RTCSctpTransport::Init(Napi::Env env, Napi::Object exports) {
-        auto func = DefineClass(env, "RTCSctpTransport", { InstanceAccessor("transport", &RTCSctpTransport::GetTransport, nullptr), InstanceAccessor("state", &RTCSctpTransport::GetState, nullptr), InstanceAccessor("maxMessageSize", &RTCSctpTransport::GetMaxMessageSize, nullptr), InstanceAccessor("maxChannels", &RTCSctpTransport::GetMaxChannels, nullptr) });
+        auto func = DefineClass(env,
+            "RTCSctpTransport",
+            {
+                InstanceAccessor("transport", &RTCSctpTransport::GetTransport, nullptr),
+                InstanceAccessor("state", &RTCSctpTransport::GetState, nullptr),
+                InstanceAccessor("maxMessageSize", &RTCSctpTransport::GetMaxMessageSize, nullptr),
+                InstanceAccessor("maxChannels", &RTCSctpTransport::GetMaxChannels, nullptr),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

@@ -24,8 +24,9 @@ PackConstructorInitializers: Never
 #   BinPack: OnePerLine
 BinPackParameters: false
 #AlignAfterOpenBracket: AlwaysBreak
-AlignAfterOpenBracket: BlockIndent
+AlignAfterOpenBracket: DontAlign
 BinPackArguments: false
+Cpp11BracedListStyle: true
 AllowAllConstructorInitializersOnNextLine: true
 NamespaceIndentation: All
 AllowShortLambdasOnASingleLine: true

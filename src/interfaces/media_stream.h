@@ -9,8 +9,6 @@
  */
 #pragma once
 
-#include <memory>
-
 #include <node-addon-api/napi.h>
 #include <webrtc/api/scoped_refptr.h>
 

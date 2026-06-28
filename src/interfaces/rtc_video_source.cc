@@ -110,7 +110,14 @@ namespace node_webrtc {
     void RTCVideoSource::Init(Napi::Env env, Napi::Object exports) {
         Napi::HandleScope scope(env);
 
-        Napi::Function func = DefineClass(env, "RTCVideoSource", { InstanceMethod("createTrack", &RTCVideoSource::CreateTrack), InstanceMethod("onFrame", &RTCVideoSource::OnFrame), InstanceAccessor("needsDenoising", &RTCVideoSource::GetNeedsDenoising, nullptr), InstanceAccessor("isScreencast", &RTCVideoSource::GetIsScreencast, nullptr) });
+        Napi::Function func = DefineClass(env,
+            "RTCVideoSource",
+            {
+                InstanceMethod("createTrack", &RTCVideoSource::CreateTrack),
+                InstanceMethod("onFrame", &RTCVideoSource::OnFrame),
+                InstanceAccessor("needsDenoising", &RTCVideoSource::GetNeedsDenoising, nullptr),
+                InstanceAccessor("isScreencast", &RTCVideoSource::GetIsScreencast, nullptr),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

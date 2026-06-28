@@ -138,7 +138,7 @@ namespace node_webrtc {
             clonedTrack = _factory->factory()->CreateAudioTrack(label, audioTrack->GetSource());
         } else {
             auto videoTrack = static_cast<webrtc::VideoTrackInterface*>(_track.get());
-            clonedTrack = _factory->factory()->CreateVideoTrack(webrtc::scoped_refptr { videoTrack->GetSource() }, label);
+            clonedTrack = _factory->factory()->CreateVideoTrack(webrtc::scoped_refptr {videoTrack->GetSource()}, label);
         }
         auto clonedMediaStreamTrack = wrap()->GetOrCreate(_factory, clonedTrack);
         if (_ended) {
@@ -160,18 +160,27 @@ namespace node_webrtc {
 
     MediaStreamTrack* MediaStreamTrack::Create(
         PeerConnectionFactory* factory,
-        webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track
-    ) {
+        webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track) {
         auto env = constructor().Env();
         Napi::HandleScope scope(env);
 
-        auto* mediaStreamTrack = Unwrap(constructor().New({ factory->Value(), Napi::CreateEnvelope(env, track) }));
+        auto* mediaStreamTrack = Unwrap(constructor().New({factory->Value(), Napi::CreateEnvelope(env, track)}));
 
         return mediaStreamTrack;
     }
 
     void MediaStreamTrack::Init(Napi::Env env, Napi::Object exports) {
-        auto func = DefineClass(env, "MediaStreamTrack", { InstanceAccessor("enabled", &MediaStreamTrack::GetEnabled, &MediaStreamTrack::SetEnabled), InstanceAccessor("id", &MediaStreamTrack::GetId, nullptr), InstanceAccessor("kind", &MediaStreamTrack::GetKind, nullptr), InstanceAccessor("readyState", &MediaStreamTrack::GetReadyState, nullptr), InstanceAccessor("muted", &MediaStreamTrack::GetMuted, nullptr), InstanceMethod("clone", &MediaStreamTrack::Clone), InstanceMethod("stop", &MediaStreamTrack::JsStop) });
+        auto func = DefineClass(env,
+            "MediaStreamTrack",
+            {
+                InstanceAccessor("enabled", &MediaStreamTrack::GetEnabled, &MediaStreamTrack::SetEnabled),
+                InstanceAccessor("id", &MediaStreamTrack::GetId, nullptr),
+                InstanceAccessor("kind", &MediaStreamTrack::GetKind, nullptr),
+                InstanceAccessor("readyState", &MediaStreamTrack::GetReadyState, nullptr),
+                InstanceAccessor("muted", &MediaStreamTrack::GetMuted, nullptr),
+                InstanceMethod("clone", &MediaStreamTrack::Clone),
+                InstanceMethod("stop", &MediaStreamTrack::JsStop),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();
@@ -183,8 +192,7 @@ namespace node_webrtc {
         auto track = mediaStreamTrack->track();
         if (track->kind() != webrtc::MediaStreamTrackInterface::kAudioKind) {
             return Validation<webrtc::scoped_refptr<webrtc::AudioTrackInterface>>::Invalid(
-                "Expected an audio MediaStreamTrack"
-            );
+                "Expected an audio MediaStreamTrack");
         }
         webrtc::scoped_refptr<webrtc::AudioTrackInterface> audioTrack(static_cast<webrtc::AudioTrackInterface*>(track.get()));
         return Pure(audioTrack);
@@ -194,8 +202,7 @@ namespace node_webrtc {
         auto track = mediaStreamTrack->track();
         if (track->kind() != webrtc::MediaStreamTrackInterface::kVideoKind) {
             return Validation<webrtc::scoped_refptr<webrtc::VideoTrackInterface>>::Invalid(
-                "Expected a video MediaStreamTrack"
-            );
+                "Expected a video MediaStreamTrack");
         }
         webrtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack(static_cast<webrtc::VideoTrackInterface*>(track.get()));
         return Pure(videoTrack);

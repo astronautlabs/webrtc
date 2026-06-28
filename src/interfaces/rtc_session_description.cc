@@ -8,7 +8,13 @@ namespace node_webrtc {
     }
 
     void RTCSessionDescription::Init(Napi::Env env, Napi::Object exports) {
-        auto func = DefineClass(env, "RTCSessionDescription", { InstanceAccessor("type", &RTCSessionDescription::GetType, nullptr), InstanceAccessor("sdp", &RTCSessionDescription::GetSdp, nullptr), InstanceMethod("toJSON", &RTCSessionDescription::ToJSON) });
+        auto func = DefineClass(env,
+            "RTCSessionDescription",
+            {
+                InstanceAccessor("type", &RTCSessionDescription::GetType, nullptr),
+                InstanceAccessor("sdp", &RTCSessionDescription::GetSdp, nullptr),
+                InstanceMethod("toJSON", &RTCSessionDescription::ToJSON),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

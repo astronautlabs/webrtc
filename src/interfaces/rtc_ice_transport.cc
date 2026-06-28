@@ -101,12 +101,11 @@ namespace node_webrtc {
 
     RTCIceTransport* RTCIceTransport::Create(
         PeerConnectionFactory* factory,
-        webrtc::scoped_refptr<webrtc::IceTransportInterface> transport
-    ) {
+        webrtc::scoped_refptr<webrtc::IceTransportInterface> transport) {
         auto env = constructor().Env();
         Napi::HandleScope scope(env);
 
-        auto object = constructor().New({ factory->Value(), Napi::External<webrtc::scoped_refptr<webrtc::IceTransportInterface>>::New(env, &transport) });
+        auto object = constructor().New({factory->Value(), Napi::External<webrtc::scoped_refptr<webrtc::IceTransportInterface>>::New(env, &transport)});
 
         auto unwrapped = Unwrap(object);
         (void)unwrapped->Ref();
@@ -121,7 +120,7 @@ namespace node_webrtc {
             Napi::HandleScope scope(env);
             auto event = Napi::Object::New(env);
             event.Set("type", Napi::String::New(env, "statechange"));
-            MakeCallback("dispatchEvent", { event });
+            MakeCallback("dispatchEvent", {event});
         }));
 
         if (_state == webrtc::IceTransportState::kClosed) {
@@ -137,7 +136,7 @@ namespace node_webrtc {
             Napi::HandleScope scope(env);
             auto event = Napi::Object::New(env);
             event.Set("type", Napi::String::New(env, "gatheringstatechange"));
-            MakeCallback("dispatchEvent", { event });
+            MakeCallback("dispatchEvent", {event});
         }));
     }
 
@@ -203,7 +202,19 @@ namespace node_webrtc {
     }
 
     void RTCIceTransport::Init(Napi::Env env, Napi::Object exports) {
-        auto func = DefineClass(env, "RTCIceTransport", { InstanceAccessor("role", &RTCIceTransport::GetRole, nullptr), InstanceAccessor("component", &RTCIceTransport::GetComponent, nullptr), InstanceAccessor("state", &RTCIceTransport::GetState, nullptr), InstanceAccessor("gatheringState", &RTCIceTransport::GetGatheringState, nullptr), InstanceMethod("getLocalCandidates", &RTCIceTransport::GetLocalCandidates), InstanceMethod("getRemoteCandidates", &RTCIceTransport::GetRemoteCandidates), InstanceMethod("getSelectedCandidatePair", &RTCIceTransport::GetSelectedCandidatePair), InstanceMethod("getLocalParameters", &RTCIceTransport::GetLocalParameters), InstanceMethod("getRemoteParameters", &RTCIceTransport::GetRemoteParameters) });
+        auto func = DefineClass(env,
+            "RTCIceTransport",
+            {
+                InstanceAccessor("role", &RTCIceTransport::GetRole, nullptr),
+                InstanceAccessor("component", &RTCIceTransport::GetComponent, nullptr),
+                InstanceAccessor("state", &RTCIceTransport::GetState, nullptr),
+                InstanceAccessor("gatheringState", &RTCIceTransport::GetGatheringState, nullptr),
+                InstanceMethod("getLocalCandidates", &RTCIceTransport::GetLocalCandidates),
+                InstanceMethod("getRemoteCandidates", &RTCIceTransport::GetRemoteCandidates),
+                InstanceMethod("getSelectedCandidatePair", &RTCIceTransport::GetSelectedCandidatePair),
+                InstanceMethod("getLocalParameters", &RTCIceTransport::GetLocalParameters),
+                InstanceMethod("getRemoteParameters", &RTCIceTransport::GetRemoteParameters),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

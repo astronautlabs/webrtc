@@ -77,7 +77,7 @@ namespace node_webrtc {
     LegacyStatsReport* LegacyStatsReport::Create(double timestamp, const std::map<std::string, std::string>& stats) {
         auto env = LegacyStatsReport::constructor().Env();
 
-        auto object = LegacyStatsReport::constructor().New({ Napi::External<double>::New(env, &timestamp), Napi::External<std::map<std::string, std::string>>::New(env, const_cast<std::map<std::string, std::string>*>(&stats)) });
+        auto object = LegacyStatsReport::constructor().New({Napi::External<double>::New(env, &timestamp), Napi::External<std::map<std::string, std::string>>::New(env, const_cast<std::map<std::string, std::string>*>(&stats))});
 
         return Unwrap(object);
     }
@@ -85,12 +85,14 @@ namespace node_webrtc {
     void LegacyStatsReport::Init(Napi::Env env, Napi::Object exports) {
         Napi::HandleScope scope(env);
 
-        Napi::Function func = DefineClass(env, "LegacyStatsReport", {
-                                                                        InstanceMethod("names", &LegacyStatsReport::Names),
-                                                                        InstanceMethod("stat", &LegacyStatsReport::Stat),
-                                                                        InstanceAccessor("timestamp", &LegacyStatsReport::GetTimestamp, nullptr),
-                                                                        InstanceAccessor("type", &LegacyStatsReport::GetType, nullptr),
-                                                                    });
+        Napi::Function func = DefineClass(env,
+            "LegacyStatsReport",
+            {
+                InstanceMethod("names", &LegacyStatsReport::Names),
+                InstanceMethod("stat", &LegacyStatsReport::Stat),
+                InstanceAccessor("timestamp", &LegacyStatsReport::GetTimestamp, nullptr),
+                InstanceAccessor("type", &LegacyStatsReport::GetType, nullptr),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

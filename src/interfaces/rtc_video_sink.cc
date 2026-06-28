@@ -74,12 +74,17 @@ namespace node_webrtc {
             auto object = Napi::Object::New(env);
             object.Set("type", Napi::String::New(env, "frame"));
             object.Set("frame", maybeValue.UnsafeFromValid());
-            MakeCallback("dispatchEvent", { object });
+            MakeCallback("dispatchEvent", {object});
         }));
     }
 
     void RTCVideoSink::Init(Napi::Env env, Napi::Object exports) {
-        auto func = DefineClass(env, "RTCVideoSink", { InstanceAccessor("stopped", &RTCVideoSink::GetStopped, nullptr), InstanceMethod("stop", &RTCVideoSink::JsStop) });
+        auto func = DefineClass(env,
+            "RTCVideoSink",
+            {
+                InstanceAccessor("stopped", &RTCVideoSink::GetStopped, nullptr),
+                InstanceMethod("stop", &RTCVideoSink::JsStop),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

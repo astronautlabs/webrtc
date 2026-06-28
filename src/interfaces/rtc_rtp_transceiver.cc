@@ -102,7 +102,7 @@ namespace node_webrtc {
     RTCRtpTransceiver* RTCRtpTransceiver::Create(RTCPeerConnection* pc, RTCRtpSender* sender, RTCRtpReceiver* receiver) {
         auto env = constructor().Env();
         Napi::HandleScope scope(env);
-        auto* unwrapped = Unwrap(constructor().New({ Napi::External<RTCPeerConnection>::New(env, pc), Napi::External<RTCRtpSender>::New(env, sender), Napi::External<RTCRtpReceiver>::New(env, receiver) }));
+        auto* unwrapped = Unwrap(constructor().New({Napi::External<RTCPeerConnection>::New(env, pc), Napi::External<RTCRtpSender>::New(env, sender), Napi::External<RTCRtpReceiver>::New(env, receiver)}));
         return unwrapped;
     }
 
@@ -121,16 +121,18 @@ namespace node_webrtc {
     }
 
     void RTCRtpTransceiver::Init(Napi::Env env, Napi::Object exports) {
-        auto func = DefineClass(env, "RTCRtpTransceiver", {
-                                                              InstanceAccessor("mid", &RTCRtpTransceiver::GetMid, nullptr),
-                                                              InstanceAccessor("sender", &RTCRtpTransceiver::GetSender, nullptr),
-                                                              InstanceAccessor("receiver", &RTCRtpTransceiver::GetReceiver, nullptr),
-                                                              InstanceAccessor("stopped", &RTCRtpTransceiver::GetStopped, nullptr),
-                                                              InstanceAccessor("direction", &RTCRtpTransceiver::GetDirection, &RTCRtpTransceiver::SetDirection),
-                                                              InstanceAccessor("currentDirection", &RTCRtpTransceiver::GetCurrentDirection, nullptr),
-                                                              InstanceMethod("stop", &RTCRtpTransceiver::Stop),
-                                                              InstanceMethod("setCodecPreferences", &RTCRtpTransceiver::SetCodecPreferences),
-                                                          });
+        auto func = DefineClass(env,
+            "RTCRtpTransceiver",
+            {
+                InstanceAccessor("mid", &RTCRtpTransceiver::GetMid, nullptr),
+                InstanceAccessor("sender", &RTCRtpTransceiver::GetSender, nullptr),
+                InstanceAccessor("receiver", &RTCRtpTransceiver::GetReceiver, nullptr),
+                InstanceAccessor("stopped", &RTCRtpTransceiver::GetStopped, nullptr),
+                InstanceAccessor("direction", &RTCRtpTransceiver::GetDirection, &RTCRtpTransceiver::SetDirection),
+                InstanceAccessor("currentDirection", &RTCRtpTransceiver::GetCurrentDirection, nullptr),
+                InstanceMethod("stop", &RTCRtpTransceiver::Stop),
+                InstanceMethod("setCodecPreferences", &RTCRtpTransceiver::SetCodecPreferences),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

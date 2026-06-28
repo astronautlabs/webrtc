@@ -51,18 +51,21 @@ namespace node_webrtc {
 
     RTCStatsResponse* RTCStatsResponse::Create(
         double timestamp,
-        const std::vector<std::map<std::string, std::string>>& reports
-    ) {
+        const std::vector<std::map<std::string, std::string>>& reports) {
         auto env = RTCStatsResponse::constructor().Env();
         Napi::HandleScope scope(env);
 
-        auto response = RTCStatsResponse::constructor().New({ Napi::External<double>::New(env, &timestamp), Napi::External<std::vector<std::map<std::string, std::string>>>::New(env, const_cast<std::vector<std::map<std::string, std::string>>*>(&reports)) });
+        auto response = RTCStatsResponse::constructor().New({Napi::External<double>::New(env, &timestamp), Napi::External<std::vector<std::map<std::string, std::string>>>::New(env, const_cast<std::vector<std::map<std::string, std::string>>*>(&reports))});
 
         return RTCStatsResponse::Unwrap(response);
     }
 
     void RTCStatsResponse::Init(Napi::Env env, Napi::Object exports) {
-        Napi::Function func = DefineClass(env, "RTCStatsResponse", { InstanceMethod("result", &RTCStatsResponse::Result) });
+        Napi::Function func = DefineClass(env,
+            "RTCStatsResponse",
+            {
+                InstanceMethod("result", &RTCStatsResponse::Result),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();

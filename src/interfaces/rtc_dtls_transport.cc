@@ -158,14 +158,13 @@ namespace node_webrtc {
 
     RTCDtlsTransport* RTCDtlsTransport::Create(
         PeerConnectionFactory* factory,
-        webrtc::scoped_refptr<webrtc::DtlsTransportInterface> transport
-    ) {
+        webrtc::scoped_refptr<webrtc::DtlsTransportInterface> transport) {
         auto env = constructor().Env();
         Napi::HandleScope scope(env);
 
         auto object = constructor().New({
             factory->Value(),
-            Napi::External<webrtc::scoped_refptr<webrtc::DtlsTransportInterface>>::New(env, &transport)
+            Napi::External<webrtc::scoped_refptr<webrtc::DtlsTransportInterface>>::New(env, &transport),
         });
 
         auto unwrapped = Unwrap(object);
@@ -174,11 +173,13 @@ namespace node_webrtc {
     }
 
     void RTCDtlsTransport::Init(Napi::Env env, Napi::Object exports) {
-        auto func = DefineClass(env, "RTCDtlsTransport", { 
-            InstanceMethod("getRemoteCertificates", &RTCDtlsTransport::GetRemoteCertificates),
-            InstanceAccessor("iceTransport", &RTCDtlsTransport::GetIceTransport, nullptr),
-            InstanceAccessor("state", &RTCDtlsTransport::GetState, nullptr)
-        });
+        auto func = DefineClass(env,
+            "RTCDtlsTransport",
+            {
+                InstanceMethod("getRemoteCertificates", &RTCDtlsTransport::GetRemoteCertificates),
+                InstanceAccessor("iceTransport", &RTCDtlsTransport::GetIceTransport, nullptr),
+                InstanceAccessor("state", &RTCDtlsTransport::GetState, nullptr),
+            });
 
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();
