@@ -28,7 +28,10 @@
 namespace node_webrtc {
 
     RTCDataChannel::RTCDataChannel(const Napi::CallbackInfo& info) :
-        Proxy<RTCDataChannel, webrtc::DataChannelInterface>(info) {
+        Proxy<RTCDataChannel, webrtc::DataChannelInterface>(info) 
+    {
+        Construct(info);
+        
         // In previous versions we had some complexity around connecting an observer early and replaying events.
         // In M150 this is not necessary, the data is already queued until an observer is registered, and state() is a blocking
         // call to the network thread. So just register the observer, and if we haven't sent an open state event yet after

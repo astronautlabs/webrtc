@@ -68,24 +68,14 @@ namespace {
 }
 
 namespace node_webrtc {
-
-    Napi::FunctionReference& RTCPeerConnection::constructor() {
-        static Napi::FunctionReference constructor;
-        return constructor;
+    RTCPeerConnection::RTCPeerConnection(const Napi::CallbackInfo& info) :
+        Proxy<RTCPeerConnection, webrtc::PeerConnectionInterface>(info) 
+    {
+        Construct(info);
     }
 
-    //
-    // PeerConnection
-    //
-
-    RTCPeerConnection::RTCPeerConnection(const Napi::CallbackInfo& info) :
-        AsyncObjectWrapWithLoop<RTCPeerConnection>("RTCPeerConnection", *this, info) {
+    void RTCPeerConnection::Construct(const Napi::CallbackInfo& info) {
         auto env = info.Env();
-
-        if (!info.IsConstructCall()) {
-            Napi::TypeError::New(env, "Use the new operator to construct the RTCPeerConnection.").ThrowAsJavaScriptException();
-            return;
-        }
 
         CONVERT_ARGS_OR_THROW_AND_RETURN_VOID_NAPI(info, maybeConfiguration, Maybe<ExtendedRTCConfiguration>)
 
@@ -132,6 +122,7 @@ namespace node_webrtc {
             }
             _factory = nullptr;
         }
+        Stop();
     }
 
     void RTCPeerConnection::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) {

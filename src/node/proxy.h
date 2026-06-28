@@ -39,8 +39,6 @@ namespace node_webrtc {
                 );
                 return;
             }
-            
-            Construct(info);
         }
 
     protected:

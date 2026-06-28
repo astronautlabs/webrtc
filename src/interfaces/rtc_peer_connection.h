@@ -25,6 +25,7 @@
 #include "src/interfaces/rtc_rtp_transceiver.h"
 #include "src/interfaces/rtc_sctp_transport.h"
 #include "src/node/async_object_wrap_with_loop.h"
+#include "src/node/proxy.h"
 
 namespace webrtc {
 
@@ -41,13 +42,14 @@ namespace node_webrtc {
     class PeerConnectionFactory;
 
     class RTCPeerConnection
-        : public AsyncObjectWrapWithLoop<RTCPeerConnection>,
+        : public Proxy<RTCPeerConnection, webrtc::PeerConnectionInterface>,
           public webrtc::PeerConnectionObserver {
     public:
         explicit RTCPeerConnection(const Napi::CallbackInfo&);
-
+        
+        void Construct(const Napi::CallbackInfo &info) override;
         void Finalize(Napi::Env env) override;
-
+        
         // ~ Begin PeerConnectionObserver interface
         void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new_state) override;
         void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
@@ -63,8 +65,6 @@ namespace node_webrtc {
         // ~ End PeerConnectionObserver interface
 
         static void Init(Napi::Env, Napi::Object);
-
-        static Napi::FunctionReference& constructor();
 
         void SaveLastSdp(const RTCSessionDescriptionInit& lastSdp);
 
