@@ -19,11 +19,12 @@ static ExtendedRTCConfiguration CreateExtendedRTCConfiguration(
 }
 
 FROM_NAPI_IMPL(ExtendedRTCConfiguration, value) {
-  return From<Napi::Object>(value).FlatMap<ExtendedRTCConfiguration>([value](auto object) {
-    return curry(CreateExtendedRTCConfiguration)
-        % From<webrtc::PeerConnectionInterface::RTCConfiguration>(value)
-        * GetOptional<UnsignedShortRange>(object, "portRange", UnsignedShortRange());
-  });
+  return To<Napi::Object>(value)
+    .FlatMap<ExtendedRTCConfiguration>([value](auto object) {
+        return curry(CreateExtendedRTCConfiguration)
+            % From<webrtc::PeerConnectionInterface::RTCConfiguration>(value)
+            * GetOptional<UnsignedShortRange>(object, "portRange", UnsignedShortRange());
+    });
 }
 
 static Validation<Napi::Value> ExtendedRTCConfigurationToJavaScript(
