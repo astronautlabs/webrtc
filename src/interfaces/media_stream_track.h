@@ -23,69 +23,70 @@
 
 namespace node_webrtc {
 
-class PeerConnectionFactory;
+    class PeerConnectionFactory;
 
-class MediaStreamTrack
-  : public AsyncObjectWrapWithLoop<MediaStreamTrack>
-  , public webrtc::ObserverInterface {
- public:
-  explicit MediaStreamTrack(const Napi::CallbackInfo&);
+    class MediaStreamTrack
+        : public AsyncObjectWrapWithLoop<MediaStreamTrack>,
+          public webrtc::ObserverInterface {
+    public:
+        explicit MediaStreamTrack(const Napi::CallbackInfo&);
 
-  void Finalize(Napi::Env env) override;
+        void Finalize(Napi::Env env) override;
 
-  static void Init(Napi::Env, Napi::Object);
+        static void Init(Napi::Env, Napi::Object);
 
-  // ~ Begin interface webrtc::ObserverInterface
-  void OnChanged() override;
-  // ~ End interface webrtc::ObserverInterface
+        // ~ Begin interface webrtc::ObserverInterface
+        void OnChanged() override;
+        // ~ End interface webrtc::ObserverInterface
 
-  void OnPeerConnectionClosed();
+        void OnPeerConnectionClosed();
 
-  bool active() { return _ended ? false : _track->state() == webrtc::MediaStreamTrackInterface::TrackState::kLive; }
-  PeerConnectionFactory* factory() { return _factory; }
-  webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track() { return _track; }
+        bool active() { return _ended ? false : _track->state() == webrtc::MediaStreamTrackInterface::TrackState::kLive; }
+        PeerConnectionFactory* factory() { return _factory; }
+        webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track() { return _track; }
 
-  static ::node_webrtc::Wrap <
-  MediaStreamTrack*,
-  webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>,
-  PeerConnectionFactory*
-  > * wrap();
+        static ::node_webrtc::Wrap<
+            MediaStreamTrack*,
+            webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>,
+            PeerConnectionFactory*>*
+        wrap();
 
-  static Napi::FunctionReference& constructor();
+        static Napi::FunctionReference& constructor();
 
-  inline std::string getId() {
-      return _track->id();
-  }
+        inline std::string getId() {
+            return _track->id();
+        }
 
- protected:
-  void Stop() override;
+    protected:
+        void Stop() override;
 
- private:
-  static MediaStreamTrack* Create(
-      PeerConnectionFactory*,
-      webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>);
+    private:
+        static MediaStreamTrack* Create(
+            PeerConnectionFactory*,
+            webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>
+        );
 
-  Napi::Value GetEnabled(const Napi::CallbackInfo&);
-  void SetEnabled(const Napi::CallbackInfo&, const Napi::Value&);
-  Napi::Value GetId(const Napi::CallbackInfo&);
-  Napi::Value GetKind(const Napi::CallbackInfo&);
-  Napi::Value GetReadyState(const Napi::CallbackInfo&);
-  Napi::Value GetMuted(const Napi::CallbackInfo&);
+        Napi::Value GetEnabled(const Napi::CallbackInfo&);
+        void SetEnabled(const Napi::CallbackInfo&, const Napi::Value&);
+        Napi::Value GetId(const Napi::CallbackInfo&);
+        Napi::Value GetKind(const Napi::CallbackInfo&);
+        Napi::Value GetReadyState(const Napi::CallbackInfo&);
+        Napi::Value GetMuted(const Napi::CallbackInfo&);
 
-  Napi::Value Clone(const Napi::CallbackInfo&);
-  Napi::Value JsStop(const Napi::CallbackInfo&);
+        Napi::Value Clone(const Napi::CallbackInfo&);
+        Napi::Value JsStop(const Napi::CallbackInfo&);
 
-  bool _ended = false;
-  bool _enabled;
-  napi_ref_ptr<PeerConnectionFactory> _factory;
-  webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> _track;
-};
+        bool _ended = false;
+        bool _enabled;
+        napi_ref_ptr<PeerConnectionFactory> _factory;
+        webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> _track;
+    };
 
-DECLARE_CONVERTER(MediaStreamTrack*, webrtc::scoped_refptr<webrtc::AudioTrackInterface>)
-DECLARE_CONVERTER(MediaStreamTrack*, webrtc::scoped_refptr<webrtc::VideoTrackInterface>)
+    DECLARE_CONVERTER(MediaStreamTrack*, webrtc::scoped_refptr<webrtc::AudioTrackInterface>)
+    DECLARE_CONVERTER(MediaStreamTrack*, webrtc::scoped_refptr<webrtc::VideoTrackInterface>)
 
-DECLARE_TO_AND_FROM_NAPI(MediaStreamTrack*)
-DECLARE_FROM_NAPI(webrtc::scoped_refptr<webrtc::AudioTrackInterface>)
-DECLARE_FROM_NAPI(webrtc::scoped_refptr<webrtc::VideoTrackInterface>)
+    DECLARE_TO_AND_FROM_NAPI(MediaStreamTrack*)
+    DECLARE_FROM_NAPI(webrtc::scoped_refptr<webrtc::AudioTrackInterface>)
+    DECLARE_FROM_NAPI(webrtc::scoped_refptr<webrtc::VideoTrackInterface>)
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

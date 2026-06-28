@@ -15,72 +15,71 @@
 #include <webrtc/api/data_channel_interface.h>
 #include <webrtc/api/scoped_refptr.h>
 
-#include "src/node/proxy.h"
 #include "src/enums/node_webrtc/binary_type.h"
 #include "src/node/async_object_wrap_with_loop.h"
+#include "src/node/proxy.h"
 #include "src/node/proxy_registry.h"
 #include "src/node/wrap.h"
 #include "src/utilities/napi_ref_ptr.h"
 
-
-
 namespace node_webrtc {
 
-class PeerConnectionFactory;
+    class PeerConnectionFactory;
 
-/**
- * Represents the RTCDataChannel Javascript object, and manages all state related to webrtc::DataChannelInterface.
- */
-class RTCDataChannel
-  : public Proxy<RTCDataChannel, webrtc::DataChannelInterface>
-  , public webrtc::DataChannelObserver 
-{
-  bool hasOpened = false;
- public:
-  explicit RTCDataChannel(const Napi::CallbackInfo&);
+    /**
+     * Represents the RTCDataChannel Javascript object, and manages all state related to webrtc::DataChannelInterface.
+     */
+    class RTCDataChannel
+        : public Proxy<RTCDataChannel, webrtc::DataChannelInterface>,
+          public webrtc::DataChannelObserver {
+        bool hasOpened = false;
 
-  static void Init(Napi::Env, Napi::Object);
+    public:
+        explicit RTCDataChannel(const Napi::CallbackInfo&);
 
-  // ~ Begin DataChannelObserver interface.
-  void OnStateChange() override;
-  void OnMessage(const webrtc::DataBuffer& buffer) override;
-  // ~ End DataChannelObserver interface
+        static void Init(Napi::Env, Napi::Object);
 
-  void OnPeerConnectionClosed();
+        // ~ Begin DataChannelObserver interface.
+        void OnStateChange() override;
+        void OnMessage(const webrtc::DataBuffer& buffer) override;
+        // ~ End DataChannelObserver interface
 
-  static napi_ref_ptr<RTCDataChannel> CreateProxy(webrtc::scoped_refptr<webrtc::DataChannelInterface>, napi_ref_ptr<PeerConnectionFactory>);
- private:
-  static RTCDataChannel* Create(PeerConnectionFactory*, webrtc::scoped_refptr<webrtc::DataChannelInterface>);
+        void OnPeerConnectionClosed();
 
-  static void HandleMessage(RTCDataChannel&, const webrtc::DataBuffer& buffer);
+        static napi_ref_ptr<RTCDataChannel> CreateProxy(webrtc::scoped_refptr<webrtc::DataChannelInterface>, napi_ref_ptr<PeerConnectionFactory>);
 
-  Napi::Value Send(const Napi::CallbackInfo&);
-  Napi::Value Close(const Napi::CallbackInfo&);
+    private:
+        static RTCDataChannel* Create(PeerConnectionFactory*, webrtc::scoped_refptr<webrtc::DataChannelInterface>);
 
-  Napi::Value GetBufferedAmount(const Napi::CallbackInfo&);
-  Napi::Value GetId(const Napi::CallbackInfo&);
-  Napi::Value GetLabel(const Napi::CallbackInfo&);
-  Napi::Value GetMaxPacketLifeTime(const Napi::CallbackInfo&);
-  Napi::Value GetMaxRetransmits(const Napi::CallbackInfo&);
-  Napi::Value GetNegotiated(const Napi::CallbackInfo&);
-  Napi::Value GetOrdered(const Napi::CallbackInfo&);
-  Napi::Value GetPriority(const Napi::CallbackInfo&);
-  Napi::Value GetProtocol(const Napi::CallbackInfo&);
-  Napi::Value GetBinaryType(const Napi::CallbackInfo&);
-  Napi::Value GetReadyState(const Napi::CallbackInfo&);
-  void SetBinaryType(const Napi::CallbackInfo&, const Napi::Value&);
+        static void HandleMessage(RTCDataChannel&, const webrtc::DataBuffer& buffer);
 
-  void CleanupInternals();
+        Napi::Value Send(const Napi::CallbackInfo&);
+        Napi::Value Close(const Napi::CallbackInfo&);
 
-  BinaryType _binaryType = BinaryType::kArrayBuffer;
-  int _cached_id = 0;
-  std::string _cached_label;
-  uint16_t _cached_max_packet_life_time = 0;
-  uint16_t _cached_max_retransmits = 0;
-  bool _cached_negotiated = false;
-  bool _cached_ordered = false;
-  std::string _cached_protocol;
-  uint64_t _cached_buffered_amount = 0;
-};
+        Napi::Value GetBufferedAmount(const Napi::CallbackInfo&);
+        Napi::Value GetId(const Napi::CallbackInfo&);
+        Napi::Value GetLabel(const Napi::CallbackInfo&);
+        Napi::Value GetMaxPacketLifeTime(const Napi::CallbackInfo&);
+        Napi::Value GetMaxRetransmits(const Napi::CallbackInfo&);
+        Napi::Value GetNegotiated(const Napi::CallbackInfo&);
+        Napi::Value GetOrdered(const Napi::CallbackInfo&);
+        Napi::Value GetPriority(const Napi::CallbackInfo&);
+        Napi::Value GetProtocol(const Napi::CallbackInfo&);
+        Napi::Value GetBinaryType(const Napi::CallbackInfo&);
+        Napi::Value GetReadyState(const Napi::CallbackInfo&);
+        void SetBinaryType(const Napi::CallbackInfo&, const Napi::Value&);
 
-}  // namespace node_webrtc
+        void CleanupInternals();
+
+        BinaryType _binaryType = BinaryType::kArrayBuffer;
+        int _cached_id = 0;
+        std::string _cached_label;
+        uint16_t _cached_max_packet_life_time = 0;
+        uint16_t _cached_max_retransmits = 0;
+        bool _cached_negotiated = false;
+        bool _cached_ordered = false;
+        std::string _cached_protocol;
+        uint64_t _cached_buffered_amount = 0;
+    };
+
+} // namespace node_webrtc

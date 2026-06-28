@@ -11,8 +11,8 @@
 
 #include <webrtc/api/stats/rtc_stats_report.h>
 
-#include "src/dictionaries/webrtc/rtc_stats_report.h"  // IWYU pragma: keep
+#include "src/dictionaries/webrtc/rtc_stats_report.h" // IWYU pragma: keep
 
 void node_webrtc::RTCStatsCollector::OnStatsDelivered(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-  Resolve(report->Copy());
+    Resolve(report->Copy());
 }

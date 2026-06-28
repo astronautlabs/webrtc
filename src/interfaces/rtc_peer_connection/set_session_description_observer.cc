@@ -34,21 +34,19 @@ void node_webrtc::SetSessionDescriptionObserver::OnSetRemoteDescriptionComplete(
 }
 
 void node_webrtc::SetSessionDescriptionObserver::OnSuccess() {
-	pc->onSetDescriptionComplete();
-	Resolve(node_webrtc::Undefined());
+    pc->onSetDescriptionComplete();
+    Resolve(node_webrtc::Undefined());
 }
 
 void node_webrtc::SetSessionDescriptionObserver::OnFailure(webrtc::RTCError error) {
-	auto someError = node_webrtc::From<node_webrtc::SomeError>(&error).FromValidation([](auto errors) {
-		return node_webrtc::SomeError(errors[0]);
-		});
+    auto someError = node_webrtc::From<node_webrtc::SomeError>(&error).FromValidation([](auto errors) {
+        return node_webrtc::SomeError(errors[0]);
+    });
 
-	// NOTE(mroberts): This workaround is annoying.
-	if (absl::StrContains(someError.message(), "Local fingerprint does not match identity. Expected: ")) {
-		someError = node_webrtc::SomeError(someError.message(),
-			node_webrtc::MakeLeft<node_webrtc::ErrorFactory::ErrorName>(
-				node_webrtc::ErrorFactory::DOMExceptionName::kInvalidModificationError));
-	}
+    // NOTE(mroberts): This workaround is annoying.
+    if (absl::StrContains(someError.message(), "Local fingerprint does not match identity. Expected: ")) {
+        someError = node_webrtc::SomeError(someError.message(), node_webrtc::MakeLeft<node_webrtc::ErrorFactory::ErrorName>(node_webrtc::ErrorFactory::DOMExceptionName::kInvalidModificationError));
+    }
 
-	Reject(someError);
+    Reject(someError);
 }

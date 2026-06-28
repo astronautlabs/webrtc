@@ -100,7 +100,7 @@ namespace node_webrtc {
             return Validation<uint64_t>::Invalid(maybeNumber.Env().GetAndClearPendingException().Message());
         }
         auto doubleValue = maybeNumber.DoubleValue();
-        if (doubleValue < 0 || doubleValue > UINT64_MAX) {
+        if (doubleValue < 0 || doubleValue > static_cast<double>(UINT64_MAX)) {
             return Validation<uint64_t>::Invalid("Expected a 64-bit unsigned integer");
         }
         return Pure(static_cast<uint64_t>(maybeNumber.DoubleValue()));
@@ -175,7 +175,7 @@ namespace node_webrtc {
             return Validation<int64_t>::Invalid(maybeNumber.Env().GetAndClearPendingException().Message());
         }
         auto doubleValue = maybeNumber.DoubleValue();
-        if (doubleValue < INT64_MIN || doubleValue > INT64_MAX) {
+        if (doubleValue < INT64_MIN || doubleValue > static_cast<double>(INT64_MAX)) {
             return Validation<int64_t>::Invalid("Expected a 64-bit integer");
         }
         return Pure(maybeNumber.Int64Value());

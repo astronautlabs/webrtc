@@ -22,64 +22,64 @@
 
 namespace rtc {
 
-class NetworkManager;
-class PacketSocketFactory;
-class Thread;
+    class NetworkManager;
+    class PacketSocketFactory;
+    class Thread;
 
-}  // namespace rtc
+} // namespace rtc
 
 namespace webrtc {
 
-class PeerConnectionFactoryInterface;
+    class PeerConnectionFactoryInterface;
 
-}  // namespace webrtc
+} // namespace webrtc
 
 namespace node_webrtc {
 
-class PeerConnectionFactory
-  : public Napi::ObjectWrap<PeerConnectionFactory> {
- public:
-  explicit PeerConnectionFactory(const Napi::CallbackInfo&);
+    class PeerConnectionFactory
+        : public Napi::ObjectWrap<PeerConnectionFactory> {
+    public:
+        explicit PeerConnectionFactory(const Napi::CallbackInfo&);
 
-  ~PeerConnectionFactory();
+        ~PeerConnectionFactory();
 
-  void Destruct();
-  void Finalize(Napi::Env env) override;
+        void Destruct();
+        void Finalize(Napi::Env env) override;
 
-  /**
-   * Get or create the default PeerConnectionFactory. The default uses
-   * webrtc::AudioDeviceModule::AudioLayer::kDummyAudio. Call {@link Release} when done.
-   */
-  static PeerConnectionFactory* GetOrCreateDefault();
+        /**
+         * Get or create the default PeerConnectionFactory. The default uses
+         * webrtc::AudioDeviceModule::AudioLayer::kDummyAudio. Call {@link Release} when done.
+         */
+        static PeerConnectionFactory* GetOrCreateDefault();
 
-  /**
-   * Release a reference to the default PeerConnectionFactory.
-   */
-  static void Release();
+        /**
+         * Release a reference to the default PeerConnectionFactory.
+         */
+        static void Release();
 
-  /**
-   * Get the underlying webrtc::PeerConnectionFactoryInterface.
-   */
-  webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory() { return _factory; }
+        /**
+         * Get the underlying webrtc::PeerConnectionFactoryInterface.
+         */
+        webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory() { return _factory; }
 
-  static void Init(Napi::Env, Napi::Object);
+        static void Init(Napi::Env, Napi::Object);
 
-  static Napi::FunctionReference& constructor();
+        static Napi::FunctionReference& constructor();
 
-  static void Dispose();
+        static void Dispose();
 
-  std::unique_ptr<webrtc::Thread> _signalingThread;
-  std::unique_ptr<webrtc::Thread> _workerThread;
-  std::unique_ptr<webrtc::Thread> _networkThread;
-  
- private:
-  bool _destructed = false;
-  static PeerConnectionFactory* _default;
-  static std::mutex _mutex;
-  static int _references;
+        std::unique_ptr<webrtc::Thread> _signalingThread;
+        std::unique_ptr<webrtc::Thread> _workerThread;
+        std::unique_ptr<webrtc::Thread> _networkThread;
 
-  webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
-  webrtc::scoped_refptr<webrtc::AudioDeviceModule> _audioDeviceModule;
-};
+    private:
+        bool _destructed = false;
+        static PeerConnectionFactory* _default;
+        static std::mutex _mutex;
+        static int _references;
 
-}  // namespace node_webrtc
+        webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
+        webrtc::scoped_refptr<webrtc::AudioDeviceModule> _audioDeviceModule;
+    };
+
+} // namespace node_webrtc

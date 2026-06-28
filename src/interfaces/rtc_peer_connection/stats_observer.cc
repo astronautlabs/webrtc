@@ -17,25 +17,25 @@
 
 #include <webrtc/api/scoped_refptr.h>
 
-#include "src/dictionaries/node_webrtc/rtc_stats_response_init.h"  // IWYU pragma: keep
+#include "src/dictionaries/node_webrtc/rtc_stats_response_init.h" // IWYU pragma: keep
 
 void node_webrtc::StatsObserver::OnComplete(const webrtc::StatsReports& stats_reports) {
-  double timestamp = 0;
-  auto reports = std::vector<std::map<std::string, std::string>>();
-  for (auto stats_report : stats_reports) {
-    auto report = std::map<std::string, std::string>();
-    // NOTE(mroberts): This is a little janky. We should thread each report's timestamp along.
-    timestamp = timestamp > stats_report->timestamp() ? timestamp : stats_report->timestamp();
-    report.emplace("type", stats_report->TypeToString());
-    for (auto const& pair : stats_report->values()) {
-      auto stat = std::string(pair.second->display_name());
-      auto value = std::string(pair.second->ToString());
-      report.emplace(stat, value);
+    double timestamp = 0;
+    auto reports = std::vector<std::map<std::string, std::string>>();
+    for (auto stats_report : stats_reports) {
+        auto report = std::map<std::string, std::string>();
+        // NOTE(mroberts): This is a little janky. We should thread each report's timestamp along.
+        timestamp = timestamp > stats_report->timestamp() ? timestamp : stats_report->timestamp();
+        report.emplace("type", stats_report->TypeToString());
+        for (auto const& pair : stats_report->values()) {
+            auto stat = std::string(pair.second->display_name());
+            auto value = std::string(pair.second->ToString());
+            report.emplace(stat, value);
+        }
+        reports.push_back(report);
     }
-    reports.push_back(report);
-  }
 
-  std::pair<double, std::vector<std::map<std::string, std::string>>> response(timestamp, reports);
+    std::pair<double, std::vector<std::map<std::string, std::string>>> response(timestamp, reports);
 
-  Resolve(response);
+    Resolve(response);
 }

@@ -12,21 +12,22 @@
 #include <node-addon-api/napi.h>
 #include <webrtc/api/peer_connection_interface.h>
 
-#include "src/interfaces/rtc_peer_connection.h"  // IWYU pragma: keep
+#include "src/interfaces/rtc_peer_connection.h" // IWYU pragma: keep
 #include "src/node/promise.h"
 
 namespace node_webrtc {
 
-class StatsObserver
-  : public PromiseCreator<RTCPeerConnection>
-  , public webrtc::StatsObserver {
- public:
-  StatsObserver(
-      RTCPeerConnection* peer_connection,
-      Napi::Promise::Deferred deferred)
-    : PromiseCreator(peer_connection, deferred) {}
+    class StatsObserver
+        : public PromiseCreator<RTCPeerConnection>,
+          public webrtc::StatsObserver {
+    public:
+        StatsObserver(
+            RTCPeerConnection* peer_connection,
+            Napi::Promise::Deferred deferred
+        ) :
+            PromiseCreator(peer_connection, deferred) { }
 
-  void OnComplete(const webrtc::StatsReports&) override;
-};
+        void OnComplete(const webrtc::StatsReports&) override;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

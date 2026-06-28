@@ -10,8 +10,8 @@
 #include "src/interfaces/rtc_audio_source.h"
 
 #include <webrtc/api/peer_connection_interface.h>
-#include <webrtc/rtc_base/ref_counted_object.h>
 #include <webrtc/rtc_base/crypto_random.h>
+#include <webrtc/rtc_base/ref_counted_object.h>
 
 #include "src/converters.h"
 #include "src/converters/arguments.h"
@@ -20,60 +20,55 @@
 
 namespace node_webrtc {
 
-Napi::FunctionReference& RTCAudioSource::constructor() {
-  static Napi::FunctionReference constructor;
-  return constructor;
-}
+    Napi::FunctionReference& RTCAudioSource::constructor() {
+        static Napi::FunctionReference constructor;
+        return constructor;
+    }
 
-RTCAudioSource::RTCAudioSource(const Napi::CallbackInfo& info): 
-    Napi::ObjectWrap<RTCAudioSource>(info), 
-    _source(new webrtc::RefCountedObject<RTCAudioTrackSource>()) 
-{
-}
+    RTCAudioSource::RTCAudioSource(const Napi::CallbackInfo& info) :
+        Napi::ObjectWrap<RTCAudioSource>(info),
+        _source(new webrtc::RefCountedObject<RTCAudioTrackSource>()) {
+    }
 
-void RTCAudioSource::Finalize(Napi::Env env)
-{
-    // These are the tracks created via CreateTrack().
-    // We will unref them so that they are collectable, 
-    // but note that if they were added to one or more PeerConnections
-    // via addTrack(), that they will still be referenced by those 
-    // PeerConnections and thus will continue to remain uncollectable.
+    void RTCAudioSource::Finalize(Napi::Env env) {
+        // These are the tracks created via CreateTrack().
+        // We will unref them so that they are collectable,
+        // but note that if they were added to one or more PeerConnections
+        // via addTrack(), that they will still be referenced by those
+        // PeerConnections and thus will continue to remain uncollectable.
 
-    for (auto* track : _tracks)
-        track->Unref();
-}
+        for (auto* track : _tracks)
+            track->Unref();
+    }
 
-Napi::Value RTCAudioSource::CreateTrack(const Napi::CallbackInfo&) {
-  // TODO(mroberts): Again, we have some implicit factory we are threading around. How to handle?
-  auto* factory = PeerConnectionFactory::GetOrCreateDefault();
-  auto track = factory->factory()->CreateAudioTrack(webrtc::CreateRandomUuid(), _source.get());
+    Napi::Value RTCAudioSource::CreateTrack(const Napi::CallbackInfo&) {
+        // TODO(mroberts): Again, we have some implicit factory we are threading around. How to handle?
+        auto* factory = PeerConnectionFactory::GetOrCreateDefault();
+        auto track = factory->factory()->CreateAudioTrack(webrtc::CreateRandomUuid(), _source.get());
 
-  // Here the default reference will be owned by the RTCAudioSource. 
-  // See RTCPeerConnection::AddTrack() for corresponding referencing logic in that case.
+        // Here the default reference will be owned by the RTCAudioSource.
+        // See RTCPeerConnection::AddTrack() for corresponding referencing logic in that case.
 
-  auto* wrappedTrack = MediaStreamTrack::wrap()->GetOrCreate(factory, track);
-  _tracks.insert(wrappedTrack);
-  return wrappedTrack->Value();
-}
+        auto* wrappedTrack = MediaStreamTrack::wrap()->GetOrCreate(factory, track);
+        _tracks.insert(wrappedTrack);
+        return wrappedTrack->Value();
+    }
 
-Napi::Value RTCAudioSource::OnData(const Napi::CallbackInfo& info) {
-  CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, dict, RTCOnDataEventDict)
-  _source->PushData(dict);
-  return info.Env().Undefined();
-}
+    Napi::Value RTCAudioSource::OnData(const Napi::CallbackInfo& info) {
+        CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, dict, RTCOnDataEventDict)
+        _source->PushData(dict);
+        return info.Env().Undefined();
+    }
 
-void RTCAudioSource::Init(Napi::Env env, Napi::Object exports) {
-  Napi::HandleScope scope(env);
+    void RTCAudioSource::Init(Napi::Env env, Napi::Object exports) {
+        Napi::HandleScope scope(env);
 
-  Napi::Function func = DefineClass(env, "RTCAudioSource", {
-    InstanceMethod("createTrack", &RTCAudioSource::CreateTrack),
-    InstanceMethod("onData", &RTCAudioSource::OnData)
-  });
+        Napi::Function func = DefineClass(env, "RTCAudioSource", { InstanceMethod("createTrack", &RTCAudioSource::CreateTrack), InstanceMethod("onData", &RTCAudioSource::OnData) });
 
-  constructor() = Napi::Persistent(func);
-  constructor().SuppressDestruct();
+        constructor() = Napi::Persistent(func);
+        constructor().SuppressDestruct();
 
-  exports.Set("RTCAudioSource", func);
-}
+        exports.Set("RTCAudioSource", func);
+    }
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

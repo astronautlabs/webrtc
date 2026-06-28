@@ -17,26 +17,26 @@
 
 namespace node_webrtc {
 
-class LegacyStatsReport
-  : public Napi::ObjectWrap<LegacyStatsReport> {
- public:
-  explicit LegacyStatsReport(const Napi::CallbackInfo&);
+    class LegacyStatsReport
+        : public Napi::ObjectWrap<LegacyStatsReport> {
+    public:
+        explicit LegacyStatsReport(const Napi::CallbackInfo&);
 
-  static void Init(Napi::Env, Napi::Object);
+        static void Init(Napi::Env, Napi::Object);
 
-  static LegacyStatsReport* Create(double timestamp, const std::map<std::string, std::string>& stats);
+        static LegacyStatsReport* Create(double timestamp, const std::map<std::string, std::string>& stats);
 
- private:
-  static Napi::FunctionReference& constructor();
+    private:
+        static Napi::FunctionReference& constructor();
 
-  Napi::Value Names(const Napi::CallbackInfo&);
-  Napi::Value Stat(const Napi::CallbackInfo&);
+        Napi::Value Names(const Napi::CallbackInfo&);
+        Napi::Value Stat(const Napi::CallbackInfo&);
 
-  Napi::Value GetTimestamp(const Napi::CallbackInfo&);
-  Napi::Value GetType(const Napi::CallbackInfo&);
+        Napi::Value GetTimestamp(const Napi::CallbackInfo&);
+        Napi::Value GetType(const Napi::CallbackInfo&);
 
-  double _timestamp;
-  std::map<std::string, std::string> _stats;
-};
+        double _timestamp;
+        std::map<std::string, std::string> _stats;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

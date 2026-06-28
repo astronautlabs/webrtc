@@ -18,72 +18,72 @@
 #include <webrtc/pc/local_audio_source.h>
 
 #include "src/dictionaries/node_webrtc/rtc_on_data_event_dict.h"
-#include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 #include "src/interfaces/media_stream_track.h"
+#include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 
 namespace node_webrtc {
 
-class RTCAudioTrackSource : public webrtc::LocalAudioSource {
- public:
-  RTCAudioTrackSource() {}
+    class RTCAudioTrackSource : public webrtc::LocalAudioSource {
+    public:
+        RTCAudioTrackSource() { }
 
-  ~RTCAudioTrackSource() override {
-    PeerConnectionFactory::Release();
-    _factory = nullptr;
-  }
+        ~RTCAudioTrackSource() override {
+            PeerConnectionFactory::Release();
+            _factory = nullptr;
+        }
 
-  SourceState state() const override {
-    return webrtc::MediaSourceInterface::SourceState::kLive;
-  }
+        SourceState state() const override {
+            return webrtc::MediaSourceInterface::SourceState::kLive;
+        }
 
-  bool remote() const override {
-    return false;
-  }
+        bool remote() const override {
+            return false;
+        }
 
-  void PushData(RTCOnDataEventDict dict) {
-    webrtc::AudioTrackSinkInterface* sink = _sink;
-    if (sink && dict.numberOfFrames.IsJust()) {
-      sink->OnData(
-          dict.samples,
-          dict.bitsPerSample,
-          dict.sampleRate,
-          dict.channelCount,
-          dict.numberOfFrames.UnsafeFromJust()
-      );
-    }
-    // HACK(mroberts): I'd rather we use a smart pointer.
-    delete[] dict.samples;
-  }
+        void PushData(RTCOnDataEventDict dict) {
+            webrtc::AudioTrackSinkInterface* sink = _sink;
+            if (sink && dict.numberOfFrames.IsJust()) {
+                sink->OnData(
+                    dict.samples,
+                    dict.bitsPerSample,
+                    dict.sampleRate,
+                    dict.channelCount,
+                    dict.numberOfFrames.UnsafeFromJust()
+                );
+            }
+            // HACK(mroberts): I'd rather we use a smart pointer.
+            delete[] dict.samples;
+        }
 
-  void AddSink(webrtc::AudioTrackSinkInterface* sink) override {
-    _sink = sink;
-  }
+        void AddSink(webrtc::AudioTrackSinkInterface* sink) override {
+            _sink = sink;
+        }
 
-  void RemoveSink(webrtc::AudioTrackSinkInterface*) override {
-    _sink = nullptr;
-  }
+        void RemoveSink(webrtc::AudioTrackSinkInterface*) override {
+            _sink = nullptr;
+        }
 
- private:
-  PeerConnectionFactory* _factory = PeerConnectionFactory::GetOrCreateDefault();
+    private:
+        PeerConnectionFactory* _factory = PeerConnectionFactory::GetOrCreateDefault();
 
-  std::atomic<webrtc::AudioTrackSinkInterface*> _sink = {nullptr};
-};
+        std::atomic<webrtc::AudioTrackSinkInterface*> _sink = { nullptr };
+    };
 
-class RTCAudioSource
-  : public Napi::ObjectWrap<RTCAudioSource> {
- public:
-  RTCAudioSource(const Napi::CallbackInfo&);
-  static void Init(Napi::Env, Napi::Object);
-  void Finalize(Napi::Env env) override;
+    class RTCAudioSource
+        : public Napi::ObjectWrap<RTCAudioSource> {
+    public:
+        RTCAudioSource(const Napi::CallbackInfo&);
+        static void Init(Napi::Env, Napi::Object);
+        void Finalize(Napi::Env env) override;
 
- private:
-  static Napi::FunctionReference& constructor();
+    private:
+        static Napi::FunctionReference& constructor();
 
-  Napi::Value CreateTrack(const Napi::CallbackInfo&);
-  Napi::Value OnData(const Napi::CallbackInfo&);
+        Napi::Value CreateTrack(const Napi::CallbackInfo&);
+        Napi::Value OnData(const Napi::CallbackInfo&);
 
-  webrtc::scoped_refptr<RTCAudioTrackSource> _source;
-  std::set<MediaStreamTrack*> _tracks;
-};
+        webrtc::scoped_refptr<RTCAudioTrackSource> _source;
+        std::set<MediaStreamTrack*> _tracks;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

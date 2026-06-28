@@ -19,33 +19,34 @@
 
 namespace node_webrtc {
 
-class RTCAudioSink
-  : public AsyncObjectWrapWithLoop<RTCAudioSink>
-  , public webrtc::AudioTrackSinkInterface {
- public:
-  explicit RTCAudioSink(const Napi::CallbackInfo&);
+    class RTCAudioSink
+        : public AsyncObjectWrapWithLoop<RTCAudioSink>,
+          public webrtc::AudioTrackSinkInterface {
+    public:
+        explicit RTCAudioSink(const Napi::CallbackInfo&);
 
-  static void Init(Napi::Env, Napi::Object);
+        static void Init(Napi::Env, Napi::Object);
 
-  void OnData(
-      const void* audio_data,
-      int bits_per_sample,
-      int sample_rate,
-      size_t number_of_channels,
-      size_t number_of_frames) override;
+        void OnData(
+            const void* audio_data,
+            int bits_per_sample,
+            int sample_rate,
+            size_t number_of_channels,
+            size_t number_of_frames
+        ) override;
 
-  static Napi::FunctionReference& constructor();
+        static Napi::FunctionReference& constructor();
 
- protected:
-  void Stop() override;
+    protected:
+        void Stop() override;
 
- private:
-  Napi::Value GetStopped(const Napi::CallbackInfo&);
+    private:
+        Napi::Value GetStopped(const Napi::CallbackInfo&);
 
-  Napi::Value JsStop(const Napi::CallbackInfo&);
+        Napi::Value JsStop(const Napi::CallbackInfo&);
 
-  bool _stopped = false;
-  webrtc::scoped_refptr<webrtc::AudioTrackInterface> _track;
-};
+        bool _stopped = false;
+        webrtc::scoped_refptr<webrtc::AudioTrackInterface> _track;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc

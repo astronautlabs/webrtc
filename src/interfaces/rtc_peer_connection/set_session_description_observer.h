@@ -18,29 +18,31 @@
 #include "src/interfaces/rtc_peer_connection.h"
 #include "src/node/promise.h"
 
-namespace webrtc { class RTCError; }
+namespace webrtc {
+    class RTCError;
+}
 
 namespace node_webrtc {
-	class SetSessionDescriptionObserver: 
-		public PromiseCreator<RTCPeerConnection>, 
-		public webrtc::SetLocalDescriptionObserverInterface,
-		public webrtc::SetRemoteDescriptionObserverInterface {
-	public:
-		SetSessionDescriptionObserver(
-			RTCPeerConnection* peer_connection,
-			Napi::Promise::Deferred deferred)
-			: PromiseCreator<RTCPeerConnection>(peer_connection, deferred) {
-			pc = peer_connection;
-		}
+    class SetSessionDescriptionObserver : public PromiseCreator<RTCPeerConnection>,
+                                          public webrtc::SetLocalDescriptionObserverInterface,
+                                          public webrtc::SetRemoteDescriptionObserverInterface {
+    public:
+        SetSessionDescriptionObserver(
+            RTCPeerConnection* peer_connection,
+            Napi::Promise::Deferred deferred
+        ) :
+            PromiseCreator<RTCPeerConnection>(peer_connection, deferred) {
+            pc = peer_connection;
+        }
 
         void OnSetLocalDescriptionComplete(webrtc::RTCError error) override;
         void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override;
 
-		void OnSuccess();
-		void OnFailure(webrtc::RTCError);
+        void OnSuccess();
+        void OnFailure(webrtc::RTCError);
 
-	private:
-		RTCPeerConnection* pc;
-	};
+    private:
+        RTCPeerConnection* pc;
+    };
 
-}  // namespace node_webrtc
+} // namespace node_webrtc
