@@ -27,8 +27,9 @@ namespace node_webrtc {
     }
 
     template <typename T>
-    bool Throw(Napi::Env env, std::string message) {
+    Napi::Value Throw(Napi::Env env, std::string message) {
         T::New(env, message.c_str()).ThrowAsJavaScriptException();
+        return env.Undefined();
     }
 
     template <typename T>

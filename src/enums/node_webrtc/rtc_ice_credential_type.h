@@ -1,14 +1,11 @@
 #pragma once
+#include "src/enums/enum_class_conversion.h"
 
-// IWYU pragma: no_include "src/enums/macros/impls.h"
+namespace node_webrtc {
+    enum class RTCIceCredentialType: std::uint8_t {
+        kPassword,
+        kOAuth
+    };
 
-#define RTC_ICE_CREDENTIAL_TYPE RTCIceCredentialType
-#define RTC_ICE_CREDENTIAL_TYPE_NAME "RTCIceCredentialType"
-#define RTC_ICE_CREDENTIAL_TYPE_LIST \
-  ENUM_SUPPORTED(kPassword, "password") \
-  ENUM_SUPPORTED(kOAuth, "oauth")
-
-#define ENUM(X) RTC_ICE_CREDENTIAL_TYPE ## X
-#include "src/enums/macros/def.h"
-#include "src/enums/macros/decls.h"
-#undef ENUM
+    DECLARE_ENUM_CLASS_CONVERTER(RTCIceCredentialType)
+} // namespace node_webrtc

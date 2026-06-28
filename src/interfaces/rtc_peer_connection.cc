@@ -97,7 +97,7 @@ namespace node_webrtc {
         }
 
         if (!validateConfiguration(configuration.configuration)) {
-            Napi::TypeError::New(info.Env(), "The given configuration is invalid.").ThrowAsJavaScriptException();
+            Throw<Napi::TypeError>(info.Env(), "The given configuration is invalid.");
             return;
         }
 
@@ -1105,7 +1105,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::SaveLastSdp(const RTCSessionDescriptionInit& lastSdp) {
-        Log(this, "RTCPeerConnection::SaveLastSdp(" + lastSdp.sdp + " type " + std::to_string(lastSdp.type) + ")");
+        Log(this, "RTCPeerConnection::SaveLastSdp(" + lastSdp.sdp + " type " + to_string(lastSdp.type) + ")");
         this->_lastSdp = lastSdp;
     }
 
