@@ -1,15 +1,8 @@
 #pragma once
 
+#include "src/enums/enum_class_conversion.h"
 #include <webrtc/api/peer_connection_interface.h>
 
-// IWYU pragma: no_include "src/enums/macros/impls.h"
-
-#define RTCP_MUX_POLICY webrtc::PeerConnectionInterface::RtcpMuxPolicy
-#define RTCP_MUX_POLICY_NAME "RTCRtcpMuxPolicy"
-#define RTCP_MUX_POLICY_LIST \
-  ENUM_SUPPORTED(RTCP_MUX_POLICY::kRtcpMuxPolicyNegotiate, "negotiate") \
-  ENUM_SUPPORTED(RTCP_MUX_POLICY::kRtcpMuxPolicyRequire, "require")
-
-#define ENUM(X) RTCP_MUX_POLICY ## X
-#include "src/enums/macros/decls.h"
-#undef ENUM
+namespace node_webrtc {
+    DECLARE_ENUM_CLASS_CONVERTER(webrtc::PeerConnectionInterface::RtcpMuxPolicy);
+} // namespace node_webrtc

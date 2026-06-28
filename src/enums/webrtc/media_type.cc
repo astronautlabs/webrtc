@@ -14,7 +14,3 @@ namespace node_webrtc {
 
     ENUM_CLASS_CONVERTER_IMPL(webrtc::MediaType, MediaTypeMap)
 } // namespace node_webrtc
-
-// #define ENUM(X) WEBRTC_MEDIA_TYPE ## X
-// #include "src/enums/macros/impls.h"
-// #undef ENUM
