@@ -10,7 +10,6 @@
 #include "src/interfaces/rtc_peer_connection.h"
 
 #include <cassert>
-#include <iosfwd>
 #include <memory>
 #include <node-addon-api/napi.h>
 #include <string>
@@ -27,9 +26,7 @@
 
 #include "src/converters.h"
 #include "src/converters/arguments.h"
-#include "src/converters/interfaces.h"
 #include "src/converters/napi.h"
-#include "src/dictionaries/macros/napi.h"
 #include "src/dictionaries/node_webrtc/rtc_answer_options.h"
 #include "src/dictionaries/node_webrtc/rtc_offer_options.h"
 #include "src/dictionaries/node_webrtc/rtc_session_description_init.h"
