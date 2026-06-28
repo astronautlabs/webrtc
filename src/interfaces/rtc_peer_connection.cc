@@ -103,7 +103,6 @@ namespace node_webrtc {
 
         _port_range = configuration.portRange;
 
-        // TODO(mroberts): Read `factory` (non-standard) from RTCConfiguration?
         _factory = PeerConnectionFactory::GetOrCreateDefault();
         _shouldReleaseFactory = true;
 
