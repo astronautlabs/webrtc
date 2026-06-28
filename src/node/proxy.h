@@ -28,7 +28,7 @@ namespace node_webrtc {
      */
     template <typename ProxyT, typename NativeT>
     class Proxy: public AsyncObjectWrapWithLoop<ProxyT> {
-    protected:
+    public:
         Proxy(const Napi::CallbackInfo& info):
             AsyncObjectWrapWithLoop<ProxyT>(ClassName(), static_cast<ProxyT&>(*this), info)
         {
@@ -40,8 +40,22 @@ namespace node_webrtc {
                 return;
             }
             
+            Construct(info);
+        }
+
+    protected:
+        virtual void Construct(const Napi::CallbackInfo& info) {
             _factory = PeerConnectionFactory::Unwrap(info[0].As<Napi::Object>());
             _handle = Napi::Envelope<webrtc::scoped_refptr<NativeT>>::Open(info[1]);
+        }
+
+        static napi_ref_ptr<ProxyT> CreateProxy(webrtc::scoped_refptr<NativeT> channel, napi_ref_ptr<PeerConnectionFactory> factory) {
+            auto env = constructor().Env();
+            Napi::HandleScope scope(env);
+            auto object = constructor().New({factory->Value(), Napi::CreateEnvelope(env, channel)});
+            auto* unwrapped = ProxyT::Unwrap(object);
+            unwrapped->Ref();
+            return unwrapped;
         }
 
         static std::string ClassName() {
@@ -61,7 +75,7 @@ namespace node_webrtc {
         }
 
         static auto& registry() {
-            static ::node_webrtc::ProxyRegistry<NativeT, ProxyT> registry { ProxyT::CreateProxy };
+            static ::node_webrtc::ProxyRegistry<NativeT, ProxyT> registry { CreateProxy };
             return registry;
         }
     public:

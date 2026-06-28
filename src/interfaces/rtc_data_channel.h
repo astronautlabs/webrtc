@@ -40,11 +40,7 @@ namespace node_webrtc {
 
         void OnPeerConnectionClosed();
 
-        static napi_ref_ptr<RTCDataChannel> CreateProxy(webrtc::scoped_refptr<webrtc::DataChannelInterface>, napi_ref_ptr<PeerConnectionFactory>);
-
     private:
-        static RTCDataChannel* Create(PeerConnectionFactory*, webrtc::scoped_refptr<webrtc::DataChannelInterface>);
-
         static void HandleMessage(RTCDataChannel&, const webrtc::DataBuffer& buffer);
 
         Napi::Value Send(const Napi::CallbackInfo&);

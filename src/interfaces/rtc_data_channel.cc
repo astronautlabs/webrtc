@@ -270,32 +270,8 @@ namespace node_webrtc {
             Throw<Napi::TypeError>(info.Env(), "binaryType 'blob' is not yet supported");
             return;
         }
-        
+
         _binaryType = maybeBinaryType.UnsafeFromValid();
-    }
-
-    napi_ref_ptr<RTCDataChannel> RTCDataChannel::CreateProxy(webrtc::scoped_refptr<webrtc::DataChannelInterface> channel, napi_ref_ptr<PeerConnectionFactory> factory) {
-        auto env = constructor().Env();
-
-        Napi::HandleScope scope(env);
-
-        auto object = constructor().New({factory->Value(), Napi::CreateEnvelope(env, channel)});
-
-        auto* unwrapped = Unwrap(object);
-        unwrapped->Ref();
-        return unwrapped;
-    }
-
-    RTCDataChannel* RTCDataChannel::Create(PeerConnectionFactory* factory, webrtc::scoped_refptr<webrtc::DataChannelInterface> channel) {
-        auto env = constructor().Env();
-
-        Napi::HandleScope scope(env);
-
-        auto object = constructor().New({PeerConnectionFactory::GetOrCreateDefault()->Value(), Napi::CreateEnvelope(env, channel)});
-
-        auto* unwrapped = Unwrap(object);
-        unwrapped->Ref();
-        return unwrapped;
     }
 
     void RTCDataChannel::Init(Napi::Env env, Napi::Object exports) {
