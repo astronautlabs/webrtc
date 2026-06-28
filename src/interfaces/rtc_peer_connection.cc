@@ -1210,7 +1210,6 @@ namespace node_webrtc {
                 InstanceMethod("getReceivers", &RTCPeerConnection::GetReceivers),
                 InstanceMethod("getSenders", &RTCPeerConnection::GetSenders),
                 InstanceMethod("getStats", &RTCPeerConnection::GetStats),
-                InstanceMethod("legacyGetStats", &RTCPeerConnection::LegacyGetStats),
                 InstanceMethod("getTransceivers", &RTCPeerConnection::GetTransceivers),
                 InstanceMethod("updateIce", &RTCPeerConnection::UpdateIce),
                 InstanceMethod("addIceCandidate", &RTCPeerConnection::AddIceCandidate),

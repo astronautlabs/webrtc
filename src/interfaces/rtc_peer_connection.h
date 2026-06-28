@@ -121,7 +121,6 @@ namespace node_webrtc {
         Napi::Value GetReceivers(const Napi::CallbackInfo&);
         Napi::Value GetSenders(const Napi::CallbackInfo&);
         Napi::Value GetStats(const Napi::CallbackInfo&);
-        Napi::Value LegacyGetStats(const Napi::CallbackInfo&);
         Napi::Value GetTransceivers(const Napi::CallbackInfo&);
         Napi::Value Close(const Napi::CallbackInfo&);
         Napi::Value RestartIce(const Napi::CallbackInfo&);
