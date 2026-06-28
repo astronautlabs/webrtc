@@ -1,14 +1,10 @@
 #pragma once
+#include "src/enums/enum_class_conversion.h"
 
-// IWYU pragma: no_include "src/enums/macros/impls.h"
-
-#define BINARY_TYPE BinaryType
-#define BINARY_TYPE_NAME "BinaryType"
-#define BINARY_TYPE_LIST \
-  ENUM_UNSUPPORTED(kBlob, "blob", "\"blob\" is not supported; see TODO") \
-  ENUM_SUPPORTED(kArrayBuffer, "arraybuffer")
-
-#define ENUM(X) BINARY_TYPE ## X
-#include "src/enums/macros/def.h"
-#include "src/enums/macros/decls.h"
-#undef ENUM
+namespace node_webrtc {
+    enum class BinaryType {
+        kBlob,
+        kArrayBuffer
+    };
+    DECLARE_ENUM_CLASS_CONVERTER(BinaryType)
+} // namespace node_webrtc

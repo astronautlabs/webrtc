@@ -261,9 +261,16 @@ namespace node_webrtc {
     void RTCDataChannel::SetBinaryType(const Napi::CallbackInfo& info, const Napi::Value& value) {
         auto maybeBinaryType = From<BinaryType>(value);
         if (maybeBinaryType.IsInvalid()) {
-            Napi::TypeError::New(info.Env(), maybeBinaryType.ToErrors()[0]).ThrowAsJavaScriptException();
+            Throw<Napi::TypeError>(info.Env(), maybeBinaryType.ToErrors()[0]);
             return;
         }
+
+        if (maybeBinaryType.UnsafeFromValid() == BinaryType::kBlob) {
+            // TODO(liam): Support blobs
+            Throw<Napi::TypeError>(info.Env(), "binaryType 'blob' is not yet supported");
+            return;
+        }
+        
         _binaryType = maybeBinaryType.UnsafeFromValid();
     }
 
