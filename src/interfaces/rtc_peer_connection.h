@@ -64,7 +64,6 @@ namespace node_webrtc {
         void OnAddStream(webrtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
         void OnRemoveStream(webrtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
 
-        void OnAddTrack(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver, const std::vector<webrtc::scoped_refptr<webrtc::MediaStreamInterface>>& streams) override;
         void OnTrack(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
 
         static void Init(Napi::Env, Napi::Object);
@@ -78,26 +77,13 @@ namespace node_webrtc {
         webrtc::scoped_refptr<webrtc::RtpSenderInterface> getUnderlying(RTCRtpSender* sender);
         webrtc::scoped_refptr<webrtc::RtpReceiverInterface> getUnderlying(RTCRtpReceiver* receiver);
         webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> getUnderlying(RTCRtpTransceiver* transceiver);
-        inline bool isClosed() {
+        bool isClosed() {
             return !_factory || !_jinglePeerConnection;
         }
 
     private:
-        void processStateChangesPlanB();
-        void processStateChangesUnifiedPlan();
+        void processStateChanges();
         bool validateConfiguration(webrtc::PeerConnectionInterface::RTCConfiguration configuration);
-
-        bool isPlanB() {
-            return _jinglePeerConnection
-                ? (_jinglePeerConnection->GetConfiguration().sdp_semantics == webrtc::SdpSemantics::kPlanB_DEPRECATED)
-                : false;
-        }
-
-        bool isUnifiedPlan() {
-            return _jinglePeerConnection
-                ? (_jinglePeerConnection->GetConfiguration().sdp_semantics == webrtc::SdpSemantics::kUnifiedPlan)
-                : false;
-        }
 
         Napi::Value AddTrack(const Napi::CallbackInfo&);
         Napi::Value AddTransceiver(const Napi::CallbackInfo&);

@@ -230,6 +230,7 @@ describe('RTCRTPReceiver', () => {
     pc.close();
   });
   
+  // TODO(liam): should test be removed with plan-b removal or updated to use unified-plan
   it('negotiating MediaStreamTracks and then renegotiating without them', async () => {
     var pc = new RTCPeerConnection(<any>{ sdpSemantics: 'plan-b' });
     var offer1 = new RTCSessionDescription({ type: 'offer', sdp: sdp1 });

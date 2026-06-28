@@ -1,10 +1,12 @@
-# vNext (0.5.0)
+# vNext (0.6.0)
 
 - Move Javascript sources to Typescript
 - Use Visual Studio 2022 for Windows builds
 - Add cmake `project()` directive
 - Add VS code C++ configuration
 - Set up `webrtc.astrocdn.com` for future binary builds
+- RTCPeerConnection.legacyGetStats() is no longer available. Only the modern standards-compliant getStats() is available
+- Plan B is no longer supported
 
 # Forked to @astronautlabs/webrtc
 

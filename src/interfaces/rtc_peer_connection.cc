@@ -12,6 +12,7 @@
 #include <cassert>
 #include <iosfwd>
 #include <memory>
+#include <node-addon-api/napi.h>
 #include <string>
 
 #include <src/api/jsep.h>
@@ -93,6 +94,11 @@ namespace node_webrtc {
         CONVERT_ARGS_OR_THROW_AND_RETURN_VOID_NAPI(info, maybeConfiguration, Maybe<ExtendedRTCConfiguration>)
 
         auto configuration = maybeConfiguration.FromMaybe(ExtendedRTCConfiguration());
+
+        if (configuration.configuration.sdp_semantics == webrtc::SdpSemantics::kPlanB_DEPRECATED) {
+            Throw<Napi::TypeError>(info.Env(), "Plan B is not supported");
+            return;
+        }
 
         if (!validateConfiguration(configuration.configuration)) {
             Napi::TypeError::New(info.Env(), "The given configuration is invalid.").ThrowAsJavaScriptException();
@@ -255,35 +261,6 @@ namespace node_webrtc {
         Log(this, "RTCPeerConnection::OnAddStream(" + stream->id() + ")");
     }
 
-    void RTCPeerConnection::OnAddTrack(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver, const std::vector<webrtc::scoped_refptr<webrtc::MediaStreamInterface>>& streams) {
-        Log(this, "RTCPeerConnection::OnAddTrack(" + receiver->id() + ", " + std::to_string(streams.size()) + " streams)");
-        if (_jinglePeerConnection->GetConfiguration().sdp_semantics != webrtc::SdpSemantics::kPlanB_DEPRECATED) {
-            return;
-        }
-
-        OnNodeThread([this] {
-            Event("statechange")
-                .Dispatch();
-        });
-
-        OnNodeThread([this, receiver, streams]() {
-            auto wrappedReceiver = createOrUpdateReceiver(receiver);
-            auto mediaStreams = std::vector<MediaStream*>();
-            for (auto const& stream : streams) {
-                auto* mediaStream = MediaStream::wrap()->GetOrCreate(_factory, stream);
-                _streams.insert(mediaStream);
-                mediaStreams.push_back(mediaStream);
-            }
-
-            Event("track")
-                .With("receiver", wrappedReceiver->Value())
-                .With("streams", mediaStreams)
-                .With("track", wrappedReceiver->getTrack())
-                .With("transceiver", Env().Null())
-                .Dispatch();
-        });
-    }
-
     void RTCPeerConnection::OnTrack(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver) {
         Log(this, "RTCPeerConnection::OnTrack(" + rtpTransceiver->mid().value_or("<no-mid>") + ")");
         OnNodeThread([this, rtpTransceiver]() {
@@ -371,17 +348,15 @@ namespace node_webrtc {
         }
 
         const auto& rtpSender = result.value();
-        if (isUnifiedPlan()) {
-            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver;
-            for (const auto& candidate : _jinglePeerConnection->GetTransceivers()) {
-                if (candidate->sender() == rtpSender) {
-                    rtpTransceiver = candidate;
-                }
+        webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver;
+        for (const auto& candidate : _jinglePeerConnection->GetTransceivers()) {
+            if (candidate->sender() == rtpSender) {
+                rtpTransceiver = candidate;
             }
-
-            assert(rtpTransceiver);
-            createOrUpdateTransceiver(rtpTransceiver);
         }
+
+        assert(rtpTransceiver);
+        createOrUpdateTransceiver(rtpTransceiver);
 
         return createOrUpdateSender(
             rtpSender,
@@ -466,13 +441,7 @@ namespace node_webrtc {
             return env.Undefined();
         }
 
-        if (isPlanB()) {
-            sender->setTrack(nullptr);
-            _senders.erase(sender->getId());
-            sender->Unref();
-        } else {
-            createOrUpdateTransceiver(getUnderlying(sender->getTransceiver()));
-        }
+        createOrUpdateTransceiver(getUnderlying(sender->getTransceiver()));
 
         return env.Undefined();
     }
@@ -664,8 +633,13 @@ namespace node_webrtc {
 
         CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, configuration, webrtc::PeerConnectionInterface::RTCConfiguration)
 
+        if (configuration.sdp_semantics == webrtc::SdpSemantics::kPlanB_DEPRECATED) {
+            Throw<Napi::TypeError>(info.Env(), "Plan B is not supported");
+            return env.Undefined();
+        }
+
         if (!validateConfiguration(configuration)) {
-            Napi::TypeError::New(info.Env(), "The given configuration is invalid.").ThrowAsJavaScriptException();
+            Throw<Napi::TypeError>(info.Env(), "The given configuration is invalid.");
             return env.Undefined();
         }
 
@@ -1145,35 +1119,12 @@ namespace node_webrtc {
             if (!_jinglePeerConnection)
                 return;
 
-            if (isPlanB())
-                processStateChangesPlanB();
-            else
-                processStateChangesUnifiedPlan();
+            processStateChanges();
         });
     }
 
-    void RTCPeerConnection::processStateChangesPlanB() {
-        Log(this, "RTCPeerConnection::processStateChangesPlanB()");
-        std::vector<RTCRtpReceiver*> removedReceivers;
-
-        for (const auto& pair : _receivers) {
-            auto receiver = pair.second;
-            if (!getUnderlying(receiver))
-                removedReceivers.push_back(receiver);
-        }
-
-        for (auto* receiver : removedReceivers) {
-            _receivers.erase(receiver->getId());
-            receiver->Unref();
-        }
-
-        for (const auto& rtpReceiver : _jinglePeerConnection->GetReceivers()) {
-            createOrUpdateReceiver(rtpReceiver);
-        }
-    }
-
-    void RTCPeerConnection::processStateChangesUnifiedPlan() {
-        Log(this, "RTCPeerConnection::processStateChangesUnifiedPlan()");
+    void RTCPeerConnection::processStateChanges() {
+        Log(this, "RTCPeerConnection::processStateChanges()");
         std::vector<uintptr_t> removedTransceivers;
 
         for (auto pair : _transceivers) {
