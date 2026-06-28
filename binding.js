@@ -13,7 +13,6 @@ EventEmitter.mixin(module.exports.RTCRtpReceiver);
 EventEmitter.mixin(module.exports.RTCRtpSender);
 EventEmitter.mixin(module.exports.RTCRtpTransceiver);
 EventEmitter.mixin(module.exports.RTCSctpTransport);
-EventEmitter.mixin(module.exports.RTCStatsResponse);
 EventEmitter.mixin(module.exports.RTCVideoSink);
 EventEmitter.mixin(module.exports.RTCVideoSource);
 EventEmitter.mixin(module.exports.RTCAudioSink);
