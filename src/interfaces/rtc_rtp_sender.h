@@ -39,11 +39,11 @@ namespace node_webrtc {
         static void Init(Napi::Env, Napi::Object);
         static Napi::FunctionReference& constructor();
 
-        static inline void setVideoCapabilities(webrtc::RtpCapabilities caps) {
+        static void setVideoCapabilities(webrtc::RtpCapabilities caps) {
             videoCapabilities = caps;
         }
 
-        static inline void setAudioCapabilities(webrtc::RtpCapabilities caps) {
+        static void setAudioCapabilities(webrtc::RtpCapabilities caps) {
             audioCapabilities = caps;
         }
 
@@ -54,27 +54,27 @@ namespace node_webrtc {
             std::vector<MediaStream*> streams
         );
 
-        inline void setTrack(MediaStreamTrack* value) {
+        void setTrack(MediaStreamTrack* value) {
             track = value;
         }
 
-        inline void setTransport(RTCDtlsTransport* value) {
+        void setTransport(RTCDtlsTransport* value) {
             transport = value;
         }
 
-        inline void setTransceiver(RTCRtpTransceiver* value) {
+        void setTransceiver(RTCRtpTransceiver* value) {
             transceiver = value;
         }
 
-        inline RTCRtpTransceiver* getTransceiver() {
+        RTCRtpTransceiver* getTransceiver() {
             return transceiver;
         }
 
-        inline void setId(std::string value) {
+        void setId(std::string value) {
             id = value;
         }
 
-        inline std::string getId() {
+        std::string getId() {
             return id;
         }
 

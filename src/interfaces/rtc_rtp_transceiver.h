@@ -37,12 +37,12 @@ namespace node_webrtc {
         static RTCRtpTransceiver* Create(RTCPeerConnection* pc, RTCRtpSender* sender, RTCRtpReceiver* receiver);
         void updateMembers(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtcTransceiver);
 
-        inline RTCRtpReceiver* getReceiver() { return this->receiver; }
-        inline uintptr_t getId() { return id; }
-        inline void setId(uintptr_t value) { id = value; }
+        RTCRtpReceiver* getReceiver() { return this->receiver; }
+        uintptr_t getId() { return id; }
+        void setId(uintptr_t value) { id = value; }
 
     private:
-        inline std::string directionToString(webrtc::RtpTransceiverDirection rtcDirection) {
+        std::string directionToString(webrtc::RtpTransceiverDirection rtcDirection) {
             if (rtcDirection == webrtc::RtpTransceiverDirection::kInactive)
                 return "inactive";
             else if (rtcDirection == webrtc::RtpTransceiverDirection::kRecvOnly)
