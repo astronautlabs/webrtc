@@ -71,14 +71,22 @@ namespace node_webrtc {
     struct Converter { };
 
     /**
-     * From is short-hand for invoking a particular Converter.
+     * Please use To<T>(s) instead.
+     */
+    template <typename T, typename S>
+    [[deprecated]] static Validation<T> From(const S s) {
+        return Converter<S, T>::Convert(s);
+    }
+
+    /**
+     * To<T>() is a short-hand for invoking a particular Converter.
      * @tparam T the target type
-     * @tparam S the source type
+     * @tparam S the source type (inferred)
      * @param s the source value
      * @return the target value
      */
     template <typename T, typename S>
-    static Validation<T> From(const S s) {
+    static Validation<T> To(const S s) {
         return Converter<S, T>::Convert(s);
     }
 
