@@ -12,10 +12,14 @@
 #define ENUM_CLASS_CONVERTER_IMPL(EnumClass, Mappings)                                              \
     CONVERTER_IMPL(EnumClass, std::string, value) {                                                 \
         static bidirectional_map<EnumClass, std::string> map {Mappings};                            \
+        if (!map.contains(value))                                                                   \
+            return Validation<std::string>::Invalid("Invalid argument");                            \
         return Validation {map[value]};                                                             \
     };                                                                                              \
     CONVERTER_IMPL(std::string, EnumClass, value) {                                                 \
         static bidirectional_map<EnumClass, std::string> map {Mappings};                            \
+        if (!map.contains(value))                                                                   \
+            return Validation<EnumClass>::Invalid("Invalid argument");                              \
         return Validation {map[value]};                                                             \
     };                                                                                              \
     CONVERT_VIA(Napi::Value, std::string, EnumClass)                                                \

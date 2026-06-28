@@ -18,6 +18,10 @@ namespace node_webrtc {
         std::map<B, A> to_a {};
 
     public:
+
+        bool contains(const A& a) { return to_b.contains(a); }
+        bool contains(const B& b) { return to_a.contains(b); }
+
         B operator[](const A& a) {
             return to_b[a];
         }
