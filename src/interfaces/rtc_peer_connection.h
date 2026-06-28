@@ -48,9 +48,7 @@ namespace node_webrtc {
 
         void Finalize(Napi::Env env) override;
 
-        //
-        // PeerConnectionObserver implementation.
-        //
+        // ~ Begin PeerConnectionObserver interface
         void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new_state) override;
         void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
         void OnConnectionChange(webrtc::PeerConnectionInterface::PeerConnectionState) override;
@@ -58,13 +56,11 @@ namespace node_webrtc {
         void OnIceCandidate(const webrtc::IceCandidate* candidate) override;
         void OnIceCandidateError(const std::string&, int, const std::string&, int, const std::string&) override;
         void OnRenegotiationNeeded() override;
-
         void OnDataChannel(webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
-
         void OnAddStream(webrtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
         void OnRemoveStream(webrtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
-
         void OnTrack(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
+        // ~ End PeerConnectionObserver interface
 
         static void Init(Napi::Env, Napi::Object);
 
