@@ -65,7 +65,6 @@ static Napi::Object Init(Napi::Env env, Napi::Object exports) {
     node_webrtc::GetDisplayMedia::Init(env, exports);
     node_webrtc::GetUserMedia::Init(env, exports);
     node_webrtc::I420Helpers::Init(env, exports);
-    node_webrtc::LegacyStatsReport::Init(env, exports);
     node_webrtc::MediaStream::Init(env, exports);
     node_webrtc::MediaStreamTrack::Init(env, exports);
     node_webrtc::PeerConnectionFactory::Init(env, exports);
@@ -81,7 +80,6 @@ static Napi::Object Init(Napi::Env env, Napi::Object exports) {
     node_webrtc::RTCRtpSender::Init(env, exports);
     node_webrtc::RTCRtpTransceiver::Init(env, exports);
     node_webrtc::RTCSctpTransport::Init(env, exports);
-    node_webrtc::RTCStatsResponse::Init(env, exports);
     node_webrtc::RTCVideoSink::Init(env, exports);
     node_webrtc::RTCVideoSource::Init(env, exports);
 #ifdef DEBUG
