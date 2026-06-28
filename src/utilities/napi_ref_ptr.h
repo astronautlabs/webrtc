@@ -1,56 +1,90 @@
 #pragma once
 #include <node-addon-api/napi.h>
 
-template<class T>
+template <class T>
 class napi_ref_ptr {
 public:
-	napi_ref_ptr() {
-		value = nullptr;
-		ref = Napi::Reference<Napi::Value>();
-	}
+    napi_ref_ptr() :
+        napi_ref_ptr(nullptr)
+    {
+    }
 
-	napi_ref_ptr(napi_ref_ptr&) = delete;
-	napi_ref_ptr(T* ptr) {
-		assignValue(ptr);
-	}
+    napi_ref_ptr(T* ptr) {
+        assignValue(ptr);
+    }
 
-	~napi_ref_ptr() {
-		assignValue(nullptr);
-	}
+    napi_ref_ptr(const napi_ref_ptr& ptr): 
+        napi_ref_ptr(ptr.get()) 
+    {
+    }
+    
+    napi_ref_ptr(napi_ref_ptr&& other) noexcept: 
+        value(other.value) 
+    {
+        other.value = nullptr;
+    }
 
-	T *get() {
-		return value;
-	}
+    ~napi_ref_ptr() {
+        release();
+    }
+    
+    napi_ref_ptr& operator=(const napi_ref_ptr& other) {
+        if (this != &other) {
+            assignValue(other.value);
+        }
+        return *this;
+    }
+    
+    napi_ref_ptr& operator=(napi_ref_ptr&& other) noexcept {
+        if (this != &other) {
+            release();
+            value = other.value;
+            other.value = nullptr;
+        }
+        return *this;
+    }
 
-	napi_ref_ptr operator=(T* ptr) {
-		assignValue(ptr);
-		return napi_ref_ptr(ptr);
-	}
+    napi_ref_ptr& operator=(T* ptr) {
+        assignValue(ptr);
+        return *this;
+    }
 
-	T *operator->() {
-		return value;
-	}
+    T* get() const {
+        return value;
+    }
 
-	operator T*() {
-		return value;
-	}
+    T* operator->() const {
+        return value;
+    }
+
+    operator T*() const {
+        return value;
+    }
 
 private:
-	T* value = nullptr;
-	Napi::Reference<Napi::Value> ref = Napi::Reference<Napi::Value>();
+    T* value = nullptr;
+    
+    void assignValue(T* ptr) {
+        if (value == ptr)
+            return;
 
-	void assignValue(T* ptr) {
-		if (value == ptr)
-			return;
+        release();
+        value = ptr;
 
-		if (value)
-			ref.Unref();
-		
-		value = ptr;
-
-		if (ptr)
-			ref = Napi::Reference<Napi::Value>::New(ptr->Value(), 1);
-		else
-			ref = Napi::Reference<Napi::Value>();
-	}
+        if (value)
+            value->Ref();
+    }
+    
+    void release() {
+        if (value) {
+            try {
+                value->Unref();
+            } catch (const Napi::Error& e) {
+                // If we are inside a Finalize() callback or Node is shutting down,
+                // the N-API reference is already dead. Calling Unref() throws.
+                // We must catch and swallow it to prevent std::terminate.
+            }
+            value = nullptr;
+        }
+    }
 };

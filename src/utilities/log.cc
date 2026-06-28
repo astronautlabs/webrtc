@@ -16,6 +16,6 @@ namespace node_webrtc {
         }
 
         if (loggingEnabled)
-            std::cerr << "@/webrtc native [" << std::hex << reinterpret_cast<uint64_t>(Owner) << std::dec << "]" << message << std::endl;
+            std::cerr << "@/webrtc native [" << std::hex << reinterpret_cast<uint64_t>(Owner) << std::dec << "] " << message << std::endl;
     }
 } // namespace node_webrtc

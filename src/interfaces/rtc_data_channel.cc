@@ -23,84 +23,49 @@
 #include "src/node/error_factory.h"
 #include "src/node/events.h"
 #include "src/converters/absl.h"
+#include "src/utilities/napi_ref_ptr.h"
 
 namespace node_webrtc {
 
-Napi::FunctionReference& RTCDataChannel::constructor() {
-  static Napi::FunctionReference constructor;
-  return constructor;
-}
-
-RTCDataChannel::RTCDataChannel(const Napi::CallbackInfo& info)
-  : AsyncObjectWrapWithLoop<RTCDataChannel>("RTCDataChannel", *this, info)
-  , _binaryType(BinaryType::kArrayBuffer) {
-  auto env = info.Env();
-
-  if (!info.IsConstructCall() || !info[0].IsExternal()) {
-    Napi::TypeError::New(env, "Use the new operator to construct the RTCDataChannel.").ThrowAsJavaScriptException();
-    return;
-  }
-
+RTCDataChannel::RTCDataChannel(const Napi::CallbackInfo& info): 
+    Proxy<RTCDataChannel, webrtc::DataChannelInterface>(info)
+{
   // In previous versions we had some complexity around connecting an observer early and replaying events.
   // In M150 this is not necessary, the data is already queued until an observer is registered, and state() is a blocking 
   // call to the network thread. So just register the observer, and if we haven't sent an open state event yet after
   // that (and we're already open), just synthesize an OnStateChange() event. 
-
-  _factory = Napi::Envelope<PeerConnectionFactory*>::Open(info[0]);
-  _factory->Ref();
-
-  _jingleDataChannel = Napi::Envelope<webrtc::scoped_refptr<webrtc::DataChannelInterface>>::Open(info[1]);
-  _jingleDataChannel->RegisterObserver(this);
-  
-  if (!hasOpened && _jingleDataChannel->state() == webrtc::DataChannelInterface::kOpen)
+  _handle->RegisterObserver(this);
+  if (!hasOpened && _handle->state() == webrtc::DataChannelInterface::kOpen)
     OnStateChange();
-
-  // NOTE(mroberts): These doesn't actually matter yet.
-  _cached_id = 0;
-  _cached_max_packet_life_time = 0;
-  _cached_max_retransmits = 0;
-  _cached_negotiated = false;
-  _cached_ordered = false;
-  _cached_buffered_amount = 0;
-}
-
-void RTCDataChannel::Finalize(Napi::Env env) {
-  wrap()->Release(this);
-  _factory->Unref();
-  _factory = nullptr;
 }
 
 void RTCDataChannel::CleanupInternals() {
-  if (_jingleDataChannel == nullptr) {
+  if (_handle == nullptr)
     return;
-  }
-  _jingleDataChannel->UnregisterObserver();
-  _cached_id = _jingleDataChannel->id();
-  _cached_label = _jingleDataChannel->label();
-  _cached_max_packet_life_time = _jingleDataChannel->maxPacketLifeTime().value_or(0); // TODO(liam): optional handling?
-  _cached_max_retransmits = _jingleDataChannel->maxRetransmitsOpt().value_or(0); // TODO(liam): optional handling?
-  _cached_negotiated = _jingleDataChannel->negotiated();
-  _cached_ordered = _jingleDataChannel->ordered();
-  _cached_protocol = _jingleDataChannel->protocol();
-  _cached_buffered_amount = _jingleDataChannel->buffered_amount();
-  _jingleDataChannel = nullptr;
-  wrap()->Release(this);
+
+  UnregisterProxy();
+  _handle->UnregisterObserver();
+  _cached_id = _handle->id();
+  _cached_label = _handle->label();
+  _cached_max_packet_life_time = _handle->maxPacketLifeTime().value_or(0); // TODO(liam): optional handling?
+  _cached_max_retransmits = _handle->maxRetransmitsOpt().value_or(0); // TODO(liam): optional handling?
+  _cached_negotiated = _handle->negotiated();
+  _cached_ordered = _handle->ordered();
+  _cached_protocol = _handle->protocol();
+  _cached_buffered_amount = _handle->buffered_amount();
+  _handle = nullptr;
 }
 
 void RTCDataChannel::OnPeerConnectionClosed() {
-  if (_jingleDataChannel != nullptr) {
+  if (_handle != nullptr) {
     Stop();
     CleanupInternals();
   }
 }
 
 void RTCDataChannel::OnStateChange() {
-  auto state = _jingleDataChannel->state();
+  auto state = _handle->state();
   Log(this, "RTCDataChannel::OnStateChange(" + std::to_string(state) + ")");
-
-//   if (state == webrtc::DataChannelInterface::kClosed) {
-//     CleanupInternals();
-//   }
 
   // Only send one open event, even if we encounter one later. 
   if (state == webrtc::DataChannelInterface::kOpen) {
@@ -109,26 +74,19 @@ void RTCDataChannel::OnStateChange() {
     hasOpened = true;
   }
 
-  Dispatch(CreateCallback<RTCDataChannel>([this, state]() {
-    RTCDataChannel::HandleStateChange(*this, state);
-  }));
-}
+  if (state == webrtc::DataChannelInterface::kClosed) {
+    CleanupInternals();
+    Stop();
+    _handle = nullptr;
+  }
 
-void RTCDataChannel::HandleStateChange(RTCDataChannel& channel, webrtc::DataChannelInterface::DataState state) {
-  auto env = channel.Env();
-  Napi::HandleScope scope(env);
-  auto object = Napi::Object::New(env);
-  if (state == webrtc::DataChannelInterface::kClosed) {
-    object.Set("type", Napi::String::New(env, "close"));
-    channel.CleanupInternals();
-  } else if (state == webrtc::DataChannelInterface::kOpen) {
-    object.Set("type", Napi::String::New(env, "open"));
-  }
-  if (state == webrtc::DataChannelInterface::kClosed) {
-    channel.Stop();
-    channel._jingleDataChannel = nullptr;
-  }
-  channel.MakeCallback("dispatchEvent", { object });
+  Dispatch(CreateCallback<RTCDataChannel>([this, state]() {
+    if (state == webrtc::DataChannelInterface::kClosed) {
+        Event("close").Dispatch();
+    } else if (state == webrtc::DataChannelInterface::kOpen) {
+        Event("open").Dispatch();
+    }
+  }));
 }
 
 void RTCDataChannel::OnMessage(const webrtc::DataBuffer& buffer) {
@@ -163,8 +121,8 @@ void RTCDataChannel::HandleMessage(RTCDataChannel& channel, const webrtc::DataBu
 
 Napi::Value RTCDataChannel::Send(const Napi::CallbackInfo& info) {
   auto env = info.Env();
-  if (_jingleDataChannel != nullptr) {
-    if (_jingleDataChannel->state() != webrtc::DataChannelInterface::DataState::kOpen) {
+  if (_handle != nullptr) {
+    if (_handle->state() != webrtc::DataChannelInterface::DataState::kOpen) {
       Napi::Error(env, ErrorFactory::CreateInvalidStateError(env, "RTCDataChannel.readyState is not 'open'")).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -173,7 +131,7 @@ Napi::Value RTCDataChannel::Send(const Napi::CallbackInfo& info) {
       auto data = str.Utf8Value();
 
       webrtc::DataBuffer buffer(data);
-      _jingleDataChannel->Send(buffer);
+      _handle->Send(buffer);
     } else {
       Napi::ArrayBuffer arraybuffer;
       size_t byte_offset = 0;
@@ -201,7 +159,7 @@ Napi::Value RTCDataChannel::Send(const Napi::CallbackInfo& info) {
       webrtc::CopyOnWriteBuffer buffer(content + byte_offset, byte_length);
 
       webrtc::DataBuffer data_buffer(buffer, true);
-      _jingleDataChannel->Send(data_buffer);
+      _handle->Send(data_buffer);
     }
   } else {
     Napi::Error(env, ErrorFactory::CreateInvalidStateError(env, "RTCDataChannel.readyState is not 'open'")).ThrowAsJavaScriptException();
@@ -212,63 +170,63 @@ Napi::Value RTCDataChannel::Send(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value RTCDataChannel::Close(const Napi::CallbackInfo& info) {
-  if (_jingleDataChannel != nullptr) {
-    _jingleDataChannel->Close();
+  if (_handle != nullptr) {
+    _handle->Close();
   }
   return info.Env().Undefined();
 }
 
 Napi::Value RTCDataChannel::GetBufferedAmount(const Napi::CallbackInfo& info) {
-  uint64_t buffered_amount = _jingleDataChannel != nullptr
-      ? _jingleDataChannel->buffered_amount()
+  uint64_t buffered_amount = _handle != nullptr
+      ? _handle->buffered_amount()
       : _cached_buffered_amount;
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), buffered_amount, result, Napi::Value)
   return result;
 }
 
 Napi::Value RTCDataChannel::GetId(const Napi::CallbackInfo& info) {
-  auto id = _jingleDataChannel
-      ? _jingleDataChannel->id()
+  auto id = _handle
+      ? _handle->id()
       : _cached_id;
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), id, result, Napi::Value)
   return result;
 }
 
 Napi::Value RTCDataChannel::GetLabel(const Napi::CallbackInfo& info) {
-  auto label = _jingleDataChannel != nullptr
-      ? _jingleDataChannel->label()
+  auto label = _handle != nullptr
+      ? _handle->label()
       : _cached_label;
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), label, result, Napi::Value)
   return result;
 }
 
 Napi::Value RTCDataChannel::GetMaxPacketLifeTime(const Napi::CallbackInfo& info) {
-  auto max_packet_life_time = _jingleDataChannel
-      ? _jingleDataChannel->maxPacketLifeTime()
+  auto max_packet_life_time = _handle
+      ? _handle->maxPacketLifeTime()
       : _cached_max_packet_life_time;
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), max_packet_life_time, result, Napi::Value)
   return result;
 }
 
 Napi::Value RTCDataChannel::GetMaxRetransmits(const Napi::CallbackInfo& info) {
-  auto max_retransmits = _jingleDataChannel
-      ? _jingleDataChannel->maxRetransmitsOpt()
+  auto max_retransmits = _handle
+      ? _handle->maxRetransmitsOpt()
       : _cached_max_retransmits;
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), max_retransmits, result, Napi::Value)
   return result;
 }
 
 Napi::Value RTCDataChannel::GetNegotiated(const Napi::CallbackInfo& info) {
-  auto negotiated = _jingleDataChannel
-      ? _jingleDataChannel->negotiated()
+  auto negotiated = _handle
+      ? _handle->negotiated()
       : _cached_negotiated;
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), negotiated, result, Napi::Value)
   return result;
 }
 
 Napi::Value RTCDataChannel::GetOrdered(const Napi::CallbackInfo& info) {
-  auto ordered = _jingleDataChannel
-      ? _jingleDataChannel->ordered()
+  auto ordered = _handle
+      ? _handle->ordered()
       : _cached_ordered;
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), ordered, result, Napi::Value)
   return result;
@@ -281,16 +239,16 @@ Napi::Value RTCDataChannel::GetPriority(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value RTCDataChannel::GetProtocol(const Napi::CallbackInfo& info) {
-  auto protocol = _jingleDataChannel
-      ? _jingleDataChannel->protocol()
+  auto protocol = _handle
+      ? _handle->protocol()
       : _cached_protocol;
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), protocol, result, Napi::Value)
   return result;
 }
 
 Napi::Value RTCDataChannel::GetReadyState(const Napi::CallbackInfo& info) {
-  auto state = _jingleDataChannel
-      ? _jingleDataChannel->state()
+  auto state = _handle
+      ? _handle->state()
       : webrtc::DataChannelInterface::kClosed;
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), state, result, Napi::Value)
   return result;
@@ -310,18 +268,28 @@ void RTCDataChannel::SetBinaryType(const Napi::CallbackInfo& info, const Napi::V
   _binaryType = maybeBinaryType.UnsafeFromValid();
 }
 
-Wrap <RTCDataChannel*, webrtc::scoped_refptr<webrtc::DataChannelInterface>, node_webrtc::PeerConnectionFactory*> * RTCDataChannel::wrap() {
-  static auto* wrap = new node_webrtc::Wrap<RTCDataChannel*, webrtc::scoped_refptr<webrtc::DataChannelInterface>, 
-    node_webrtc::PeerConnectionFactory*>(RTCDataChannel::Create);
-  return wrap;
+napi_ref_ptr<RTCDataChannel> RTCDataChannel::CreateProxy(webrtc::scoped_refptr<webrtc::DataChannelInterface> channel, napi_ref_ptr<PeerConnectionFactory> factory) {
+  auto env = constructor().Env();
+  
+  Napi::HandleScope scope(env);
+
+  auto object = constructor().New({
+    factory->Value(),
+    Napi::CreateEnvelope(env, channel)
+  });
+
+  auto* unwrapped = Unwrap(object);
+  unwrapped->Ref();
+  return unwrapped;
 }
 
 RTCDataChannel* RTCDataChannel::Create(PeerConnectionFactory* factory, webrtc::scoped_refptr<webrtc::DataChannelInterface> channel) {
   auto env = constructor().Env();
+  
   Napi::HandleScope scope(env);
 
   auto object = constructor().New({
-    Napi::CreateEnvelope(env, factory),
+    PeerConnectionFactory::GetOrCreateDefault()->Value(),
     Napi::CreateEnvelope(env, channel)
   });
 

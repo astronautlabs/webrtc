@@ -110,8 +110,6 @@ namespace node_webrtc {
 			Napi::External<RTCRtpSender>::New(env, sender),
 			Napi::External<RTCRtpReceiver>::New(env, receiver)
 		}));
-
-		unwrapped->Ref(); // Owned by RTCPeerConnection
 		return unwrapped;
 	}
 

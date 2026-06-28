@@ -129,8 +129,7 @@ namespace node_webrtc {
 		auto unwrapped = Unwrap(object);
 		for (auto stream : streams)
 			unwrapped->streams.push_back(stream);
-
-		unwrapped->Ref(); // Owned by RTCPeerConnection
+        
 		return unwrapped;
 	}
 

@@ -247,10 +247,10 @@ namespace node_webrtc {
         // no need to rush to attach an observer.
         
 		OnNodeThread([this, channel]() {
-			auto* jsChannel = RTCDataChannel::wrap()->GetOrCreate(_factory, channel);
+            auto jsChannel = RTCDataChannel::Wrap(channel, _factory);
 			_peerChannels.insert(jsChannel);
             Event("datachannel")
-                .With("channel", jsChannel->Value())
+                .With("channel", jsChannel)
                 .Dispatch()
             ;
         });
@@ -273,7 +273,7 @@ namespace node_webrtc {
         });
 
 		OnNodeThread([this, receiver, streams]() {
-			auto* wrappedReceiver = createOrUpdateReceiver(receiver);
+			auto wrappedReceiver = createOrUpdateReceiver(receiver);
 			auto mediaStreams = std::vector<MediaStream*>();
 			for (auto const& stream : streams) {
 				auto* mediaStream = MediaStream::wrap()->GetOrCreate(_factory, stream);
@@ -297,7 +297,7 @@ namespace node_webrtc {
 				return;
 
 			auto receiver = rtpTransceiver->receiver();
-			auto* wrappedTransceiver = createOrUpdateTransceiver(rtpTransceiver);
+			auto wrappedTransceiver = createOrUpdateTransceiver(rtpTransceiver);
 
 			auto mediaStreams = std::vector<MediaStream*>();
 			for (auto const& stream : receiver->streams()) {
@@ -337,7 +337,7 @@ namespace node_webrtc {
 
         // Acquire arguments
 
-		auto* mediaStreamTrack = info[0].As<Napi::External<MediaStreamTrack>>().Data();
+		auto* mediaStreamTrack = MediaStreamTrack::Unwrap(info[0].As<Napi::Object>());
         if (!mediaStreamTrack) {
             Napi::TypeError::New(Env(), "track must be a MediaStreamTrack")
                 .ThrowAsJavaScriptException();
@@ -437,9 +437,8 @@ namespace node_webrtc {
 			return env.Undefined();
 		}
 
-
 		auto rtpTransceiver = result.value();
-		auto *wrappedTransceiver = createOrUpdateTransceiver(rtpTransceiver);
+		auto wrappedTransceiver = createOrUpdateTransceiver(rtpTransceiver);
 		return wrappedTransceiver->Value();
 	}
 
@@ -646,7 +645,7 @@ namespace node_webrtc {
 			return env.Undefined();
 		}
 
-		auto* channel = RTCDataChannel::wrap()->GetOrCreate(_factory, data_channel_interface);
+        auto channel = RTCDataChannel::Wrap(data_channel_interface, _factory);
 		_channels.insert(channel);
 		return channel->Value();
 	}
@@ -705,7 +704,7 @@ namespace node_webrtc {
 		std::vector<RTCRtpReceiver*> receivers;
 		if (_jinglePeerConnection) {
 			for (const auto& receiver : _jinglePeerConnection->GetReceivers()) {
-				auto* wrappedReceiver = createOrUpdateReceiver(receiver);
+				auto wrappedReceiver = createOrUpdateReceiver(receiver);
 				receivers.emplace_back(wrappedReceiver);
 			}
 		}
@@ -720,7 +719,7 @@ namespace node_webrtc {
 		if (_jinglePeerConnection) {
 			for (const auto& sender : _jinglePeerConnection->GetSenders()) {
 				auto track = sender->track();
-				auto* wrappedSender = createOrUpdateSender(
+				auto wrappedSender = createOrUpdateSender(
 					sender, sender->media_type() == webrtc::MediaType::AUDIO ? "audio" : "video"
 				);
 				senders.emplace_back(wrappedSender);
@@ -776,7 +775,7 @@ namespace node_webrtc {
 		if (_jinglePeerConnection
 			&& _jinglePeerConnection->GetConfiguration().sdp_semantics == webrtc::SdpSemantics::kUnifiedPlan) {
 			for (const auto& transceiver : _jinglePeerConnection->GetTransceivers()) {
-				auto* wrappedTransceiver = createOrUpdateTransceiver(transceiver);
+				auto wrappedTransceiver = createOrUpdateTransceiver(transceiver);
 				transceivers.emplace_back(wrappedTransceiver);
 			}
 		}
@@ -817,11 +816,11 @@ namespace node_webrtc {
 				}
 			}
 
-			for (auto* channel : _channels) {
+			for (auto channel : _channels) {
 				channel->OnPeerConnectionClosed();
 			}
 
-			for (auto* channel : _peerChannels) {
+			for (auto channel : _peerChannels) {
 				channel->OnPeerConnectionClosed();
 			}
 		}
@@ -842,38 +841,17 @@ namespace node_webrtc {
 		// If we don't do this step, RTCPeerConnection and its underlying channels and tracks will
 		// leak memory.
 
-		for (auto* channel : _channels)
-			channel->Unref();
 		_channels.clear();
-
-		for (auto* channel : _peerChannels)
-			channel->Unref();
 		_peerChannels.clear();
-
-		for (const auto& pair : _tracks)
-			pair.second->Unref();
 		_tracks.clear();
 
 		// We may have picked up some tracks that we do not own. We want to keep these separate, because
 		// we don't want to end their event loops when we're done, but we do need to unreference them
 		// at this point.
 
-		for (const auto& pair : _externalTracks)
-			pair.second->Unref();
 		_externalTracks.clear();
-
-		// Transceivers/receivers/senders are mirrored objects, so no unref'ing is required.
-
-		for (auto pair : _transceivers)
-			pair.second->Unref();
 		_transceivers.clear();
-
-		for (const auto& pair : _receivers)
-			pair.second->Unref();
 		_receivers.clear();
-
-		for (const auto& pair : _senders)
-			pair.second->Unref();
 		_senders.clear();
 
 		// Though the specification does not define this behavior, Jingle provides the backing objects
@@ -882,17 +860,10 @@ namespace node_webrtc {
 		// In the future when we are using our own MediaStream implementation (and using stream_ids() instead
 		// of streams()) we'll be able to implement this closer to the spirit of the specification.
 
-		for (auto* stream : _streams)
-			stream->Unref();
 		_streams.clear();
 
-		// Also unref our transport...
-
-		if (_sctpTransport) {
-			_sctpTransport->Unref();
-			_sctpTransport = nullptr;
-		}
-
+		_sctpTransport = nullptr;
+        
 		return info.Env().Undefined();
 	}
 
@@ -1056,7 +1027,7 @@ namespace node_webrtc {
 			return result;
 	}
 
-	RTCRtpTransceiver* RTCPeerConnection::createOrUpdateTransceiver(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver)
+	napi_ref_ptr<RTCRtpTransceiver> RTCPeerConnection::createOrUpdateTransceiver(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver)
 	{
         Log(this, "RTCPeerConnection::createOrUpdateTransceiver()");
 		auto id = reinterpret_cast<uintptr_t>(rtpTransceiver.get());
@@ -1069,6 +1040,7 @@ namespace node_webrtc {
 
 		if (iter == _transceivers.end()) {
 			transceiver = RTCRtpTransceiver::Create(this, sender, receiver);
+            transceiver->Ref();
 			sender->setTransceiver(transceiver);
 			receiver->setTransceiver(transceiver);
 			transceiver->setId(id);
@@ -1081,7 +1053,7 @@ namespace node_webrtc {
 		return transceiver;
 	}
 
-	RTCRtpReceiver* RTCPeerConnection::createOrUpdateReceiver(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver)
+	napi_ref_ptr<RTCRtpReceiver> RTCPeerConnection::createOrUpdateReceiver(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver)
 	{
         Log(this, "RTCPeerConnection::createOrUpdateReceiver()");
 		auto iter = _receivers.find(rtpReceiver->id());
@@ -1090,6 +1062,7 @@ namespace node_webrtc {
 		RTCRtpReceiver* receiver = nullptr;
 		if (iter == _receivers.end()) {
 			receiver = RTCRtpReceiver::Create(this, track, {});
+            receiver->Ref();
 			// TODO(liam): Set muted state by default as in Chromium
 			// https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/modules/peerconnection/rtc_peer_connection.cc;l=2320;drc=a8029174f1140518a446524b318fef5dda3fba79;bpv=1;bpt=1
 			receiver->setId(rtpReceiver->id());
@@ -1107,7 +1080,7 @@ namespace node_webrtc {
 		return receiver;
 	}
 
-	RTCRtpSender* RTCPeerConnection::createOrUpdateSender(webrtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender, std::string kind)
+	napi_ref_ptr<RTCRtpSender> RTCPeerConnection::createOrUpdateSender(webrtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender, std::string kind)
 	{
         Log(this, "RTCPeerConnection::createOrUpdateSender()");
 		MediaStreamTrack* track = nullptr;
@@ -1122,6 +1095,7 @@ namespace node_webrtc {
 
 		if (iter == _senders.end()) {
 			sender = RTCRtpSender::Create(this, kind, track, {});
+            sender->Ref();
 			sender->setId(id);
 			_senders[id] = sender;
 		} else {
@@ -1139,17 +1113,17 @@ namespace node_webrtc {
 		return sender;
 	}
 
-	MediaStreamTrack* RTCPeerConnection::getTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack)
+	napi_ref_ptr<MediaStreamTrack> RTCPeerConnection::getTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack)
 	{
         Log(this, "RTCPeerConnection::getTrack()");
 		auto iter = _tracks.find(rtpTrack->id());
 		return iter == _tracks.end() ? nullptr : (*iter).second;
 	}
 
-	MediaStreamTrack* node_webrtc::RTCPeerConnection::getKnownTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack)
+	napi_ref_ptr<MediaStreamTrack> node_webrtc::RTCPeerConnection::getKnownTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack)
 	{
         Log(this, "RTCPeerConnection::getKnownTrack()");
-		auto* track = getTrack(rtpTrack);
+		auto track = getTrack(rtpTrack);
 
 		if (!track) {
 			auto iter = _externalTracks.find(rtpTrack->id());
@@ -1235,7 +1209,7 @@ namespace node_webrtc {
 		std::vector<RTCRtpReceiver*> removedReceivers;
 
 		for (const auto& pair : _receivers) {
-			auto* receiver = pair.second;
+			auto receiver = pair.second;
 			if (!getUnderlying(receiver))
 				removedReceivers.push_back(receiver);
 		}
@@ -1255,18 +1229,15 @@ namespace node_webrtc {
 		std::vector<uintptr_t> removedTransceivers;
 
 		for (auto pair : _transceivers) {
-			auto* transceiver = pair.second;
+			auto transceiver = pair.second;
 			if (!getUnderlying(transceiver))
 				removedTransceivers.push_back(pair.first);
 		}
 
 		for (auto key : removedTransceivers) {
 			auto iter = _transceivers.find(key);
-			if (iter != _transceivers.end()) {
-				auto* transceiver = (*iter).second;
+			if (iter != _transceivers.end())
 				_transceivers.erase(key);
-				transceiver->Unref();
-			}
 		}
 
 		for (const auto& rtpTransceiver : _jinglePeerConnection->GetTransceivers()) {

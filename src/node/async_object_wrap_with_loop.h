@@ -17,7 +17,7 @@ namespace node_webrtc {
           public EventLoop<T> {
     public:
         AsyncObjectWrapWithLoop(
-            const char* name,
+            std::string name,
             T& target,
             const Napi::CallbackInfo& info
         ) :

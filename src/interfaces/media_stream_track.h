@@ -19,6 +19,7 @@
 #include "src/converters/napi.h"
 #include "src/node/async_object_wrap_with_loop.h"
 #include "src/node/wrap.h"
+#include "src/utilities/napi_ref_ptr.h"
 
 namespace node_webrtc {
 
@@ -34,8 +35,9 @@ class MediaStreamTrack
 
   static void Init(Napi::Env, Napi::Object);
 
-  // ObserverInterface
+  // ~ Begin interface webrtc::ObserverInterface
   void OnChanged() override;
+  // ~ End interface webrtc::ObserverInterface
 
   void OnPeerConnectionClosed();
 
@@ -75,7 +77,7 @@ class MediaStreamTrack
 
   bool _ended = false;
   bool _enabled;
-  PeerConnectionFactory* _factory;
+  napi_ref_ptr<PeerConnectionFactory> _factory;
   webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> _track;
 };
 

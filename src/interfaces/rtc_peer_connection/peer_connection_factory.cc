@@ -11,6 +11,7 @@
 
 #include <memory>
 
+#include "src/utilities/log.h"
 #include "src/webrtc/test_audio_device_module.h"
 #include "src/webrtc/zero_capturer.h"
 #include <src/rtc_base/network.h>
@@ -106,12 +107,14 @@ PeerConnectionFactory::PeerConnectionFactory(const Napi::CallbackInfo &info)
 }
 
 PeerConnectionFactory::~PeerConnectionFactory() {
-  Destruct();
+    Log(this, "PeerConnectionFactory::~PeerConnectionFactory()");
+    Destruct();
 }
 
 void PeerConnectionFactory::Destruct() {
     if (_destructed)
         return;
+    Log(this, "PeerConnectionFactory::Destruct()");
     _factory = nullptr;
 
     _destructed = true;
@@ -127,10 +130,12 @@ void PeerConnectionFactory::Destruct() {
 }
 
 void PeerConnectionFactory::Finalize(Napi::Env env) {
+    Log(this, "PeerConnectionFactory::Finalize()");
     Destruct();
 }
 
 PeerConnectionFactory *PeerConnectionFactory::GetOrCreateDefault() {
+  Log(nullptr, "PeerConnectionFactory::GetOrCreateDefault()");
   _mutex.lock();
   _references++;
   if (_references == 1) {
@@ -147,6 +152,7 @@ PeerConnectionFactory *PeerConnectionFactory::GetOrCreateDefault() {
 }
 
 void PeerConnectionFactory::Release() {
+  Log(nullptr, "PeerConnectionFactory::Release()");
   _mutex.lock();
   _references--;
   assert(_references >= 0);
@@ -159,7 +165,10 @@ void PeerConnectionFactory::Release() {
   _mutex.unlock();
 }
 
-void PeerConnectionFactory::Dispose() { webrtc::CleanupSSL(); }
+void PeerConnectionFactory::Dispose() { 
+  Log(nullptr, "PeerConnectionFactory::Dispose()");
+  webrtc::CleanupSSL(); 
+}
 
 void PeerConnectionFactory::Init(Napi::Env env, Napi::Object exports) {
   assert(webrtc::InitializeSSL());

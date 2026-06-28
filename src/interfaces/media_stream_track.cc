@@ -8,7 +8,9 @@
  * tree.
  */
 #include "src/interfaces/media_stream_track.h"
-
+#include "src/node/envelope.h"
+#include "src/utilities/log.h"
+#include <src/api/media_stream_interface.h>
 #include <src/api/scoped_refptr.h>
 #include <webrtc/api/peer_connection_interface.h>
 #include <webrtc/rtc_base/crypto_random.h>
@@ -27,6 +29,7 @@ Napi::FunctionReference& MediaStreamTrack::constructor() {
 
 MediaStreamTrack::MediaStreamTrack(const Napi::CallbackInfo& info)
   : AsyncObjectWrapWithLoop<MediaStreamTrack>("MediaStreamTrack", *this, info) {
+  Log(this, "MediaStreamTrack::MediaStreamTrack()");
   auto env = info.Env();
 
   if (info.Length() != 2 || !info[0].IsObject() || !info[1].IsExternal()) {
@@ -35,13 +38,9 @@ MediaStreamTrack::MediaStreamTrack(const Napi::CallbackInfo& info)
   }
 
   // FIXME(mroberts): There is a safer conversion here.
-  auto factory = PeerConnectionFactory::Unwrap(info[0].ToObject());
-  auto track = *info[1].As<Napi::External<webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>>>().Data();
+  _factory = PeerConnectionFactory::Unwrap(info[0].ToObject());
 
-  _factory = factory;
-  _factory->Ref();
-
-  _track = std::move(track);
+  _track = Napi::Envelope<webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>>::Open(info[1]);
   _track->RegisterObserver(this);
 
   // NOTE(mroberts): This doesn't actually matter yet.
@@ -49,6 +48,7 @@ MediaStreamTrack::MediaStreamTrack(const Napi::CallbackInfo& info)
 }
 
 void MediaStreamTrack::Finalize(Napi::Env env) {
+  Log(this, "MediaStreamTrack::Finalize()");
   _track = nullptr;
 
   Napi::HandleScope scope(PeerConnectionFactory::constructor().Env());
@@ -59,6 +59,7 @@ void MediaStreamTrack::Finalize(Napi::Env env) {
 }
 
 void MediaStreamTrack::Stop() {
+  Log(this, "MediaStreamTrack::Stop()");
   _track->UnregisterObserver(this);
   _ended = true;
   _enabled = _track->enabled();
@@ -66,15 +67,14 @@ void MediaStreamTrack::Stop() {
 }
 
 void MediaStreamTrack::OnChanged() {
+  Log(this, "MediaStreamTrack::OnChanged()");
   // Important to dispatch onto our own thread, because we may be in the process of shutting down
   // via PeerConnection.Close(). If that is the case, stopping the track will attempt to unregister
   // the observer on the underlying MediaStreamTrack which will cause a deadlock between signalling
   // and worker threads.
-  Dispatch(CreateCallback<MediaStreamTrack>([this] () {
-    if (_track->state() == webrtc::MediaStreamTrackInterface::TrackState::kEnded) {
-      Stop();
-    }
-  }));
+  if (_track->state() == webrtc::MediaStreamTrackInterface::TrackState::kEnded) {
+    Stop();
+  }
 }
 
 void MediaStreamTrack::OnPeerConnectionClosed() {
@@ -82,11 +82,13 @@ void MediaStreamTrack::OnPeerConnectionClosed() {
 }
 
 Napi::Value MediaStreamTrack::GetEnabled(const Napi::CallbackInfo& info) {
+  Log(this, "MediaStreamTrack::GetEnabled()");
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _ended ? _enabled : _track->enabled(), result, Napi::Value)
   return result;
 }
 
 void MediaStreamTrack::SetEnabled(const Napi::CallbackInfo& info, const Napi::Value& value) {
+  Log(this, "MediaStreamTrack::SetEnabled()");
   auto maybeEnabled = From<bool>(value);
   if (maybeEnabled.IsInvalid()) {
     Napi::TypeError::New(info.Env(), maybeEnabled.ToErrors()[0]).ThrowAsJavaScriptException();
@@ -101,16 +103,19 @@ void MediaStreamTrack::SetEnabled(const Napi::CallbackInfo& info, const Napi::Va
 }
 
 Napi::Value MediaStreamTrack::GetId(const Napi::CallbackInfo& info) {
+  Log(this, "MediaStreamTrack::GetId()");
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _track->id(), result, Napi::Value)
   return result;
 }
 
 Napi::Value MediaStreamTrack::GetKind(const Napi::CallbackInfo& info) {
+  Log(this, "MediaStreamTrack::GetKind()");
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _track->kind(), result, Napi::Value)
   return result;
 }
 
 Napi::Value MediaStreamTrack::GetReadyState(const Napi::CallbackInfo& info) {
+  Log(this, "MediaStreamTrack::GetReadyState()");
   auto state = _ended
       ? webrtc::MediaStreamTrackInterface::TrackState::kEnded
       : _track->state();
@@ -119,11 +124,13 @@ Napi::Value MediaStreamTrack::GetReadyState(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value MediaStreamTrack::GetMuted(const Napi::CallbackInfo& info) {
+  Log(this, "MediaStreamTrack::GetMuted()");
   CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), false, result, Napi::Value)
   return result;
 }
 
 Napi::Value MediaStreamTrack::Clone(const Napi::CallbackInfo&) {
+  Log(this, "MediaStreamTrack::Clone()");
   auto label = webrtc::CreateRandomUuid();
   webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> clonedTrack = nullptr;
   if (_track->kind() == _track->kAudioKind) {
@@ -141,20 +148,14 @@ Napi::Value MediaStreamTrack::Clone(const Napi::CallbackInfo&) {
 }
 
 Napi::Value MediaStreamTrack::JsStop(const Napi::CallbackInfo& info) {
+  Log(this, "MediaStreamTrack::JsStop()");
   Stop();
   return info.Env().Undefined();
 }
 
-Wrap <
-MediaStreamTrack*,
-webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>,
-PeerConnectionFactory*
-> * MediaStreamTrack::wrap() {
-  static auto wrap = new node_webrtc::Wrap <
-  MediaStreamTrack*,
-  webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>,
-  PeerConnectionFactory*
-  > (MediaStreamTrack::Create);
+Wrap <MediaStreamTrack*, webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>, PeerConnectionFactory*> * MediaStreamTrack::wrap() {
+  static auto wrap = new node_webrtc::Wrap <MediaStreamTrack*, webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>, 
+    PeerConnectionFactory*> (MediaStreamTrack::Create);
   return wrap;
 }
 
@@ -164,13 +165,11 @@ MediaStreamTrack* MediaStreamTrack::Create(
   auto env = constructor().Env();
   Napi::HandleScope scope(env);
 
-  auto mediaStreamTrack = Unwrap(constructor().New({
+  auto* mediaStreamTrack = Unwrap(constructor().New({
     factory->Value(),
-    Napi::External<webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>>::New(env, &track)
+    Napi::CreateEnvelope(env, track)
   }));
 
-  // Add a reference owned by the RTCPeerConnection
-  mediaStreamTrack->Ref();
   return mediaStreamTrack;
 }
 

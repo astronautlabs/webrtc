@@ -186,11 +186,10 @@ namespace node_webrtc {
 			Napi::External<MediaStreamTrack>::New(env, track)
 			});
 
-		auto unwrapped = Unwrap(object);
-		for (auto stream : streams)
-			unwrapped->streams.push_back(stream);
+		auto* unwrapped = Unwrap(object);
+		for (auto* stream : streams)
+			unwrapped->streams.emplace_back(stream);
 
-		unwrapped->Ref(); // Owned by RTCPeerConnection
 		return unwrapped;
 	}
 

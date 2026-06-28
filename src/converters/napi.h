@@ -13,6 +13,7 @@
 #include "src/converters/macros.h"
 #include "src/functional/maybe.h"
 #include "src/functional/validation.h"
+#include "src/utilities/napi_ref_ptr.h"
 
 #define CONVERT_OR_THROW_AND_RETURN_NAPI(E, I, O, T) \
   auto NODE_WEBRTC_UNIQUE_NAME(validation) = From<detail::argument_type<void(T)>::type>(std::make_pair(E, I)); \
@@ -156,6 +157,25 @@ struct Converter<std::pair<Napi::Env, Napi::Object>, Napi::Value> {
   static Validation<Napi::Value> Convert(std::pair<Napi::Env, Napi::Object> pair) {
     return Validation<Napi::Value> { pair.second };
   }
+};
+
+template <typename T>
+concept CNapiValueReference = requires(T a) {
+    { a.Value() } -> std::convertible_to<Napi::Value>;
+};
+
+template <CNapiValueReference T>
+struct Converter<std::pair<Napi::Env, napi_ref_ptr<T>>, Napi::Value> {
+    static Validation<Napi::Value> Convert(std::pair<Napi::Env, napi_ref_ptr<T>> pair) {
+        return Validation<Napi::Value> { pair.second->Value() };
+    };
+};
+
+template <CNapiValueReference T>
+struct Converter<std::pair<Napi::Env, T*>, Napi::Value> {
+    static Validation<Napi::Value> Convert(std::pair<Napi::Env, T*> pair) {
+        return Validation<Napi::Value> { pair.second->Value() };
+    };
 };
 
 /**

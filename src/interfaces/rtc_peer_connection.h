@@ -146,36 +146,36 @@ namespace node_webrtc {
 		ExtendedRTCConfiguration _cached_configuration;
 		webrtc::scoped_refptr<webrtc::PeerConnectionInterface> _jinglePeerConnection;
 
-		PeerConnectionFactory* _factory = nullptr;
+		napi_ref_ptr<PeerConnectionFactory> _factory = nullptr;
 		bool _shouldReleaseFactory = false;
 
-		std::set<RTCDataChannel*> _channels;
-		std::set<RTCDataChannel*> _peerChannels;
-		std::map<uintptr_t, RTCRtpTransceiver*> _transceivers;
-		std::map<std::string, RTCRtpReceiver*> _receivers;
-		std::map<std::string, RTCRtpSender*> _senders;
-		std::map<std::string, MediaStreamTrack*> _tracks;
-		std::map<void*, RTCDtlsTransport*> _dtlsTransports;
-		std::map<void*, RTCIceTransport*> _iceTransports;
+		std::set<napi_ref_ptr<RTCDataChannel>> _channels;
+		std::set<napi_ref_ptr<RTCDataChannel>> _peerChannels;
+		std::map<uintptr_t, napi_ref_ptr<RTCRtpTransceiver>> _transceivers;
+		std::map<std::string, napi_ref_ptr<RTCRtpReceiver>> _receivers;
+		std::map<std::string, napi_ref_ptr<RTCRtpSender>> _senders;
+		std::map<std::string, napi_ref_ptr<MediaStreamTrack>> _tracks;
+		std::map<void*, napi_ref_ptr<RTCDtlsTransport>> _dtlsTransports;
+		std::map<void*, napi_ref_ptr<RTCIceTransport>> _iceTransports;
 		/**
 		 * A set of tracks which are referenced by this RTCPeerConnection, but are not
 		 * owned by it. These may be owned by an RTCAudioSource/RTCVideoSource or by another
 		 * RTCPeerConnection. We keep a list of them so that we can unreference them when the
 		 * RTCPeerConnection closes.
 		 */
-		std::map<std::string, MediaStreamTrack*> _externalTracks;
+		std::map<std::string, napi_ref_ptr<MediaStreamTrack>> _externalTracks;
 
-		RTCRtpTransceiver* createOrUpdateTransceiver(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver);
-		RTCRtpReceiver* createOrUpdateReceiver(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver);
-		RTCRtpSender* createOrUpdateSender(webrtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender, std::string kind);
-		MediaStreamTrack* getTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack);
-		MediaStreamTrack* getKnownTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack);
+		napi_ref_ptr<RTCRtpTransceiver> createOrUpdateTransceiver(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver);
+		napi_ref_ptr<RTCRtpReceiver> createOrUpdateReceiver(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver);
+		napi_ref_ptr<RTCRtpSender> createOrUpdateSender(webrtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender, std::string kind);
+		napi_ref_ptr<MediaStreamTrack> getTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack);
+		napi_ref_ptr<MediaStreamTrack> getKnownTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack);
+
 		bool isOwned(MediaStreamTrack* track);
 		bool isOwned(RTCRtpSender* sender);
 
-
-		std::set<MediaStream*> _streams;
-		RTCSctpTransport* _sctpTransport = nullptr;
+		std::set<napi_ref_ptr<MediaStream>> _streams;
+		napi_ref_ptr<RTCSctpTransport> _sctpTransport = nullptr;
 	};
 
 }  // namespace node_webrtc

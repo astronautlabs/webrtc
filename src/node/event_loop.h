@@ -5,6 +5,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <utility>
 
 #include "src/node/event_queue.h"
 #include "src/node/events.h"
@@ -38,12 +39,12 @@ namespace node_webrtc {
 
     protected:
         EventLoop(
-            const char* name,
+            std::string name,
             Napi::Env env,
             Napi::AsyncContext* context,
             T& target
         ) :
-            _name(name),
+            _name(std::move(name)),
             _context(context),
             _env(env),
             _target(target) 

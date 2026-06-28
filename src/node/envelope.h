@@ -1,3 +1,4 @@
+#pragma once
 #include <node-addon-api/napi.h>
 
 namespace Napi {

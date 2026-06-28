@@ -13,43 +13,46 @@
 #include "src/converters/napi.h"
 
 #define CREATE_DEFERRED(E, D) \
-  auto deferred = Napi::Promise::Deferred::New(E);
+    auto deferred = Napi::Promise::Deferred::New(E);
 
 #define RETURNS_PROMISE(R) \
-  CREATE_RESOLVER(R) \
-  info.GetReturnValue().Set(R->GetPromise());
+    CREATE_RESOLVER(R)     \
+    info.GetReturnValue().Set(R->GetPromise());
 
 namespace node_webrtc {
 
-inline void LogToConsole(Napi::Env env, const std::string& message) {
-    Napi::HandleScope scope(env);
-    env.Global().Get("console").As<Napi::Object>()
-        .Get("log").As<Napi::Function>()
-        .Call({ Napi::String::New(env, message) });
-}
+    inline void LogToConsole(Napi::Env env, const std::string& message) {
+        Napi::HandleScope scope(env);
+        env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>().Call({ Napi::String::New(env, message) });
+    }
 
-template <typename T>
-bool Resolve(Napi::Promise::Deferred deferred, T input) {
-  auto env = deferred.Env();
-  auto maybeOutput = From<Napi::Value>(std::make_pair(env, input));
-  if (maybeOutput.IsValid()) {
-    deferred.Resolve(maybeOutput.UnsafeFromValid());
-    return true;
-  }
-  deferred.Reject(Napi::Error::New(env, maybeOutput.ToErrors()[0]).Value());
-  return false;
-}
+    template <typename T>
+    bool Throw(Napi::Env env, std::string message) {
+        T::New(env, message.c_str()).ThrowAsJavaScriptException();
+    }
 
-template <typename T>
-bool Reject(Napi::Promise::Deferred deferred, T input) {
-  auto env = deferred.Env();
-  auto maybeOutput = From<Napi::Value>(std::make_pair(env, input));
-  if (maybeOutput.IsValid()) {
-    deferred.Reject(maybeOutput.UnsafeFromValid());
-    return true;
-  }
-  deferred.Reject(Napi::Error::New(env, maybeOutput.ToErrors()[0]).Value());
-  return false;
-}
+    template <typename T>
+    bool Resolve(Napi::Promise::Deferred deferred, T input) {
+        auto env = deferred.Env();
+        auto maybeOutput = From<Napi::Value>(std::make_pair(env, input));
+        if (maybeOutput.IsValid()) {
+            deferred.Resolve(maybeOutput.UnsafeFromValid());
+            return true;
+        }
+        deferred.Reject(Napi::Error::New(env, maybeOutput.ToErrors()[0]).Value());
+        return false;
+    }
 
-}  // namespace node_webrtc
+    template <typename T>
+    bool Reject(Napi::Promise::Deferred deferred, T input) {
+        auto env = deferred.Env();
+        auto maybeOutput = From<Napi::Value>(std::make_pair(env, input));
+        if (maybeOutput.IsValid()) {
+            deferred.Reject(maybeOutput.UnsafeFromValid());
+            return true;
+        }
+        deferred.Reject(Napi::Error::New(env, maybeOutput.ToErrors()[0]).Value());
+        return false;
+    }
+
+} // namespace node_webrtc

@@ -25,11 +25,9 @@ class AsyncObjectWrap: public Napi::ObjectWrap<T> {
   }
 
  public:
-  AsyncObjectWrap(
-      const char* name,
-      const Napi::CallbackInfo& info):
-    Napi::ObjectWrap<T>(info) {
-    this->_async_context = new Napi::AsyncContext(info.Env(), name, this->Value());
+  AsyncObjectWrap(std::string name, const Napi::CallbackInfo& info):
+    Napi::ObjectWrap<T>(info), _async_context(new Napi::AsyncContext(info.Env(), name.c_str(), this->Value())) 
+  {
     AsyncContextReleaser::GetDefault();
   }
 

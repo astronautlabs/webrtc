@@ -15,29 +15,31 @@
 #include <webrtc/api/data_channel_interface.h>
 #include <webrtc/api/scoped_refptr.h>
 
+#include "src/node/proxy.h"
 #include "src/enums/node_webrtc/binary_type.h"
 #include "src/node/async_object_wrap_with_loop.h"
+#include "src/node/proxy_registry.h"
 #include "src/node/wrap.h"
+#include "src/utilities/napi_ref_ptr.h"
+
+
 
 namespace node_webrtc {
+
 class PeerConnectionFactory;
 
 /**
  * Represents the RTCDataChannel Javascript object, and manages all state related to webrtc::DataChannelInterface.
  */
 class RTCDataChannel
-  : public AsyncObjectWrapWithLoop<RTCDataChannel>
-  , public webrtc::DataChannelObserver {
+  : public Proxy<RTCDataChannel, webrtc::DataChannelInterface>
+  , public webrtc::DataChannelObserver 
+{
+  bool hasOpened = false;
  public:
   explicit RTCDataChannel(const Napi::CallbackInfo&);
 
-  void Finalize(Napi::Env env) override;
-
-  static Napi::FunctionReference& constructor();
-
   static void Init(Napi::Env, Napi::Object);
-
-  bool hasOpened = false;
 
   // ~ Begin DataChannelObserver interface.
   void OnStateChange() override;
@@ -46,11 +48,10 @@ class RTCDataChannel
 
   void OnPeerConnectionClosed();
 
-  static ::node_webrtc::Wrap <RTCDataChannel*, webrtc::scoped_refptr<webrtc::DataChannelInterface>, PeerConnectionFactory*> * wrap();
+  static napi_ref_ptr<RTCDataChannel> CreateProxy(webrtc::scoped_refptr<webrtc::DataChannelInterface>, napi_ref_ptr<PeerConnectionFactory>);
  private:
   static RTCDataChannel* Create(PeerConnectionFactory*, webrtc::scoped_refptr<webrtc::DataChannelInterface>);
 
-  static void HandleStateChange(RTCDataChannel&, webrtc::DataChannelInterface::DataState);
   static void HandleMessage(RTCDataChannel&, const webrtc::DataBuffer& buffer);
 
   Napi::Value Send(const Napi::CallbackInfo&);
@@ -71,17 +72,15 @@ class RTCDataChannel
 
   void CleanupInternals();
 
-  BinaryType _binaryType;
-  int _cached_id;
+  BinaryType _binaryType = BinaryType::kArrayBuffer;
+  int _cached_id = 0;
   std::string _cached_label;
-  uint16_t _cached_max_packet_life_time;
-  uint16_t _cached_max_retransmits;
-  bool _cached_negotiated;
-  bool _cached_ordered;
+  uint16_t _cached_max_packet_life_time = 0;
+  uint16_t _cached_max_retransmits = 0;
+  bool _cached_negotiated = false;
+  bool _cached_ordered = false;
   std::string _cached_protocol;
-  uint64_t _cached_buffered_amount;
-  PeerConnectionFactory* _factory;
-  webrtc::scoped_refptr<webrtc::DataChannelInterface> _jingleDataChannel;
+  uint64_t _cached_buffered_amount = 0;
 };
 
 }  // namespace node_webrtc
