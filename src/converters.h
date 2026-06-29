@@ -90,6 +90,11 @@ namespace node_webrtc {
         return Converter<S, T>::Convert(s);
     }
 
+    template <typename T, typename S>
+    static T ToOrThrow(Napi::Env env, const S s, std::string message = "") {
+        return Converter<S, T>::Convert(s).ValueOrThrow(env, message);
+    }
+
     /**
      * There is an "identity" Converter between values of the same type T.
      * @tparam T the source and target type

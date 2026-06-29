@@ -8,6 +8,7 @@
  */
 #pragma once
 
+#include "src/converters.h"
 #include "src/functional/validation.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 #include "src/node/utility.h"
@@ -35,6 +36,10 @@ namespace node_webrtc {
             AsyncObjectWrapWithLoop<ProxyT>(ClassName(), static_cast<ProxyT&>(*this), info)
         {
             this->Value().TypeTag(GetTypeTag());
+        }
+
+        static std::vector<napi_ref_ptr<ProxyT>> UnwrapArray(const Napi::Value& value) {
+            return ToOrThrow<std::vector<napi_ref_ptr<ProxyT>>>(value.Env(), value, "Expected an array of " + ClassName());
         }
 
         static napi_ref_ptr<ProxyT> UnwrapProxy(const Napi::Value& value) {
