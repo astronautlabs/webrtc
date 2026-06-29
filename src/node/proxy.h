@@ -34,6 +34,7 @@ namespace node_webrtc {
         Proxy(const Napi::CallbackInfo& info):
             AsyncObjectWrapWithLoop<ProxyT>(ClassName(), static_cast<ProxyT&>(*this), info)
         {
+            this->Value().TypeTag(GetTypeTag());
         }
 
         static napi_ref_ptr<ProxyT> UnwrapProxy(const Napi::Value& value) {
@@ -50,7 +51,7 @@ namespace node_webrtc {
                 return false;
 
             auto object = value.As<Napi::Object>();
-            return object.CheckTypeTag(TypeTag());
+            return object.CheckTypeTag(GetTypeTag());
         }
 
         webrtc::scoped_refptr<NativeT> Handle() { return _handle; }
@@ -70,16 +71,21 @@ namespace node_webrtc {
             Napi::HandleScope scope(env);
             auto object = constructor().New({factory->Value(), Napi::CreateEnvelope(env, channel)});
             auto unwrapped = ProxyT::UnwrapProxy(object);
+            if (!unwrapped) {
+                return nullptr;
+            }
             unwrapped->Ref();
             return unwrapped;
         }
 
-        static napi_type_tag* TypeTag() {
+        static napi_type_tag* GetTypeTag() {
             static napi_type_tag tag;
-            std::random_device rd;
-            std::mt19937_64 engine(rd());
-            tag.upper = engine();
-            tag.lower = engine();
+            if (tag.lower == 0 && tag.upper == 0) {
+                std::random_device rd;
+                std::mt19937_64 engine(rd());
+                tag.upper = engine();
+                tag.lower = engine();
+            }
             return &tag;
         }
 
