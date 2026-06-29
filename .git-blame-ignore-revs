@@ -1,0 +1,4 @@
+# Revisions that are ignored for git blame.
+# Useful for ignoring large mechanical changes like code reformatting.
+c1ec07ccd8967f65fe10669edb43dab07984aa16 # code style (part 1) | https://github.com/astronautlabs/webrtc/commit/c1ec07ccd8967f65fe10669edb43dab07984aa16
+d3ae13853c50bafb1006b75ef748944ff82e9b09 # code style (part 2) | https://github.com/astronautlabs/webrtc/commit/d3ae13853c50bafb1006b75ef748944ff82e9b09

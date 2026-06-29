@@ -136,5 +136,8 @@
     "C_Cpp.clang_format_sortIncludes": null,
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, IndentWidth: 4, TabWidth: 4 }",
     "C_Cpp.formatting": "clangFormat",
-    "C_Cpp.clang_format_path": "/usr/bin/clang-format"
+    "C_Cpp.clang_format_path": "/usr/bin/clang-format",
+    "gitlens.advanced.blame.customArguments": [
+        "--ignore-revs-file .git-blame-ignore-revs"
+    ]
 }
