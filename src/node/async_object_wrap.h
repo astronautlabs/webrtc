@@ -26,7 +26,8 @@ namespace node_webrtc {
     public:
         AsyncObjectWrap(std::string name, const Napi::CallbackInfo& info) :
             Napi::ObjectWrap<T>(info),
-            _async_context(new Napi::AsyncContext(info.Env(), name.c_str(), this->Value())) {
+            _async_context(new Napi::AsyncContext(info.Env(), name.c_str(), this->Value())) 
+        {
             AsyncContextReleaser::GetDefault();
         }
 
