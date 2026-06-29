@@ -11,7 +11,6 @@ namespace node_webrtc {
 
     template <typename T>
     class AsyncObjectWrap : public Napi::ObjectWrap<T> {
-    private:
         Napi::AsyncContext* _async_context;
         std::mutex _async_context_mutex;
 
