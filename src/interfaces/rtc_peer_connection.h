@@ -46,7 +46,7 @@ namespace node_webrtc {
           public webrtc::PeerConnectionObserver {
     public:
         explicit RTCPeerConnection(const Napi::CallbackInfo&);
-        
+
         void Construct(const Napi::CallbackInfo &info) override;
         void Finalize(Napi::Env env) override;
         
@@ -74,7 +74,7 @@ namespace node_webrtc {
         webrtc::scoped_refptr<webrtc::RtpReceiverInterface> getUnderlying(RTCRtpReceiver* receiver);
         webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> getUnderlying(RTCRtpTransceiver* transceiver);
         bool isClosed() {
-            return !_factory || !_jinglePeerConnection;
+            return !_factory || !_handle;
         }
 
     private:
@@ -124,7 +124,6 @@ namespace node_webrtc {
 
         UnsignedShortRange _port_range;
         ExtendedRTCConfiguration _cached_configuration;
-        webrtc::scoped_refptr<webrtc::PeerConnectionInterface> _jinglePeerConnection;
 
         napi_ref_ptr<PeerConnectionFactory> _factory = nullptr;
         bool _shouldReleaseFactory = false;

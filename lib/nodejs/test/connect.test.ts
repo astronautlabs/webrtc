@@ -304,7 +304,7 @@ describe('RTCPeerConnection', () => {
     peers[0].close();
     peers[1].close();
   
-    // make sure nothing crashes after connection is closed and _jinglePeerConnection is null
+    // make sure nothing crashes after connection is closed and the peer connection's handle is null
     for (var i = 0; i < 2; i++) {
       await peers[i].createOffer({}).then(() => {}, () => {});
       await peers[i].createAnswer().then(() => {}, () => {});
