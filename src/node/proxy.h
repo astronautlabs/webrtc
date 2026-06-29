@@ -36,12 +36,6 @@ namespace node_webrtc {
         {
         }
 
-    protected:
-        virtual void Construct(const Napi::CallbackInfo& info) {
-            _factory = PeerConnectionFactory::Unwrap(info[0].As<Napi::Object>());
-            _handle = Napi::Envelope<webrtc::scoped_refptr<NativeT>>::Open(info[1]);
-        }
-
         static napi_ref_ptr<ProxyT> Unwrap(const Napi::Value& value) {
             if (!IsInstance(value)) {
                 Throw<Napi::TypeError>(value.Env(), "Expected instance of " + ClassName());
@@ -50,12 +44,19 @@ namespace node_webrtc {
 
             return Napi::ObjectWrap<ProxyT>::Unwrap(value.As<Napi::Object>());
         }
+        
+    protected:
+        virtual void Construct(const Napi::CallbackInfo& info) {
+            _factory = PeerConnectionFactory::Unwrap(info[0].As<Napi::Object>());
+            _handle = Napi::Envelope<webrtc::scoped_refptr<NativeT>>::Open(info[1]);
+        }
+
 
         static napi_ref_ptr<ProxyT> CreateProxy(webrtc::scoped_refptr<NativeT> channel, napi_ref_ptr<PeerConnectionFactory> factory) {
             auto env = constructor().Env();
             Napi::HandleScope scope(env);
             auto object = constructor().New({factory->Value(), Napi::CreateEnvelope(env, channel)});
-            auto* unwrapped = ProxyT::Unwrap(object);
+            auto unwrapped = ProxyT::Unwrap(object);
             unwrapped->Ref();
             return unwrapped;
         }
