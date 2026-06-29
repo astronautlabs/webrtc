@@ -18,7 +18,9 @@
 #include "src/utilities/bidi_map.h"
 #include "src/utilities/napi_ref_ptr.h"
 #include <concepts>
+#include <js_native_api_types.h>
 #include <node-addon-api/napi.h>
+#include <random>
 #include <src/api/scoped_refptr.h>
 #include <string_view>
 
@@ -40,6 +42,15 @@ namespace node_webrtc {
             _handle = Napi::Envelope<webrtc::scoped_refptr<NativeT>>::Open(info[1]);
         }
 
+        static napi_ref_ptr<ProxyT> Unwrap(const Napi::Value& value) {
+            if (!IsInstance(value)) {
+                Throw<Napi::TypeError>(value.Env(), "Expected instance of " + ClassName());
+                return nullptr;
+            }
+
+            return Napi::ObjectWrap<ProxyT>::Unwrap(value.As<Napi::Object>());
+        }
+
         static napi_ref_ptr<ProxyT> CreateProxy(webrtc::scoped_refptr<NativeT> channel, napi_ref_ptr<PeerConnectionFactory> factory) {
             auto env = constructor().Env();
             Napi::HandleScope scope(env);
@@ -47,6 +58,23 @@ namespace node_webrtc {
             auto* unwrapped = ProxyT::Unwrap(object);
             unwrapped->Ref();
             return unwrapped;
+        }
+
+        static bool IsInstance(const Napi::Value& value) {
+            if (!value.IsObject())
+                return false;
+
+            auto object = value.As<Napi::Object>();
+            return object.CheckTypeTag(TypeTag());
+        }
+
+        static napi_type_tag* TypeTag() {
+            static napi_type_tag tag;
+            std::random_device rd;
+            std::mt19937_64 engine(rd());
+            tag.upper = engine();
+            tag.lower = engine();
+            return &tag;
         }
 
         static std::string ClassName() {
