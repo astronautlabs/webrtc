@@ -32,13 +32,6 @@ namespace node_webrtc {
         Proxy(const Napi::CallbackInfo& info):
             AsyncObjectWrapWithLoop<ProxyT>(ClassName(), static_cast<ProxyT&>(*this), info)
         {
-            if (!info.IsConstructCall()) {
-                Throw<Napi::TypeError>(
-                    info.Env(), 
-                    "Please use the 'new' operator, this DOM object constructor cannot be called as a function."
-                );
-                return;
-            }
         }
 
     protected:
