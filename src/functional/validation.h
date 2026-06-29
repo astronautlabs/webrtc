@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <functional>
+#include <node-addon-api/napi.h>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -168,6 +169,17 @@ namespace node_webrtc {
          */
         T UnsafeFromValid() const {
             assert(_is_valid);
+            return _value;
+        }
+
+        T ValueOrThrow(Napi::Env env, std::string message = "") const {
+            if (!_is_valid) {
+                if (message == "")
+                    message = _errors.empty() ? "Invalid argument" : _errors[0];
+
+                Napi::TypeError::New(env, message)
+                    .ThrowAsJavaScriptException();
+            }
             return _value;
         }
 
