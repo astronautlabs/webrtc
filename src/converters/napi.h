@@ -124,19 +124,6 @@ namespace node_webrtc {
         }
     };
 
-    // template <typename T>
-    // struct Converter<std::pair<Napi::Env, std::optional<T>>, Napi::Value> {
-    //   static Validation<Napi::Value> Convert(const std::pair<Napi::Env, std::optional<T>> pair) {
-    //     Napi::Env env = pair.first;
-    //     auto value = pair.second;
-
-    //     if (!value.has_value())
-    //         return Validation { env.Undefined() }; // TODO(liam): Debate null vs undefined
-
-    //     return Converter<T, Napi::Value>::Convert(value);
-    //   }
-    // };
-
     template <>
     struct Converter<Napi::Value, Napi::Array> {
         static Validation<Napi::Array> Convert(Napi::Value value) {
