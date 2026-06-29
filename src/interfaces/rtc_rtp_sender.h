@@ -20,7 +20,6 @@
 #include "src/interfaces/rtc_dtls_transport.h"
 #include "src/interfaces/rtc_peer_connection.h"
 #include "src/interfaces/rtc_rtp_transceiver.h"
-#include "src/node/async_object_wrap.h"
 #include "src/node/wrap.h"
 #include "src/utilities/napi_ref_ptr.h"
 

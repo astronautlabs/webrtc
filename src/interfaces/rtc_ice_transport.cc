@@ -16,6 +16,7 @@
 #include "src/enums/webrtc/ice_role.h"
 #include "src/enums/webrtc/ice_transport_state.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
+#include "src/utilities/task.h"
 
 namespace node_webrtc {
 
@@ -26,6 +27,7 @@ namespace node_webrtc {
 
     RTCIceTransport::RTCIceTransport(const Napi::CallbackInfo& info) :
         AsyncObjectWrapWithLoop<RTCIceTransport>("RTCIceTransport", *this, info) {
+        InitializeAsyncContext();
         if (info.Length() != 2 || !info[0].IsObject() || !info[1].IsExternal()) {
             Napi::TypeError::New(info.Env(), "You cannot construct an RTCIceTransport").ThrowAsJavaScriptException();
             return;
@@ -115,7 +117,7 @@ namespace node_webrtc {
     void RTCIceTransport::OnStateChanged(webrtc::IceTransportInternal*) {
         TakeSnapshot();
 
-        Dispatch(CreateCallback<RTCIceTransport>([this]() {
+        Dispatch(CreateTask([this]() {
             auto env = Env();
             Napi::HandleScope scope(env);
             auto event = Napi::Object::New(env);
@@ -131,7 +133,7 @@ namespace node_webrtc {
     void RTCIceTransport::OnGatheringStateChanged(webrtc::IceTransportInternal*) {
         TakeSnapshot();
 
-        Dispatch(CreateCallback<RTCIceTransport>([this]() {
+        Dispatch(CreateTask([this]() {
             auto env = Env();
             Napi::HandleScope scope(env);
             auto event = Napi::Object::New(env);

@@ -27,7 +27,6 @@
 #include "src/interfaces/media_stream.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 #include "src/interfaces/rtc_video_source.h"
-#include "src/node/events.h"
 #include "src/node/utility.h"
 
 // TODO(mroberts): Expand support for other members.
@@ -104,7 +103,7 @@ struct node_webrtc::Converter<Napi::Value, MediaStreamConstraints> {
 };
 
 Napi::Value node_webrtc::GetUserMedia::GetUserMediaImpl(const Napi::CallbackInfo& info) {
-    CREATE_DEFERRED(info.Env(), deferred)
+    auto deferred = Napi::Promise::Deferred::New(info.Env());
 
     CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, constraints, MediaStreamConstraints)
 
@@ -132,7 +131,7 @@ Napi::Value node_webrtc::GetUserMedia::GetUserMediaImpl(const Napi::CallbackInfo
         stream->AddTrack(track);
     }
 
-    node_webrtc::Resolve(deferred, MediaStream::wrap()->GetOrCreate(factory, stream));
+    node_webrtc::Resolve(deferred, MediaStream::Wrap(stream, factory));
     return deferred.Promise();
 }
 

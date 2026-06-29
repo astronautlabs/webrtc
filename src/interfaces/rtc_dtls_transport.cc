@@ -26,7 +26,6 @@
 #include "src/functional/validation.h"
 #include "src/interfaces/rtc_ice_transport.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
-#include "src/node/events.h"
 
 namespace node_webrtc {
 
@@ -54,6 +53,7 @@ namespace node_webrtc {
 
     RTCDtlsTransport::RTCDtlsTransport(const Napi::CallbackInfo& info) :
         AsyncObjectWrapWithLoop<RTCDtlsTransport>("RTCDtlsTransport", *this, info) {
+        InitializeAsyncContext();
         if (info.Length() != 2 || !info[0].IsObject() || !info[1].IsExternal()) {
             Napi::TypeError::New(info.Env(), "You cannot construct an RTCDtlsTransport").ThrowAsJavaScriptException();
             return;

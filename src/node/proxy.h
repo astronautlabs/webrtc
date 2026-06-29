@@ -59,12 +59,12 @@ namespace node_webrtc {
             return object.CheckTypeTag(GetTypeTag());
         }
 
-        webrtc::scoped_refptr<NativeT> Handle() { return _handle; }
+        webrtc::scoped_refptr<NativeT> handle() { return _handle; }
 
     protected:
         virtual void Construct(const Napi::CallbackInfo& info) {
             if (info.Length() != 2 || !info[0].IsObject() || !info[1].IsExternal()) {
-                Throw<Napi::TypeError>(info.Env(), "You cannot construct a " + ClassName());
+                Throw<Napi::TypeError>(info.Env(), "Invalid construction for " + ClassName());
                 return;
             }
             _factory = PeerConnectionFactory::Unwrap(info[0].As<Napi::Object>());
@@ -129,6 +129,8 @@ namespace node_webrtc {
         }
     };
 
+    // Conversions
+
     template <typename ProxyT, typename NativeT>
     concept CCanConvertToNative = requires(ProxyT a) {
         { a.Handle() } -> std::convertible_to<webrtc::scoped_refptr<NativeT>>;
@@ -166,4 +168,5 @@ namespace node_webrtc {
             return Validation<napi_ref_ptr<T>> { T::UnwrapProxy(value) };
         };
     };
+
 } // namespace node_webrtc

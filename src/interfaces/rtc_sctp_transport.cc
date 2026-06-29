@@ -24,6 +24,7 @@ namespace node_webrtc {
 
     RTCSctpTransport::RTCSctpTransport(const Napi::CallbackInfo& info) :
         AsyncObjectWrapWithLoop<RTCSctpTransport>("RTCSctpTransport", *this, info) {
+        InitializeAsyncContext();
         if (info.Length() != 2 || !info[0].IsObject() || !info[1].IsExternal()) {
             Napi::TypeError::New(info.Env(), "You cannot construct an RTCSctpTransport").ThrowAsJavaScriptException();
             return;
@@ -87,7 +88,7 @@ namespace node_webrtc {
     }
 
     void RTCSctpTransport::OnStateChange(const webrtc::SctpTransportInformation info) {
-        Dispatch(CreateCallback<RTCSctpTransport>([this]() {
+        Dispatch(CreateTask([this]() {
             auto env = Env();
             Napi::HandleScope scope(env);
             auto event = Napi::Object::New(env);

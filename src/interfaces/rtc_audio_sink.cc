@@ -22,7 +22,6 @@
 #include "src/functional/maybe.h"
 #include "src/functional/validation.h"
 #include "src/interfaces/media_stream_track.h" // IWYU pragma: keep
-#include "src/node/events.h"
 
 namespace node_webrtc {
 
@@ -33,6 +32,7 @@ namespace node_webrtc {
 
     RTCAudioSink::RTCAudioSink(const Napi::CallbackInfo& info) :
         AsyncObjectWrapWithLoop<RTCAudioSink>("RTCAudioSink", *this, info) {
+        InitializeAsyncContext();
         auto env = info.Env();
 
         if (!info.IsConstructCall()) {
@@ -79,7 +79,7 @@ namespace node_webrtc {
         }
         memcpy(audio_data_copy.get(), audio_data, byte_length);
 
-        Dispatch(CreateCallback<RTCAudioSink>([this, audio_data_copy = std::move(audio_data_copy), bits_per_sample, sample_rate, number_of_channels, number_of_frames]() mutable {
+        Dispatch(CreateTask([this, audio_data_copy = std::move(audio_data_copy), bits_per_sample, sample_rate, number_of_channels, number_of_frames]() mutable {
             RTCOnDataEventDict dict({audio_data_copy.release(), static_cast<uint8_t>(bits_per_sample), static_cast<uint16_t>(sample_rate), static_cast<uint8_t>(number_of_channels), MakeJust<uint16_t>(static_cast<uint16_t>(number_of_frames))});
 
             auto env = Env();

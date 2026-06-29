@@ -80,7 +80,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCRtpSender::SetParameters(const Napi::CallbackInfo& info) {
-        CREATE_DEFERRED(info.Env(), deffered)
+        auto deferred = Napi::Promise::Deferred::New(info.Env());
         CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, parameters, webrtc::RtpParameters)
 
         auto rtcSender = pc->getUnderlying(this);
@@ -102,13 +102,13 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCRtpSender::GetStats(const Napi::CallbackInfo& info) {
-        CREATE_DEFERRED(info.Env(), deffered)
+        auto deferred = Napi::Promise::Deferred::New(info.Env());
         Reject(deferred, Napi::Error::New(info.Env(), "Not yet implemented; file a feature request against @astronautlabs/webrtc"));
         return deferred.Promise();
     }
 
     Napi::Value RTCRtpSender::ReplaceTrack(const Napi::CallbackInfo& info) {
-        CREATE_DEFERRED(info.Env(), deferred)
+        auto deferred = Napi::Promise::Deferred::New(info.Env());
         CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, maybeTrack, Either<Null COMMA napi_ref_ptr<MediaStreamTrack>>)
         auto mediaStreamTrack = maybeTrack.FromEither<napi_ref_ptr<MediaStreamTrack>>([](auto) {
             return nullptr;
@@ -157,14 +157,14 @@ namespace node_webrtc {
         auto streams = std::vector<std::string>();
         for (size_t i = 0; i < info.Length(); i++) {
             auto value = info[i];
-            auto maybeStream = From<MediaStream*>(value);
+            auto maybeStream = To<napi_ref_ptr<MediaStream>>(value);
             if (maybeStream.IsInvalid()) {
                 auto error = maybeStream.ToErrors()[0];
                 Napi::TypeError::New(info.Env(), error).ThrowAsJavaScriptException();
                 return info.Env().Undefined();
             }
             auto stream = maybeStream.UnsafeFromValid();
-            streams.emplace_back(stream->stream()->id());
+            streams.emplace_back(stream->handle()->id());
         }
         pc->getUnderlying(this)->SetStreams(streams);
         return info.Env().Undefined();

@@ -13,34 +13,30 @@
 #include <mutex>
 #include <queue>
 
-#include "events.h"
-
 namespace node_webrtc {
 
     /**
-     * EventQueue is a thread-safe Event queue. It allows you to enqueue events
-     * from one thread and dequeue them from another (or the same).
-     * @tparam T the Event target type
+     * A thread safe queue which supports move-only objects. 
      */
     template <typename T>
-    class EventQueue {
+    class ThreadSafeQueue {
     public:
         /**
          * Enqueue an Event.
          * @param event the event to enqueue
          */
-        void Enqueue(std::unique_ptr<Event<T>> event) {
+        void Enqueue(T event) {
             _mutex.lock();
             _events.push(std::move(event));
             _mutex.unlock();
         }
 
         /**
-         * Attempt to dequeue an Event. If the EventQueue is empty, this method
+         * Attempt to dequeue an Event. If the queue is empty, this method
          * returns nullptr.
          * @return the dequeued Event or nullptr
          */
-        std::unique_ptr<Event<T>> Dequeue() {
+        T Dequeue() {
             _mutex.lock();
             if (_events.empty()) {
                 _mutex.unlock();
@@ -53,7 +49,7 @@ namespace node_webrtc {
         }
 
     private:
-        std::queue<std::unique_ptr<Event<T>>> _events;
+        std::queue<T> _events;
         std::mutex _mutex { };
     };
 

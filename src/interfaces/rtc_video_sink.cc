@@ -20,7 +20,6 @@
 #include "src/dictionaries/webrtc/video_frame.h" // IWYU pragma: keep
 #include "src/functional/validation.h"
 #include "src/interfaces/media_stream_track.h" // IWYU pragma: keep
-#include "src/node/events.h"
 
 namespace node_webrtc {
 
@@ -31,6 +30,7 @@ namespace node_webrtc {
 
     RTCVideoSink::RTCVideoSink(const Napi::CallbackInfo& info) :
         AsyncObjectWrapWithLoop<RTCVideoSink>("RTCVideoSink", *this, info) {
+        InitializeAsyncContext();
         if (!info.IsConstructCall()) {
             Napi::TypeError::New(info.Env(), "Use the new operator to construct an RTCVideoSink.").ThrowAsJavaScriptException();
             return;
@@ -63,7 +63,7 @@ namespace node_webrtc {
     }
 
     void RTCVideoSink::OnFrame(const webrtc::VideoFrame& frame) {
-        Dispatch(CreateCallback<RTCVideoSink>([this, frame]() {
+        Dispatch(CreateTask([this, frame]() {
             auto env = Env();
             Napi::HandleScope scope(env);
             auto maybeValue = From<Napi::Value>(std::make_pair(env, frame));

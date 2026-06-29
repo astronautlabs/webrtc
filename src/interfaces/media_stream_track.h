@@ -89,7 +89,7 @@ namespace node_webrtc {
             if (track->kind() != webrtc::MediaStreamTrackInterface::kAudioKind)
                 return Validation<webrtc::scoped_refptr<webrtc::AudioTrackInterface>>::Invalid("Expected an audio track");
 
-            return Validation { Cast<webrtc::AudioTrackInterface>(track->Handle()) };
+            return Validation { Cast<webrtc::AudioTrackInterface>(track->handle()) };
         };
     };
 
@@ -104,7 +104,7 @@ namespace node_webrtc {
             if (track->kind() != webrtc::MediaStreamTrackInterface::kVideoKind)
                 return Validation<webrtc::scoped_refptr<webrtc::VideoTrackInterface>>::Invalid("Expected a video track");
 
-            return Validation { Cast<webrtc::VideoTrackInterface>(track->Handle()) };
+            return Validation { Cast<webrtc::VideoTrackInterface>(track->handle()) };
         };
     };
 

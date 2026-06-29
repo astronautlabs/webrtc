@@ -14,67 +14,39 @@
 
 #include <node-addon-api/napi.h>
 
-#include "events.h"
+#include "src/utilities/napi_ref_ptr.h"
 #include "utility.h"
 
 namespace node_webrtc {
-
-    template <typename T, typename F>
-    class Promise : public Event<T> {
-    public:
-        Promise(
-            Napi::Promise::Deferred& deferred,
-            F callback
-        ) :
-            _callback(callback),
-            _deferred(deferred) { }
-
-        void Dispatch(T&) override {
-            _callback(_deferred);
-        }
-
-    private:
-        F _callback;
-        Napi::Promise::Deferred _deferred;
-    };
-
-    template <typename T, typename F>
-    std::unique_ptr<Promise<T, F>> CreatePromise(Napi::Promise::Deferred deferred, F callback) {
-        return std::make_unique<Promise<T, F>>(deferred, callback);
-    }
-
     template <typename T>
     class PromiseCreator {
     public:
         PromiseCreator(
-            T* target,
+            napi_ref_ptr<T> target,
             Napi::Promise::Deferred deferred
         ) :
             _target(target),
-            _deferred(deferred) { }
-
-        template <typename F>
-        void Dispatch(F callback) {
-            _target->Dispatch(std::make_unique<Promise<T, F>>(_deferred, callback));
+            _deferred(deferred) 
+        { 
         }
 
         template <typename F>
         void Resolve(F value) {
-            Dispatch([value](auto deferred) {
+            _target->Dispatch(CreateTask([deferred = _deferred, value]() {
                 node_webrtc::Resolve(deferred, value);
-            });
+            }));
         }
 
         template <typename F>
         void Reject(F value) {
-            Dispatch([value](auto deferred) {
+            _target->Dispatch(CreateTask([deferred = _deferred, value]() {
                 node_webrtc::Reject(deferred, value);
-            });
+            }));
         }
 
     private:
-        T* _target;
+
+        napi_ref_ptr<T> _target;
         Napi::Promise::Deferred _deferred;
     };
-
 } // namespace node_webrtc

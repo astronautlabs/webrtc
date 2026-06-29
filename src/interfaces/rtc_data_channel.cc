@@ -21,9 +21,9 @@
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 #include "src/node/envelope.h"
 #include "src/node/error_factory.h"
-#include "src/node/events.h"
 #include "src/utilities/log.h"
 #include "src/utilities/napi_ref_ptr.h"
+#include "src/utilities/task.h"
 
 namespace node_webrtc {
 
@@ -31,7 +31,7 @@ namespace node_webrtc {
         Proxy<RTCDataChannel, webrtc::DataChannelInterface>(info) 
     {
         Construct(info);
-        
+
         // In previous versions we had some complexity around connecting an observer early and replaying events.
         // In M150 this is not necessary, the data is already queued until an observer is registered, and state() is a blocking
         // call to the network thread. So just register the observer, and if we haven't sent an open state event yet after
@@ -82,7 +82,7 @@ namespace node_webrtc {
             _handle = nullptr;
         }
 
-        Dispatch(CreateCallback<RTCDataChannel>([this, state]() {
+        Dispatch(CreateTask([this, state]() {
             if (state == webrtc::DataChannelInterface::kClosed) {
                 Event("close").Dispatch();
             } else if (state == webrtc::DataChannelInterface::kOpen) {
@@ -92,7 +92,7 @@ namespace node_webrtc {
     }
 
     void RTCDataChannel::OnMessage(const webrtc::DataBuffer& buffer) {
-        Dispatch(CreateCallback<RTCDataChannel>([this, buffer]() {
+        Dispatch(CreateTask([this, buffer]() {
             RTCDataChannel::HandleMessage(*this, buffer);
         }));
     }

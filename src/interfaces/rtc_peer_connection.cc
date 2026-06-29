@@ -55,7 +55,6 @@
 #include "src/interfaces/rtc_rtp_transceiver.h"
 #include "src/interfaces/rtc_sctp_transport.h"
 #include "src/node/error_factory.h"
-#include "src/node/events.h"
 #include "src/node/promise.h"
 #include "src/node/utility.h"
 #include "src/utilities/log.h"
@@ -257,9 +256,9 @@ namespace node_webrtc {
             auto receiver = rtpTransceiver->receiver();
             auto wrappedTransceiver = createOrUpdateTransceiver(rtpTransceiver);
 
-            auto mediaStreams = std::vector<MediaStream*>();
+            auto mediaStreams = std::vector<napi_ref_ptr<MediaStream>>();
             for (auto const& stream : receiver->streams()) {
-                auto* mediaStream = MediaStream::wrap()->GetOrCreate(_factory.get(), stream); // TODO(liam): raw ptr
+                auto mediaStream = MediaStream::Wrap(stream, _factory);
                 _streams.insert(mediaStream);
                 mediaStreams.push_back(mediaStream);
             }
@@ -324,7 +323,7 @@ namespace node_webrtc {
         std::vector<std::string> streamIds;
         streamIds.reserve(mediaStreams.size());
         for (auto const& stream : mediaStreams) {
-            streamIds.emplace_back(stream->stream()->id());
+            streamIds.emplace_back(stream->handle()->id());
         }
 
         auto result = _handle->AddTrack(mediaStreamTrack->track(), streamIds);
@@ -436,7 +435,7 @@ namespace node_webrtc {
     Napi::Value RTCPeerConnection::CreateOffer(const Napi::CallbackInfo& info) {
         Log(this, "RTCPeerConnection::CreateOffer()");
         auto env = info.Env();
-        CREATE_DEFERRED(env, deferred)
+        auto deferred = Napi::Promise::Deferred::New(info.Env());
 
         auto maybeOptions = From<Maybe<RTCOfferOptions>>(Arguments(info)).Map([](auto maybeOptions) {
             return maybeOptions.FromMaybe(RTCOfferOptions());
@@ -461,7 +460,7 @@ namespace node_webrtc {
     Napi::Value RTCPeerConnection::CreateAnswer(const Napi::CallbackInfo& info) {
         Log(this, "RTCPeerConnection::CreateAnswer()");
         auto env = info.Env();
-        CREATE_DEFERRED(env, deferred)
+        auto deferred = Napi::Promise::Deferred::New(info.Env());
 
         auto maybeOptions = From<Maybe<RTCAnswerOptions>>(Arguments(info)).Map([](auto maybeOptions) {
             return maybeOptions.FromMaybe(RTCAnswerOptions());
@@ -486,7 +485,7 @@ namespace node_webrtc {
     Napi::Value RTCPeerConnection::SetLocalDescription(const Napi::CallbackInfo& info) {
         Log(this, "RTCPeerConnection::SetLocalDescription()");
         auto env = info.Env();
-        CREATE_DEFERRED(env, deferred)
+        auto deferred = Napi::Promise::Deferred::New(info.Env());
 
         CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, descriptionInit, RTCSessionDescriptionInit)
         if (descriptionInit.sdp.empty()) {
@@ -517,7 +516,7 @@ namespace node_webrtc {
     Napi::Value RTCPeerConnection::SetRemoteDescription(const Napi::CallbackInfo& info) {
         Log(this, "RTCPeerConnection::SetRemoteDescription()");
         auto env = info.Env();
-        CREATE_DEFERRED(env, deferred)
+        auto deferred = Napi::Promise::Deferred::New(info.Env());
 
         CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, description, std::shared_ptr<webrtc::SessionDescriptionInterface>)
 
@@ -537,26 +536,25 @@ namespace node_webrtc {
 
     Napi::Value RTCPeerConnection::AddIceCandidate(const Napi::CallbackInfo& info) {
         Log(this, "RTCPeerConnection::AddIceCandidate()");
-        auto env = info.Env();
-        CREATE_DEFERRED(env, deferred)
+        
+        auto deferred = Napi::Promise::Deferred::New(info.Env());
 
         CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, candidate, std::shared_ptr<webrtc::IceCandidateInterface>)
 
-        Dispatch(CreatePromise<RTCPeerConnection>(deferred, [this, candidate](auto deferred) {
-            if (_handle
-                && _handle->signaling_state() != webrtc::PeerConnectionInterface::SignalingState::kClosed
-                && _handle->AddIceCandidate(candidate.get())) {
-                Resolve(deferred, this->Env().Undefined());
-            } else {
-                std::string error = std::string("Failed to set ICE candidate");
-                if (!_handle
-                    || _handle->signaling_state() == webrtc::PeerConnectionInterface::SignalingState::kClosed) {
-                    error += "; RTCPeerConnection is closed";
-                }
-                error += ".";
-                Reject(deferred, SomeError(error));
+        if (_handle
+            && _handle->signaling_state() != webrtc::PeerConnectionInterface::SignalingState::kClosed
+            && _handle->AddIceCandidate(candidate.get())) {
+            Resolve(deferred, this->Env().Undefined());
+        } else {
+            std::string error = std::string("Failed to set ICE candidate");
+            if (!_handle
+                || _handle->signaling_state() == webrtc::PeerConnectionInterface::SignalingState::kClosed) {
+                error += "; RTCPeerConnection is closed";
             }
-        }));
+            error += ".";
+            Reject(deferred, SomeError(error));
+        }
+
         return deferred.Promise();
     }
 
@@ -679,8 +677,7 @@ namespace node_webrtc {
     Napi::Value RTCPeerConnection::GetStats(const Napi::CallbackInfo& info) {
         Log(this, "RTCPeerConnection::GetStats()");
         auto env = info.Env();
-
-        CREATE_DEFERRED(env, deferred)
+        auto deferred = Napi::Promise::Deferred::New(info.Env());
 
         if (!_handle) {
             Reject(deferred, ErrorFactory::CreateError(env, "RTCPeerConnection is closed"));
@@ -689,7 +686,7 @@ namespace node_webrtc {
 
         auto* callback = new webrtc::RefCountedObject<RTCStatsCollector>(this, deferred);
         _handle->GetStats(callback);
-
+        
         return deferred.Promise(); // NOLINT
     }
 

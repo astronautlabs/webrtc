@@ -27,7 +27,7 @@ namespace node_webrtc {
           public webrtc::RTCStatsCollectorCallback {
     public:
         RTCStatsCollector(
-            RTCPeerConnection* peer_connection,
+            napi_ref_ptr<RTCPeerConnection> peer_connection,
             Napi::Promise::Deferred deferred
         ) :
             PromiseCreator<RTCPeerConnection>(peer_connection, deferred) { }

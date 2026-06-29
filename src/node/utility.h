@@ -12,9 +12,6 @@
 #include "src/converters.h"
 #include "src/converters/napi.h"
 
-#define CREATE_DEFERRED(E, D) \
-    auto deferred = Napi::Promise::Deferred::New(E);
-
 #define RETURNS_PROMISE(R) \
     CREATE_RESOLVER(R)     \
     info.GetReturnValue().Set(R->GetPromise());
