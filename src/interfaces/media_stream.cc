@@ -8,6 +8,7 @@
  * tree.
  */
 #include "src/interfaces/media_stream.h"
+#include "src/utilities/napi_ref_ptr.h"
 #include "src/utilities/webrtc_utils.h"
 #include <src/api/media_stream_interface.h>
 #include <webrtc/api/peer_connection_interface.h>
@@ -31,14 +32,14 @@ namespace node_webrtc {
         return constructor;
     }
 
-    MediaStream::Impl::Impl(PeerConnectionFactory* factory) :
+    MediaStream::Impl::Impl(napi_ref_ptr<PeerConnectionFactory> factory) :
         _factory(factory ? factory : PeerConnectionFactory::GetOrCreateDefault()),
         _stream(_factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid())),
         _shouldReleaseFactory(!factory) {
         _factory->Ref();
     }
 
-    MediaStream::Impl::Impl(std::vector<MediaStreamTrack*>&& tracks, PeerConnectionFactory* factory) :
+    MediaStream::Impl::Impl(std::vector<napi_ref_ptr<MediaStreamTrack>>&& tracks, napi_ref_ptr<PeerConnectionFactory> factory) :
         _factory(factory ? factory : tracks.empty() ? PeerConnectionFactory::GetOrCreateDefault()
                                                     : tracks[0]->factory()),
         _stream(_factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid())),
@@ -57,14 +58,14 @@ namespace node_webrtc {
 
     MediaStream::Impl::Impl(
         webrtc::scoped_refptr<webrtc::MediaStreamInterface>&& stream,
-        PeerConnectionFactory* factory) :
+        napi_ref_ptr<PeerConnectionFactory> factory) :
         _factory(factory ? factory : PeerConnectionFactory::GetOrCreateDefault()),
         _stream(stream),
         _shouldReleaseFactory(!factory) {
         _factory->Ref();
     }
 
-    MediaStream::Impl::Impl(const RTCMediaStreamInit& init, PeerConnectionFactory* factory) :
+    MediaStream::Impl::Impl(const RTCMediaStreamInit& init, napi_ref_ptr<PeerConnectionFactory> factory) :
         _factory(factory ? factory : PeerConnectionFactory::GetOrCreateDefault()),
         _stream(_factory->factory()->CreateLocalMediaStream(init.id)),
         _shouldReleaseFactory(!factory) {
@@ -100,7 +101,7 @@ namespace node_webrtc {
     MediaStream::MediaStream(const Napi::CallbackInfo& info) :
         Napi::ObjectWrap<MediaStream>(info) {
         auto maybeEither = From<Either<std::tuple<Napi::Object COMMA Napi::External<webrtc::scoped_refptr<webrtc::MediaStreamInterface>>> COMMA // Either1 - Remote MediaStream OR Either2
-                Either<std::vector<MediaStreamTrack*> COMMA // Either2 - Array of MediaStreamTracks OR Either3
+                Either<std::vector<napi_ref_ptr<MediaStreamTrack>> COMMA // Either2 - Array of MediaStreamTracks OR Either3
                         Either<MediaStream * COMMA // Either3 - Local MediaStream OR Maybe
                                    Maybe<RTCMediaStreamInit>>>>>(Arguments(info)); // Maybe - Optional RTCMediaStreamInit dictionary
         if (maybeEither.IsInvalid()) {
@@ -127,10 +128,10 @@ namespace node_webrtc {
                 if (either3.IsLeft()) {
                     // 3. Local MediaStream, existing MediaStream
                     auto* existingStream = either3.UnsafeFromLeft();
-                    auto* factory = existingStream->_impl._factory;
-                    auto tracks = std::vector<MediaStreamTrack*>();
+                    auto factory = existingStream->_impl._factory;
+                    auto tracks = std::vector<napi_ref_ptr<MediaStreamTrack>>();
                     for (auto const& track : existingStream->tracks()) {
-                        tracks.push_back(MediaStreamTrack::wrap()->GetOrCreate(factory, track));
+                        tracks.push_back(MediaStreamTrack::Wrap(track, factory));
                     }
                     _impl = MediaStream::Impl(std::move(tracks), factory);
                 } else {
@@ -156,7 +157,7 @@ namespace node_webrtc {
     Napi::Value MediaStream::GetActive(const Napi::CallbackInfo& info) {
         auto active = false;
         for (auto const& track : tracks()) {
-            auto* mediaStreamTrack = MediaStreamTrack::wrap()->GetOrCreate(_impl._factory, track);
+            auto mediaStreamTrack = MediaStreamTrack::Wrap(track, _impl._factory);
             active = active || mediaStreamTrack->active();
         }
         CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), active, result, Napi::Value)
@@ -164,9 +165,9 @@ namespace node_webrtc {
     }
 
     Napi::Value MediaStream::GetAudioTracks(const Napi::CallbackInfo& info) {
-        auto tracks = std::vector<MediaStreamTrack*>();
+        auto tracks = std::vector<napi_ref_ptr<MediaStreamTrack>>();
         for (auto const& track : _impl._stream->GetAudioTracks()) {
-            auto* mediaStreamTrack = MediaStreamTrack::wrap()->GetOrCreate(_impl._factory, track);
+            auto mediaStreamTrack = MediaStreamTrack::Wrap(track, _impl._factory);
             tracks.push_back(mediaStreamTrack);
         }
         CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), tracks, result, Napi::Value)
@@ -174,9 +175,9 @@ namespace node_webrtc {
     }
 
     Napi::Value MediaStream::GetVideoTracks(const Napi::CallbackInfo& info) {
-        auto tracks = std::vector<MediaStreamTrack*>();
+        auto tracks = std::vector<napi_ref_ptr<MediaStreamTrack>>();
         for (auto const& track : _impl._stream->GetVideoTracks()) {
-            auto* mediaStreamTrack = MediaStreamTrack::wrap()->GetOrCreate(_impl._factory, track);
+            auto mediaStreamTrack = MediaStreamTrack::Wrap(track, _impl._factory);
             tracks.push_back(mediaStreamTrack);
         }
         CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), tracks, result, Napi::Value)
@@ -184,9 +185,9 @@ namespace node_webrtc {
     }
 
     Napi::Value MediaStream::GetTracks(const Napi::CallbackInfo& info) {
-        auto tracks = std::vector<MediaStreamTrack*>();
+        auto tracks = std::vector<napi_ref_ptr<MediaStreamTrack>>();
         for (auto const& track : this->tracks()) {
-            auto* mediaStreamTrack = MediaStreamTrack::wrap()->GetOrCreate(_impl._factory, track);
+            auto mediaStreamTrack = MediaStreamTrack::Wrap(track, _impl._factory);
             tracks.push_back(mediaStreamTrack);
         }
         CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), tracks, result, Napi::Value)
@@ -197,13 +198,13 @@ namespace node_webrtc {
         CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, label, std::string)
         auto audioTrack = _impl._stream->FindAudioTrack(label);
         if (audioTrack) {
-            auto* track = MediaStreamTrack::wrap()->GetOrCreate(_impl._factory, audioTrack);
+            auto track = MediaStreamTrack::Wrap(audioTrack, _impl._factory);
             CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), track, result, Napi::Value)
             return result;
         }
         auto videoTrack = _impl._stream->FindVideoTrack(label);
         if (videoTrack) {
-            auto* track = MediaStreamTrack::wrap()->GetOrCreate(_impl._factory, videoTrack);
+            auto track = MediaStreamTrack::Wrap(videoTrack, _impl._factory);
             CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), track, result, Napi::Value)
             return result;
         }
@@ -211,7 +212,7 @@ namespace node_webrtc {
     }
 
     Napi::Value MediaStream::AddTrack(const Napi::CallbackInfo& info) {
-        CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, mediaStreamTrack, MediaStreamTrack*)
+        CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, mediaStreamTrack, napi_ref_ptr<MediaStreamTrack>)
         auto stream = _impl._stream;
         auto track = mediaStreamTrack->track();
         if (track->kind() == track->kAudioKind) {
@@ -223,7 +224,7 @@ namespace node_webrtc {
     }
 
     Napi::Value MediaStream::RemoveTrack(const Napi::CallbackInfo& info) {
-        CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, mediaStreamTrack, MediaStreamTrack*)
+        CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, mediaStreamTrack, napi_ref_ptr<MediaStreamTrack>)
         auto stream = _impl._stream;
         auto track = mediaStreamTrack->track();
         if (track->kind() == track->kAudioKind) {
@@ -249,7 +250,7 @@ namespace node_webrtc {
                 clonedStream->AddTrack(clonedTrack);
             }
         }
-        auto* mediaStream = MediaStream::wrap()->GetOrCreate(_impl._factory, clonedStream);
+        auto* mediaStream = MediaStream::wrap()->GetOrCreate(_impl._factory.get(), clonedStream); // TODO(liam): raw ptr
         CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), mediaStream, result, Napi::Value)
         return result;
     }

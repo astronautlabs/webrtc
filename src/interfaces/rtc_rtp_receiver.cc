@@ -53,7 +53,7 @@ namespace node_webrtc {
     }
 
     MediaStreamTrack* RTCRtpReceiver::getTrack() {
-        return track;
+        return track.get(); // TODO(liam): raw ptr
     }
 
     Napi::Value RTCRtpReceiver::GetTransport(const Napi::CallbackInfo& info) {

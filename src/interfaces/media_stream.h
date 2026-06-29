@@ -63,15 +63,15 @@ namespace node_webrtc {
 
             ~Impl();
 
-            explicit Impl(PeerConnectionFactory* factory = nullptr);
+            explicit Impl(napi_ref_ptr<PeerConnectionFactory> factory = nullptr);
 
-            Impl(std::vector<MediaStreamTrack*>&& tracks, PeerConnectionFactory* factory = nullptr);
+            Impl(std::vector<napi_ref_ptr<MediaStreamTrack>>&& tracks, napi_ref_ptr<PeerConnectionFactory> factory = nullptr);
 
-            Impl(webrtc::scoped_refptr<webrtc::MediaStreamInterface>&& stream, PeerConnectionFactory* factory = nullptr);
+            Impl(webrtc::scoped_refptr<webrtc::MediaStreamInterface>&& stream, napi_ref_ptr<PeerConnectionFactory> factory = nullptr);
 
-            Impl(const RTCMediaStreamInit& init, PeerConnectionFactory* factory = nullptr);
+            Impl(const RTCMediaStreamInit& init, napi_ref_ptr<PeerConnectionFactory> factory = nullptr);
 
-            PeerConnectionFactory* _factory;
+            napi_ref_ptr<PeerConnectionFactory> _factory;
             webrtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;
             bool _shouldReleaseFactory;
         };

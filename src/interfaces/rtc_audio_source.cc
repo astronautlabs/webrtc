@@ -49,8 +49,8 @@ namespace node_webrtc {
         // Here the default reference will be owned by the RTCAudioSource.
         // See RTCPeerConnection::AddTrack() for corresponding referencing logic in that case.
 
-        auto* wrappedTrack = MediaStreamTrack::wrap()->GetOrCreate(factory, track);
-        _tracks.insert(wrappedTrack);
+        auto wrappedTrack = MediaStreamTrack::Wrap(track, factory);
+        _tracks.insert(wrappedTrack.get()); // TODO(liam): raw ptr
         return wrappedTrack->Value();
     }
 

@@ -20,42 +20,21 @@
 #include "src/enums/webrtc/track_state.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 
+#define Super Proxy<MediaStreamTrack, webrtc::MediaStreamTrackInterface>
+
 namespace node_webrtc {
-
-    Napi::FunctionReference& MediaStreamTrack::constructor() {
-        static Napi::FunctionReference constructor;
-        return constructor;
-    }
-
     MediaStreamTrack::MediaStreamTrack(const Napi::CallbackInfo& info) :
-        AsyncObjectWrapWithLoop<MediaStreamTrack>("MediaStreamTrack", *this, info) {
-        Log(this, "MediaStreamTrack::MediaStreamTrack()");
-        auto env = info.Env();
-
-        if (info.Length() != 2 || !info[0].IsObject() || !info[1].IsExternal()) {
-            Napi::TypeError::New(env, "You cannot construct a MediaStreamTrack").ThrowAsJavaScriptException();
-            return;
-        }
-
-        // FIXME(mroberts): There is a safer conversion here.
-        _factory = PeerConnectionFactory::Unwrap(info[0].ToObject());
-
-        _track = Napi::Envelope<webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>>::Open(info[1]);
+        Super(info) 
+    {
+        Construct(info);
         _track->RegisterObserver(this);
-
-        // NOTE(mroberts): This doesn't actually matter yet.
-        _enabled = false;
     }
 
     void MediaStreamTrack::Finalize(Napi::Env env) {
-        Log(this, "MediaStreamTrack::Finalize()");
+        Super::Finalize(env);
+        if (_track)
+            _track->UnregisterObserver(this);
         _track = nullptr;
-
-        Napi::HandleScope scope(PeerConnectionFactory::constructor().Env());
-        _factory->Unref();
-        _factory = nullptr;
-
-        wrap()->Release(this);
     }
 
     void MediaStreamTrack::Stop() {
@@ -63,7 +42,7 @@ namespace node_webrtc {
         _track->UnregisterObserver(this);
         _ended = true;
         _enabled = _track->enabled();
-        AsyncObjectWrapWithLoop<MediaStreamTrack>::Stop();
+        Super::Stop();
     }
 
     void MediaStreamTrack::OnChanged() {
@@ -140,7 +119,8 @@ namespace node_webrtc {
             auto videoTrack = static_cast<webrtc::VideoTrackInterface*>(_track.get());
             clonedTrack = _factory->factory()->CreateVideoTrack(webrtc::scoped_refptr {videoTrack->GetSource()}, label);
         }
-        auto clonedMediaStreamTrack = wrap()->GetOrCreate(_factory, clonedTrack);
+
+        auto clonedMediaStreamTrack = Wrap(clonedTrack, _factory);
         if (_ended) {
             clonedMediaStreamTrack->Stop();
         }
@@ -153,18 +133,13 @@ namespace node_webrtc {
         return info.Env().Undefined();
     }
 
-    Wrap<MediaStreamTrack*, webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>, PeerConnectionFactory*>* MediaStreamTrack::wrap() {
-        static auto wrap = new node_webrtc::Wrap<MediaStreamTrack*, webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>, PeerConnectionFactory*>(MediaStreamTrack::Create);
-        return wrap;
-    }
-
     MediaStreamTrack* MediaStreamTrack::Create(
         PeerConnectionFactory* factory,
         webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track) {
         auto env = constructor().Env();
         Napi::HandleScope scope(env);
 
-        auto* mediaStreamTrack = Unwrap(constructor().New({factory->Value(), Napi::CreateEnvelope(env, track)}));
+        auto mediaStreamTrack = Unwrap(constructor().New({factory->Value(), Napi::CreateEnvelope(env, track)}));
 
         return mediaStreamTrack;
     }
@@ -188,29 +163,29 @@ namespace node_webrtc {
         exports.Set("MediaStreamTrack", func);
     }
 
-    CONVERTER_IMPL(MediaStreamTrack*, webrtc::scoped_refptr<webrtc::AudioTrackInterface>, mediaStreamTrack) {
-        auto track = mediaStreamTrack->track();
-        if (track->kind() != webrtc::MediaStreamTrackInterface::kAudioKind) {
-            return Validation<webrtc::scoped_refptr<webrtc::AudioTrackInterface>>::Invalid(
-                "Expected an audio MediaStreamTrack");
-        }
-        webrtc::scoped_refptr<webrtc::AudioTrackInterface> audioTrack(static_cast<webrtc::AudioTrackInterface*>(track.get()));
-        return Pure(audioTrack);
-    }
+    // CONVERTER_IMPL(MediaStreamTrack*, webrtc::scoped_refptr<webrtc::AudioTrackInterface>, mediaStreamTrack) {
+    //     auto track = mediaStreamTrack->track();
+    //     if (track->kind() != webrtc::MediaStreamTrackInterface::kAudioKind) {
+    //         return Validation<webrtc::scoped_refptr<webrtc::AudioTrackInterface>>::Invalid(
+    //             "Expected an audio MediaStreamTrack");
+    //     }
+    //     webrtc::scoped_refptr<webrtc::AudioTrackInterface> audioTrack(static_cast<webrtc::AudioTrackInterface*>(track.get()));
+    //     return Pure(audioTrack);
+    // }
 
-    CONVERTER_IMPL(MediaStreamTrack*, webrtc::scoped_refptr<webrtc::VideoTrackInterface>, mediaStreamTrack) {
-        auto track = mediaStreamTrack->track();
-        if (track->kind() != webrtc::MediaStreamTrackInterface::kVideoKind) {
-            return Validation<webrtc::scoped_refptr<webrtc::VideoTrackInterface>>::Invalid(
-                "Expected a video MediaStreamTrack");
-        }
-        webrtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack(static_cast<webrtc::VideoTrackInterface*>(track.get()));
-        return Pure(videoTrack);
-    }
+    // CONVERTER_IMPL(MediaStreamTrack*, webrtc::scoped_refptr<webrtc::VideoTrackInterface>, mediaStreamTrack) {
+    //     auto track = mediaStreamTrack->track();
+    //     if (track->kind() != webrtc::MediaStreamTrackInterface::kVideoKind) {
+    //         return Validation<webrtc::scoped_refptr<webrtc::VideoTrackInterface>>::Invalid(
+    //             "Expected a video MediaStreamTrack");
+    //     }
+    //     webrtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack(static_cast<webrtc::VideoTrackInterface*>(track.get()));
+    //     return Pure(videoTrack);
+    // }
 
-    CONVERT_INTERFACE_TO_AND_FROM_NAPI(MediaStreamTrack, "MediaStreamTrack")
+    // CONVERT_INTERFACE_TO_AND_FROM_NAPI(MediaStreamTrack, "MediaStreamTrack")
 
-    CONVERT_VIA(Napi::Value, MediaStreamTrack*, webrtc::scoped_refptr<webrtc::AudioTrackInterface>)
-    CONVERT_VIA(Napi::Value, MediaStreamTrack*, webrtc::scoped_refptr<webrtc::VideoTrackInterface>)
+    // CONVERT_VIA(Napi::Value, MediaStreamTrack*, webrtc::scoped_refptr<webrtc::AudioTrackInterface>)
+    // CONVERT_VIA(Napi::Value, MediaStreamTrack*, webrtc::scoped_refptr<webrtc::VideoTrackInterface>)
 
 } // namespace node_webrtc

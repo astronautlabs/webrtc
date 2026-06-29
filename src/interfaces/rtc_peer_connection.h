@@ -70,9 +70,9 @@ namespace node_webrtc {
 
         void onSetDescriptionComplete();
 
-        webrtc::scoped_refptr<webrtc::RtpSenderInterface> getUnderlying(RTCRtpSender* sender);
-        webrtc::scoped_refptr<webrtc::RtpReceiverInterface> getUnderlying(RTCRtpReceiver* receiver);
-        webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> getUnderlying(RTCRtpTransceiver* transceiver);
+        webrtc::scoped_refptr<webrtc::RtpSenderInterface> getUnderlying(napi_ref_ptr<RTCRtpSender> sender);
+        webrtc::scoped_refptr<webrtc::RtpReceiverInterface> getUnderlying(napi_ref_ptr<RTCRtpReceiver> receiver);
+        webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> getUnderlying(napi_ref_ptr<RTCRtpTransceiver> transceiver);
         bool isClosed() {
             return !_factory || !_handle;
         }
@@ -150,8 +150,8 @@ namespace node_webrtc {
         napi_ref_ptr<MediaStreamTrack> getTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack);
         napi_ref_ptr<MediaStreamTrack> getKnownTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack);
 
-        bool isOwned(MediaStreamTrack* track);
-        bool isOwned(RTCRtpSender* sender);
+        bool isOwned(napi_ref_ptr<MediaStreamTrack> track);
+        bool isOwned(napi_ref_ptr<RTCRtpSender> sender);
 
         std::set<napi_ref_ptr<MediaStream>> _streams;
         napi_ref_ptr<RTCSctpTransport> _sctpTransport = nullptr;

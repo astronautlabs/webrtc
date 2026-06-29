@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <cstdint>
 #include <iosfwd>
 #include <map>
@@ -160,18 +161,18 @@ namespace node_webrtc {
     };
 
     template <typename T>
-    concept CNapiValueReference = requires(T a) {
+    concept CCanConvertToNapiValue = requires(T a) {
         { a.Value() } -> std::convertible_to<Napi::Value>;
     };
 
-    template <CNapiValueReference T>
+    template <CCanConvertToNapiValue T>
     struct Converter<std::pair<Napi::Env, napi_ref_ptr<T>>, Napi::Value> {
         static Validation<Napi::Value> Convert(std::pair<Napi::Env, napi_ref_ptr<T>> pair) {
             return Validation<Napi::Value> { pair.second->Value() };
         };
     };
 
-    template <CNapiValueReference T>
+    template <CCanConvertToNapiValue T>
     struct Converter<std::pair<Napi::Env, T*>, Napi::Value> {
         static Validation<Napi::Value> Convert(std::pair<Napi::Env, T*> pair) {
             return Validation<Napi::Value> { pair.second->Value() };

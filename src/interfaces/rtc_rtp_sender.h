@@ -66,7 +66,7 @@ namespace node_webrtc {
             transceiver = value;
         }
 
-        RTCRtpTransceiver* getTransceiver() {
+        napi_ref_ptr<RTCRtpTransceiver> getTransceiver() {
             return transceiver;
         }
 

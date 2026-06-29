@@ -1,4 +1,5 @@
 #pragma once
+#include <concepts>
 #include <node-addon-api/napi.h>
 
 template <class T>
@@ -57,8 +58,21 @@ public:
         return value;
     }
 
-    operator T*() const {
-        return value;
+    explicit operator bool() const {
+        return !!value;
+    }
+
+    bool operator>(const napi_ref_ptr<T>& other) const {
+        return get() > other.get();
+    }
+
+    bool operator<(const napi_ref_ptr<T>& other) const {
+        return get() < other.get();
+    }
+
+    template <std::derived_from<T> U>
+    napi_ref_ptr<U> cast() {
+        return napi_ref_ptr<U> { static_cast<U*>(get()) };
     }
 
 private:

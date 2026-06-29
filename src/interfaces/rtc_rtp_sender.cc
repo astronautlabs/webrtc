@@ -109,8 +109,8 @@ namespace node_webrtc {
 
     Napi::Value RTCRtpSender::ReplaceTrack(const Napi::CallbackInfo& info) {
         CREATE_DEFERRED(info.Env(), deferred)
-        CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, maybeTrack, Either<Null COMMA MediaStreamTrack*>)
-        auto mediaStreamTrack = maybeTrack.FromEither<MediaStreamTrack*>([](auto) {
+        CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, maybeTrack, Either<Null COMMA napi_ref_ptr<MediaStreamTrack>>)
+        auto mediaStreamTrack = maybeTrack.FromEither<napi_ref_ptr<MediaStreamTrack>>([](auto) {
             return nullptr;
         }, [](auto track) {
             return track;

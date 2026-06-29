@@ -8,6 +8,7 @@
 #include <webrtc/api/rtp_transceiver_interface.h>
 #include <webrtc/api/scoped_refptr.h>
 
+#include "src/interfaces/rtc_peer_connection/peer_connection_factory.h" // IWYU pragma: keep
 #include "src/enums/webrtc/rtp_transceiver_direction.h"  // IWYU pragma: keep
 #include "src/dictionaries/webrtc/rtp_encoding_parameters.h"  // IWYU pragma: keep
 #include "src/functional/validation.h"
