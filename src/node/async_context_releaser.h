@@ -32,7 +32,8 @@ namespace node_webrtc {
         public:
             ReleaserDeferrer(Napi::Env env, AsyncContextReleaser* parent) :
                 Deferrer(env),
-                _parent(parent) {
+                _parent(parent) 
+            {
             }
 
             void Execute(Napi::Env env) override {
