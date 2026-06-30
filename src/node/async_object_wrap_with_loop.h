@@ -56,6 +56,7 @@ namespace node_webrtc {
         std::string _name = "<unnamed>";
         std::mutex _async_context_mutex;
         std::atomic<bool> _hasUV = false;
+        std::atomic<bool> _uvKeepAlive = false;
         uv_async_t _async;
         Napi::AsyncContext* _context = nullptr;
         std::mutex _lock;
@@ -122,6 +123,9 @@ namespace node_webrtc {
                 self->Run();
             });
 
+            // do not hold the event loop open by default
+            uv_unref(reinterpret_cast<uv_handle_t*>(&_async));
+            _uvKeepAlive = false;
             _async.data = this;
         }
 
@@ -134,6 +138,22 @@ namespace node_webrtc {
             if (!_context) {
                 Log(this, "Initializing async context");
                 _context = new Napi::AsyncContext(this->Env(), _name.c_str(), this->Value());
+            }
+        }
+
+        /**
+         * Determines whether the Node.js event loop should be kept alive by this object. This should be the case for 
+         * RTCPeerConnection, audio/video sinks, etc.
+         */
+        void SetKeepAlive(const bool &enabled) {
+            assert(_hasUV);
+            if (enabled != _uvKeepAlive) {
+                _uvKeepAlive = enabled;
+                if (enabled) {
+                    uv_ref(reinterpret_cast<uv_handle_t*>(&_async));
+                } else {
+                    uv_unref(reinterpret_cast<uv_handle_t*>(&_async));
+                }
             }
         }
 

@@ -55,7 +55,6 @@
 #include "src/interfaces/rtc_rtp_transceiver.h"
 #include "src/interfaces/rtc_sctp_transport.h"
 #include "src/node/error_factory.h"
-#include "src/node/promise.h"
 #include "src/node/utility.h"
 #include "src/utilities/log.h"
 #include "src/utilities/napi_ref_ptr.h"
@@ -67,11 +66,14 @@ namespace {
     }
 }
 
+#define Super Proxy<RTCPeerConnection, webrtc::PeerConnectionInterface>
+
 namespace node_webrtc {
-    RTCPeerConnection::RTCPeerConnection(const Napi::CallbackInfo& info) :
-        Proxy<RTCPeerConnection, webrtc::PeerConnectionInterface>(info) 
+    RTCPeerConnection::RTCPeerConnection(const Napi::CallbackInfo& info):
+        Super(info)
     {
         InitializeUV();
+        SetKeepAlive(true);
         InitializeAsyncContext();
         Construct(info);
     }
@@ -124,7 +126,7 @@ namespace node_webrtc {
             }
             _factory = nullptr;
         }
-        Stop();
+        Super::Finalize(env);
     }
 
     void RTCPeerConnection::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) {
@@ -712,7 +714,7 @@ namespace node_webrtc {
 
     Napi::Value RTCPeerConnection::Close(const Napi::CallbackInfo& info) {
         Log(this, "Close()");
-        Stop();
+        SetKeepAlive(false);
         if (_handle) {
             _cached_configuration = ExtendedRTCConfiguration(
                 _handle->GetConfiguration(),
