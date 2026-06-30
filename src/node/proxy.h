@@ -59,6 +59,10 @@ namespace node_webrtc {
             return object.CheckTypeTag(GetTypeTag());
         }
 
+        static std::string ClassName() {
+            return std::string { NAMEOF_TYPE(ProxyT) };
+        }
+
         webrtc::scoped_refptr<NativeT> handle() { return _handle; }
 
     protected:
@@ -92,10 +96,6 @@ namespace node_webrtc {
                 tag.lower = engine();
             }
             return &tag;
-        }
-
-        static std::string ClassName() {
-            return std::string { NAMEOF_TYPE(ProxyT) };
         }
 
         void UnregisterProxy() {
