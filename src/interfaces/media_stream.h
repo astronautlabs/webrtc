@@ -42,9 +42,7 @@ namespace node_webrtc {
         Napi::Value AddTrack(const Napi::CallbackInfo&);
         Napi::Value RemoveTrack(const Napi::CallbackInfo&);
         Napi::Value Clone(const Napi::CallbackInfo&);
-
-        napi_ref_ptr<PeerConnectionFactory> _factory;
-        webrtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;
+        
         bool _shouldReleaseFactory;
     };
 } // namespace node_webrtc

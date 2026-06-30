@@ -10,6 +10,7 @@
 #include "src/interfaces/media_stream.h"
 #include "src/utilities/napi_ref_ptr.h"
 #include "src/utilities/webrtc_utils.h"
+#include <cassert>
 #include <node-addon-api/napi.h>
 #include <src/api/media_stream_interface.h>
 #include <webrtc/api/peer_connection_interface.h>
@@ -30,6 +31,8 @@ namespace node_webrtc {
         Proxy<MediaStream, webrtc::MediaStreamInterface>(info)
     {
         Construct(info);
+        assert(_handle);
+        assert(_factory);
     }
 
     void MediaStream::Construct(const Napi::CallbackInfo &info) {
@@ -39,9 +42,11 @@ namespace node_webrtc {
         if (info.Length() == 0 || info[0].IsUndefined()) {
             
             _factory = PeerConnectionFactory::GetOrCreateDefault();
-            _factory->Ref();
             _shouldReleaseFactory = true;
-            _stream = _factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid());
+            _handle = _factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid());
+            
+            assert(_factory);
+            assert(_handle);
             return;
         } 
         
@@ -54,14 +59,18 @@ namespace node_webrtc {
             _factory = tracks.empty() ? PeerConnectionFactory::GetOrCreateDefault() : tracks[0]->factory();
             _shouldReleaseFactory = tracks.empty();
 
-            _stream = _factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid());
+            _handle = _factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid());
 
             for (auto const& track : tracks) {
                 if (track->track()->kind() == track->track()->kAudioKind)
-                    _stream->AddTrack(Cast<webrtc::AudioTrackInterface>(track->track()));
+                    _handle->AddTrack(Cast<webrtc::AudioTrackInterface>(track->track()));
                 else
-                    _stream->AddTrack(Cast<webrtc::VideoTrackInterface>(track->track()));
+                    _handle->AddTrack(Cast<webrtc::VideoTrackInterface>(track->track()));
             }
+
+            assert(_factory);
+            assert(_handle);
+            return;
         }
 
         // ---------------------------------------------------------
@@ -78,14 +87,18 @@ namespace node_webrtc {
             
             _factory = factory;
             _shouldReleaseFactory = !factory && tracks.empty();
-            _stream = _factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid());
+            _handle = _factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid());
 
             for (auto const& track : tracks) {
                 if (track->track()->kind() == track->track()->kAudioKind)
-                    _stream->AddTrack(Cast<webrtc::AudioTrackInterface>(track->track()));
+                    _handle->AddTrack(Cast<webrtc::AudioTrackInterface>(track->track()));
                 else
-                    _stream->AddTrack(Cast<webrtc::VideoTrackInterface>(track->track()));
+                    _handle->AddTrack(Cast<webrtc::VideoTrackInterface>(track->track()));
             }
+
+            assert(_factory);
+            assert(_handle);
+            return;
         }
 
         // ---------------------------------------------------------
@@ -94,14 +107,17 @@ namespace node_webrtc {
 
         if (info.Length() == 1 && info[0].IsObject() && info[0].As<Napi::Object>().Has("id")) {
             _factory = PeerConnectionFactory::GetOrCreateDefault();
-            _factory->Ref();
             _shouldReleaseFactory = true;
-            _stream = _factory->factory()->CreateLocalMediaStream(
+            _handle = _factory->factory()->CreateLocalMediaStream(
                 ToOrThrow<std::string>(
                     info.Env(), info[0].As<Napi::Object>().Get("id"),
                     "Expected a string for 'id' init property"
                 )
             );
+
+            assert(_factory);
+            assert(_handle);
+            return;
         }
 
         // ---------------------------------------------------------
@@ -122,17 +138,17 @@ namespace node_webrtc {
 
     std::vector<webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>> MediaStream::tracks() {
         auto tracks = std::vector<webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>>();
-        for (auto const& track : _stream->GetAudioTracks()) {
+        for (auto const& track : _handle->GetAudioTracks()) {
             tracks.emplace_back(track);
         }
-        for (auto const& track : _stream->GetVideoTracks()) {
+        for (auto const& track : _handle->GetVideoTracks()) {
             tracks.emplace_back(track);
         }
         return tracks;
     }
 
     Napi::Value MediaStream::GetId(const Napi::CallbackInfo& info) {
-        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _stream->id(), result, Napi::Value)
+        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _handle->id(), result, Napi::Value)
         return result;
     }
 
@@ -148,7 +164,7 @@ namespace node_webrtc {
 
     Napi::Value MediaStream::GetAudioTracks(const Napi::CallbackInfo& info) {
         auto tracks = std::vector<napi_ref_ptr<MediaStreamTrack>>();
-        for (auto const& track : _stream->GetAudioTracks()) {
+        for (auto const& track : _handle->GetAudioTracks()) {
             auto mediaStreamTrack = MediaStreamTrack::Wrap(track, _factory);
             tracks.push_back(mediaStreamTrack);
         }
@@ -158,7 +174,7 @@ namespace node_webrtc {
 
     Napi::Value MediaStream::GetVideoTracks(const Napi::CallbackInfo& info) {
         auto tracks = std::vector<napi_ref_ptr<MediaStreamTrack>>();
-        for (auto const& track : _stream->GetVideoTracks()) {
+        for (auto const& track : _handle->GetVideoTracks()) {
             auto mediaStreamTrack = MediaStreamTrack::Wrap(track, _factory);
             tracks.push_back(mediaStreamTrack);
         }
@@ -178,13 +194,13 @@ namespace node_webrtc {
 
     Napi::Value MediaStream::GetTrackById(const Napi::CallbackInfo& info) {
         CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, label, std::string)
-        auto audioTrack = _stream->FindAudioTrack(label);
+        auto audioTrack = _handle->FindAudioTrack(label);
         if (audioTrack) {
             auto track = MediaStreamTrack::Wrap(audioTrack, _factory);
             CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), track, result, Napi::Value)
             return result;
         }
-        auto videoTrack = _stream->FindVideoTrack(label);
+        auto videoTrack = _handle->FindVideoTrack(label);
         if (videoTrack) {
             auto track = MediaStreamTrack::Wrap(videoTrack, _factory);
             CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), track, result, Napi::Value)
@@ -195,7 +211,7 @@ namespace node_webrtc {
 
     Napi::Value MediaStream::AddTrack(const Napi::CallbackInfo& info) {
         CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, mediaStreamTrack, napi_ref_ptr<MediaStreamTrack>)
-        auto stream = _stream;
+        auto stream = _handle;
         auto track = mediaStreamTrack->track();
         if (track->kind() == track->kAudioKind) {
             stream->AddTrack(webrtc::scoped_refptr<webrtc::AudioTrackInterface> {static_cast<webrtc::AudioTrackInterface*>(track.get())});
@@ -207,7 +223,7 @@ namespace node_webrtc {
 
     Napi::Value MediaStream::RemoveTrack(const Napi::CallbackInfo& info) {
         CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, mediaStreamTrack, napi_ref_ptr<MediaStreamTrack>)
-        auto stream = _stream;
+        auto stream = _handle;
         auto track = mediaStreamTrack->track();
         if (track->kind() == track->kAudioKind) {
             stream->RemoveTrack(webrtc::scoped_refptr {static_cast<webrtc::AudioTrackInterface*>(track.get())});
