@@ -40,18 +40,18 @@ namespace node_webrtc {
 
         void OnPeerConnectionClosed();
 
-        bool active() { return _ended ? false : _track->state() == webrtc::MediaStreamTrackInterface::TrackState::kLive; }
+        bool active() { return _ended ? false : _handle->state() == webrtc::MediaStreamTrackInterface::TrackState::kLive; }
         napi_ref_ptr<PeerConnectionFactory> factory() { return _factory; }
-        webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track() { return _track; }
+        webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track() { return _handle; }
 
         std::string getId() {
-            return _track->id();
+            return _handle->id();
         }
 
         std::string kind() { 
-            if (!_track)
+            if (!_handle)
                 return "unknown";
-            return _track->kind(); 
+            return _handle->kind(); 
         }
 
     protected:
@@ -75,7 +75,6 @@ namespace node_webrtc {
 
         bool _ended = false;
         bool _enabled = false;
-        webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> _track;
     };
 
     template <>

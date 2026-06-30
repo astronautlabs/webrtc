@@ -27,21 +27,21 @@ namespace node_webrtc {
         Super(info) 
     {
         Construct(info);
-        _track->RegisterObserver(this);
+        _handle->RegisterObserver(this);
     }
 
     void MediaStreamTrack::Finalize(Napi::Env env) {
         Super::Finalize(env);
-        if (_track)
-            _track->UnregisterObserver(this);
-        _track = nullptr;
+        if (_handle)
+            _handle->UnregisterObserver(this);
+        _handle = nullptr;
     }
 
     void MediaStreamTrack::Stop() {
         Log(this, "MediaStreamTrack::Stop()");
-        _track->UnregisterObserver(this);
+        _handle->UnregisterObserver(this);
         _ended = true;
-        _enabled = _track->enabled();
+        _enabled = _handle->enabled();
         Super::Stop();
     }
 
@@ -51,7 +51,7 @@ namespace node_webrtc {
         // via PeerConnection.Close(). If that is the case, stopping the track will attempt to unregister
         // the observer on the underlying MediaStreamTrack which will cause a deadlock between signalling
         // and worker threads.
-        if (_track->state() == webrtc::MediaStreamTrackInterface::TrackState::kEnded) {
+        if (_handle->state() == webrtc::MediaStreamTrackInterface::TrackState::kEnded) {
             Stop();
         }
     }
@@ -62,7 +62,7 @@ namespace node_webrtc {
 
     Napi::Value MediaStreamTrack::GetEnabled(const Napi::CallbackInfo& info) {
         Log(this, "MediaStreamTrack::GetEnabled()");
-        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _ended ? _enabled : _track->enabled(), result, Napi::Value)
+        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _ended ? _enabled : _handle->enabled(), result, Napi::Value)
         return result;
     }
 
@@ -77,19 +77,19 @@ namespace node_webrtc {
         if (_ended) {
             _enabled = enabled;
         } else {
-            _track->set_enabled(enabled);
+            _handle->set_enabled(enabled);
         }
     }
 
     Napi::Value MediaStreamTrack::GetId(const Napi::CallbackInfo& info) {
         Log(this, "MediaStreamTrack::GetId()");
-        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _track->id(), result, Napi::Value)
+        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _handle->id(), result, Napi::Value)
         return result;
     }
 
     Napi::Value MediaStreamTrack::GetKind(const Napi::CallbackInfo& info) {
         Log(this, "MediaStreamTrack::GetKind()");
-        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _track->kind(), result, Napi::Value)
+        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _handle->kind(), result, Napi::Value)
         return result;
     }
 
@@ -97,7 +97,7 @@ namespace node_webrtc {
         Log(this, "MediaStreamTrack::GetReadyState()");
         auto state = _ended
             ? webrtc::MediaStreamTrackInterface::TrackState::kEnded
-            : _track->state();
+            : _handle->state();
         CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), state, result, Napi::Value)
         return result;
     }
@@ -112,11 +112,11 @@ namespace node_webrtc {
         Log(this, "MediaStreamTrack::Clone()");
         auto label = webrtc::CreateRandomUuid();
         webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> clonedTrack = nullptr;
-        if (_track->kind() == _track->kAudioKind) {
-            auto audioTrack = static_cast<webrtc::AudioTrackInterface*>(_track.get());
+        if (_handle->kind() == _handle->kAudioKind) {
+            auto audioTrack = static_cast<webrtc::AudioTrackInterface*>(_handle.get());
             clonedTrack = _factory->factory()->CreateAudioTrack(label, audioTrack->GetSource());
         } else {
-            auto videoTrack = static_cast<webrtc::VideoTrackInterface*>(_track.get());
+            auto videoTrack = static_cast<webrtc::VideoTrackInterface*>(_handle.get());
             clonedTrack = _factory->factory()->CreateVideoTrack(webrtc::scoped_refptr {videoTrack->GetSource()}, label);
         }
 
