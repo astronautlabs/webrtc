@@ -1,4 +1,5 @@
 #include "src/node/async_context_releaser.h"
+#include "src/utilities/log.h"
 
 namespace node_webrtc {
 
@@ -66,6 +67,7 @@ namespace node_webrtc {
         // depending on finalization order. This hook ensures that we stop doing async context releases
         // as soon as the process begins cleaning up.
         env.AddCleanupHook([]() {
+            Log<AsyncContextReleaser>("Detected Node.js cleanup started.");
             AsyncContextReleaser::_teardown = true;
             if (_default)
                 _default->Execute(_default->Env());
