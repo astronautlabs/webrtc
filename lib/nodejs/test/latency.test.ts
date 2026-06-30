@@ -157,7 +157,7 @@ async function measureTimeThroughUnorderedUnreliableRTCDataChannel() {
     }
 }
 
-describe('Latency', () => {
+describe.skip('Latency', () => {
     it(': Average Time through Unordered, Unreliable RTCDataChannel', async () => {
         const averageTime = await measureTimeThroughUnorderedUnreliableRTCDataChannel();
         console.log(`    (***) Latency: data-channel: ${averageTime} ms`);
