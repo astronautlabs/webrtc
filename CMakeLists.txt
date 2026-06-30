@@ -329,6 +329,8 @@ if (WIN32)
     ${libwebrtc_binary_dir}/obj/api/video_codecs/builtin_video_encoder_factory.lib
     ${libwebrtc_binary_dir}/obj/api/video_codecs/builtin_video_decoder_factory.lib
     ${libwebrtc_binary_dir}/obj/media/rtc_internal_video_codecs.lib
+    ${libwebrtc_binary_dir}/obj/media/media_engine.lib
+    ${libwebrtc_binary_dir}/obj/media/rtc_simulcast_encoder_adapter.lib
   )
 else()
   set(byproducts
@@ -338,6 +340,10 @@ else()
     ${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_encoder_factory.a
     ${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_decoder_factory.a
     ${libwebrtc_binary_dir}/obj/media/librtc_internal_video_codecs.a
+    ${libwebrtc_binary_dir}/obj/media/libmedia_engine.a
+    ${libwebrtc_binary_dir}/obj/media/librtc_simulcast_encoder_adapter.a
+    
+    
   )
 endif()
 
@@ -442,6 +448,25 @@ set_target_properties(librtc_internal_video_codecs PROPERTIES
 )
 add_dependencies(librtc_internal_video_codecs project_libwebrtc)
 
+# libmedia_engine
+# -----------------------------------------------------------------------------
+
+add_library(libmedia_engine STATIC IMPORTED)
+set_target_properties(libmedia_engine PROPERTIES 
+  IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/media/libmedia_engine.a"
+)
+add_dependencies(libmedia_engine project_libwebrtc)
+
+# librtc_simulcast_encoder_adapter
+# -----------------------------------------------------------------------------
+
+add_library(librtc_simulcast_encoder_adapter STATIC IMPORTED)
+set_target_properties(librtc_simulcast_encoder_adapter PROPERTIES 
+  IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/media/librtc_simulcast_encoder_adapter.a"
+)
+add_dependencies(librtc_simulcast_encoder_adapter project_libwebrtc)
+
+
 # node-webrtc
 # -----------------------------------------------------------------------------
 
@@ -480,6 +505,8 @@ target_link_libraries(${MODULE} PRIVATE
   libbuiltin_video_encoder_factory
   libbuiltin_video_decoder_factory
   librtc_internal_video_codecs
+  libmedia_engine
+  librtc_simulcast_encoder_adapter
   ${CMAKE_JS_LIB}
 )
 
