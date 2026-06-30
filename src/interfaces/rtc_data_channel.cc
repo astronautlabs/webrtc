@@ -297,8 +297,8 @@ namespace node_webrtc {
                 InstanceMethod("send", &RTCDataChannel::Send),
             });
 
-        constructor() = Napi::Persistent(func);
-        constructor().SuppressDestruct();
+        constructor(env) = Napi::Persistent(func);
+        constructor(env).SuppressDestruct();
 
         exports.Set("RTCDataChannel", func);
     }

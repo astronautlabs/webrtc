@@ -58,11 +58,6 @@ namespace node_webrtc {
         void Stop() override;
 
     private:
-        static MediaStreamTrack* Create(
-            PeerConnectionFactory*,
-            webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>
-        );
-
         Napi::Value GetEnabled(const Napi::CallbackInfo&);
         void SetEnabled(const Napi::CallbackInfo&, const Napi::Value&);
         Napi::Value GetId(const Napi::CallbackInfo&);

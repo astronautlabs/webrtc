@@ -80,19 +80,46 @@ namespace node_webrtc {
             assert(_handle);
         }
 
-        static napi_ref_ptr<ProxyT> CreateProxy(webrtc::scoped_refptr<NativeT> channel, napi_ref_ptr<PeerConnectionFactory> factory) {
-            auto env = constructor().Env();
-            Napi::HandleScope scope(env);
-
-            if (!factory)
-                factory = PeerConnectionFactory::GetOrCreateDefault();
-            auto object = constructor().New({factory->Value(), Napi::CreateEnvelope(env, channel)});
-            auto unwrapped = ProxyT::UnwrapProxy(object);
-            if (!unwrapped) {
-                return nullptr;
+        /**
+        * Maintains a map between native webrtc objects and their node-webrtc proxies. 
+        */
+        class Registry {
+        public:
+            explicit Registry(Napi::Env env):
+                _env(env)
+            {
             }
-            return unwrapped;
-        }
+
+            Registry(Registry const&) = delete;
+            Registry& operator=(Registry const&) = delete;
+
+            Napi::Env _env;
+
+            napi_ref_ptr<ProxyT> Proxy(webrtc::scoped_refptr<NativeT> key, napi_ref_ptr<PeerConnectionFactory> factory = nullptr) {
+                if (!factory)
+                    factory = PeerConnectionFactory::GetOrCreateDefault();
+                return _map.computeIfAbsent(key, [this, key, factory]() {
+                    Napi::HandleScope scope(_env);
+                    return ProxyT::UnwrapProxy(
+                        constructor(_env).New({
+                            (factory ? factory : PeerConnectionFactory::GetOrCreateDefault())->Value(), 
+                            Napi::CreateEnvelope(_env, key)
+                        })
+                    );
+                });
+            }
+
+            webrtc::scoped_refptr<NativeT> Native(napi_ref_ptr<ProxyT> key) {
+                return _map.get(key);
+            }
+
+            void Release(napi_ref_ptr<ProxyT> value) {
+                _map.reverseRemove(value);
+            }
+
+        private:
+            BidiMap<webrtc::scoped_refptr<NativeT>, napi_ref_ptr<ProxyT>> _map;
+        };
 
         static napi_type_tag* GetTypeTag() {
             static napi_type_tag tag;
@@ -106,30 +133,32 @@ namespace node_webrtc {
         }
 
         void UnregisterProxy() {
-            registry().Release(static_cast<ProxyT*>(this));
+            registry(this->Env()).Release(static_cast<ProxyT*>(this));
         }
 
         webrtc::scoped_refptr<NativeT> _handle;
         napi_ref_ptr<PeerConnectionFactory> _factory;
 
-        static Napi::FunctionReference& constructor() {
-            static Napi::FunctionReference constructor;
-            return constructor;
+        class JSConstructor: public Napi::FunctionReference {};
+
+        static Napi::FunctionReference& constructor(Napi::Env env) {
+            return Addon::Fragment<JSConstructor>(env);
         }
 
-        static auto& registry() {
-            static ::node_webrtc::ProxyRegistry<NativeT, ProxyT> registry { CreateProxy };
-            return registry;
+        static Registry& registry(Napi::Env env) {
+            return Addon::Fragment<Registry>(env);
         }
     public:
         static napi_ref_ptr<ProxyT> Wrap(
+            Napi::Env env,
             webrtc::scoped_refptr<NativeT> object, 
             napi_ref_ptr<PeerConnectionFactory> factory = PeerConnectionFactory::GetOrCreateDefault()
         ) {
-            return ProxyT::registry().Proxy(object, factory);
+            return ProxyT::registry(env).Proxy(object, factory);
         }
 
         void Finalize(Napi::Env env) override {
+            this->Stop();
             UnregisterProxy();
             _handle = nullptr;
             _factory = nullptr;

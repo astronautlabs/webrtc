@@ -77,7 +77,7 @@ namespace node_webrtc {
         // Here the default reference will be owned by the RTCVideoSource.
         // See RTCPeerConnection::AddTrack() for corresponding referencing logic in that case.
 
-        auto wrappedTrack = MediaStreamTrack::Wrap(track, factory);
+        auto wrappedTrack = MediaStreamTrack::Wrap(Env(), track, factory);
         _tracks.insert(wrappedTrack.get()); // TODO(liam): raw ptr
         return wrappedTrack->Value();
     }

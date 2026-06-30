@@ -120,7 +120,7 @@ namespace node_webrtc {
             clonedTrack = _factory->factory()->CreateVideoTrack(webrtc::scoped_refptr {videoTrack->GetSource()}, label);
         }
 
-        auto clonedMediaStreamTrack = Wrap(clonedTrack, _factory);
+        auto clonedMediaStreamTrack = Wrap(Env(), clonedTrack, _factory);
         if (_ended) {
             clonedMediaStreamTrack->Stop();
         }
@@ -131,17 +131,6 @@ namespace node_webrtc {
         Log(this, "MediaStreamTrack::JsStop()");
         Stop();
         return info.Env().Undefined();
-    }
-
-    MediaStreamTrack* MediaStreamTrack::Create(
-        PeerConnectionFactory* factory,
-        webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track) {
-        auto env = constructor().Env();
-        Napi::HandleScope scope(env);
-
-        auto mediaStreamTrack = Unwrap(constructor().New({factory->Value(), Napi::CreateEnvelope(env, track)}));
-
-        return mediaStreamTrack;
     }
 
     void MediaStreamTrack::Init(Napi::Env env, Napi::Object exports) {
@@ -157,8 +146,8 @@ namespace node_webrtc {
                 InstanceMethod("stop", &MediaStreamTrack::JsStop),
             });
 
-        constructor() = Napi::Persistent(func);
-        constructor().SuppressDestruct();
+        constructor(env) = Napi::Persistent(func);
+        constructor(env).SuppressDestruct();
 
         exports.Set("MediaStreamTrack", func);
     }

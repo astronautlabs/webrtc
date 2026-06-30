@@ -66,8 +66,6 @@ namespace node_webrtc {
 
         static Napi::FunctionReference& constructor();
 
-        static void Dispose();
-
         std::unique_ptr<webrtc::Thread> _signalingThread;
         std::unique_ptr<webrtc::Thread> _workerThread;
         std::unique_ptr<webrtc::Thread> _networkThread;

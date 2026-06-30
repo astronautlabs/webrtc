@@ -82,7 +82,7 @@ namespace node_webrtc {
             auto factory = existingStream->_factory;
             auto tracks = std::vector<napi_ref_ptr<MediaStreamTrack>>();
             for (auto const& track : existingStream->tracks()) {
-                tracks.push_back(MediaStreamTrack::Wrap(track, factory));
+                tracks.push_back(MediaStreamTrack::Wrap(Env(), track, factory));
             }
             
             _factory = factory;
@@ -155,7 +155,7 @@ namespace node_webrtc {
     Napi::Value MediaStream::GetActive(const Napi::CallbackInfo& info) {
         auto active = false;
         for (auto const& track : tracks()) {
-            auto mediaStreamTrack = MediaStreamTrack::Wrap(track, _factory);
+            auto mediaStreamTrack = MediaStreamTrack::Wrap(Env(), track, _factory);
             active = active || mediaStreamTrack->active();
         }
         CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), active, result, Napi::Value)
@@ -165,7 +165,7 @@ namespace node_webrtc {
     Napi::Value MediaStream::GetAudioTracks(const Napi::CallbackInfo& info) {
         auto tracks = std::vector<napi_ref_ptr<MediaStreamTrack>>();
         for (auto const& track : _handle->GetAudioTracks()) {
-            auto mediaStreamTrack = MediaStreamTrack::Wrap(track, _factory);
+            auto mediaStreamTrack = MediaStreamTrack::Wrap(Env(), track, _factory);
             tracks.push_back(mediaStreamTrack);
         }
         CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), tracks, result, Napi::Value)
@@ -175,7 +175,7 @@ namespace node_webrtc {
     Napi::Value MediaStream::GetVideoTracks(const Napi::CallbackInfo& info) {
         auto tracks = std::vector<napi_ref_ptr<MediaStreamTrack>>();
         for (auto const& track : _handle->GetVideoTracks()) {
-            auto mediaStreamTrack = MediaStreamTrack::Wrap(track, _factory);
+            auto mediaStreamTrack = MediaStreamTrack::Wrap(Env(), track, _factory);
             tracks.push_back(mediaStreamTrack);
         }
         CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), tracks, result, Napi::Value)
@@ -185,7 +185,7 @@ namespace node_webrtc {
     Napi::Value MediaStream::GetTracks(const Napi::CallbackInfo& info) {
         auto tracks = std::vector<napi_ref_ptr<MediaStreamTrack>>();
         for (auto const& track : this->tracks()) {
-            auto mediaStreamTrack = MediaStreamTrack::Wrap(track, _factory);
+            auto mediaStreamTrack = MediaStreamTrack::Wrap(Env(), track, _factory);
             tracks.push_back(mediaStreamTrack);
         }
         CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), tracks, result, Napi::Value)
@@ -196,13 +196,13 @@ namespace node_webrtc {
         CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, label, std::string)
         auto audioTrack = _handle->FindAudioTrack(label);
         if (audioTrack) {
-            auto track = MediaStreamTrack::Wrap(audioTrack, _factory);
+            auto track = MediaStreamTrack::Wrap(Env(), audioTrack, _factory);
             CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), track, result, Napi::Value)
             return result;
         }
         auto videoTrack = _handle->FindVideoTrack(label);
         if (videoTrack) {
-            auto track = MediaStreamTrack::Wrap(videoTrack, _factory);
+            auto track = MediaStreamTrack::Wrap(Env(), videoTrack, _factory);
             CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), track, result, Napi::Value)
             return result;
         }
@@ -248,7 +248,7 @@ namespace node_webrtc {
                 clonedStream->AddTrack(clonedTrack);
             }
         }
-        auto mediaStream = MediaStream::Wrap(clonedStream, _factory);
+        auto mediaStream = MediaStream::Wrap(Env(), clonedStream, _factory);
         CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), mediaStream, result, Napi::Value)
         return result;
     }
@@ -270,8 +270,8 @@ namespace node_webrtc {
                 InstanceMethod("clone", &MediaStream::Clone),
             });
 
-        constructor() = Napi::Persistent(func);
-        constructor().SuppressDestruct();
+        constructor(env) = Napi::Persistent(func);
+        constructor(env).SuppressDestruct();
 
         exports.Set("MediaStream", func);
     }

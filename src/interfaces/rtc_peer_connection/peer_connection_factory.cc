@@ -167,11 +167,6 @@ namespace node_webrtc {
         _mutex.unlock();
     }
 
-    void PeerConnectionFactory::Dispose() {
-        Log<PeerConnectionFactory>("Dispose()");
-        webrtc::CleanupSSL();
-    }
-
     void PeerConnectionFactory::Init(Napi::Env env, Napi::Object exports) {
         assert(webrtc::InitializeSSL());
 
