@@ -12,7 +12,11 @@
             "args": ["${workspaceFolder}/node_modules/.bin/jest", "--runInBand", "rtpsender"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
-            "environment": [],
+            "environment": [
+                { "name": "LOG", "value": "1" },
+                { "name": "DEBUG", "value": "simple-peer" },
+                { "name": "NODE_WEBRTC_LOGGING", "value": "1" }
+            ],
             "externalConsole": false,
             "MIMode": "gdb",
             "sourceFileMap": {
