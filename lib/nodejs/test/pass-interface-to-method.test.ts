@@ -7,7 +7,7 @@ describe('Pass interface to method', () => {
     const pc = new RTCPeerConnection();
     try {
         expect(() => pc.addTransceiver('audio', { streams: [<any>{}] }))
-            .to.throw(/Expected instance of node_webrtc::MediaStreamTrack/);
+            .to.throw(/Expected instance of node_webrtc::MediaStream/);
     } finally {
         pc.close();
     }
