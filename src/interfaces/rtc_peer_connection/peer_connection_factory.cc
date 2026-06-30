@@ -109,14 +109,14 @@ namespace node_webrtc {
     }
 
     PeerConnectionFactory::~PeerConnectionFactory() {
-        Log(this, "PeerConnectionFactory::~PeerConnectionFactory()");
+        Log(this, "~PeerConnectionFactory()");
         Destruct();
     }
 
     void PeerConnectionFactory::Destruct() {
         if (_destructed)
             return;
-        Log(this, "PeerConnectionFactory::Destruct()");
+        Log(this, "Destruct()");
         _factory = nullptr;
 
         _destructed = true;
@@ -132,12 +132,12 @@ namespace node_webrtc {
     }
 
     void PeerConnectionFactory::Finalize(Napi::Env env) {
-        Log(this, "PeerConnectionFactory::Finalize()");
+        Log(this, "Finalize()");
         Destruct();
     }
 
     PeerConnectionFactory* PeerConnectionFactory::GetOrCreateDefault() {
-        Log(nullptr, "PeerConnectionFactory::GetOrCreateDefault()");
+        Log<PeerConnectionFactory>("GetOrCreateDefault()");
         _mutex.lock();
         _references++;
         if (_references == 1) {
@@ -154,7 +154,7 @@ namespace node_webrtc {
     }
 
     void PeerConnectionFactory::Release() {
-        Log(nullptr, "PeerConnectionFactory::Release()");
+        Log<PeerConnectionFactory>("Release()");
         _mutex.lock();
         _references--;
         assert(_references >= 0);
@@ -168,7 +168,7 @@ namespace node_webrtc {
     }
 
     void PeerConnectionFactory::Dispose() {
-        Log(nullptr, "PeerConnectionFactory::Dispose()");
+        Log<PeerConnectionFactory>("Dispose()");
         webrtc::CleanupSSL();
     }
 
