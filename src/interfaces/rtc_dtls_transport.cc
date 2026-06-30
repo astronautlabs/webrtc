@@ -53,6 +53,7 @@ namespace node_webrtc {
 
     RTCDtlsTransport::RTCDtlsTransport(const Napi::CallbackInfo& info) :
         AsyncObjectWrapWithLoop<RTCDtlsTransport>("RTCDtlsTransport", *this, info) {
+        InitializeUV();
         InitializeAsyncContext();
         if (info.Length() != 2 || !info[0].IsObject() || !info[1].IsExternal()) {
             Napi::TypeError::New(info.Env(), "You cannot construct an RTCDtlsTransport").ThrowAsJavaScriptException();

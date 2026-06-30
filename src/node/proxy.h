@@ -13,6 +13,7 @@
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 #include "src/node/utility.h"
 #include "src/utilities/nameof.h"
+#include "src/utilities/log.h"
 #include "src/node/async_object_wrap_with_loop.h"
 #include "src/node/envelope.h"
 #include "src/node/proxy_registry.h"
@@ -68,16 +69,23 @@ namespace node_webrtc {
     protected:
         virtual void Construct(const Napi::CallbackInfo& info) {
             if (info.Length() != 2 || !info[0].IsObject() || !info[1].IsExternal()) {
+                Log(this, "Invalid construction for " + className() + ", throwing exception");
                 Throw<Napi::TypeError>(info.Env(), "Invalid construction for " + className());
                 return;
             }
             _factory = PeerConnectionFactory::Unwrap(info[0].As<Napi::Object>());
             _handle = Napi::Envelope<webrtc::scoped_refptr<NativeT>>::Open(info[1]);
+
+            assert(_factory);
+            assert(_handle);
         }
 
         static napi_ref_ptr<ProxyT> CreateProxy(webrtc::scoped_refptr<NativeT> channel, napi_ref_ptr<PeerConnectionFactory> factory) {
             auto env = constructor().Env();
             Napi::HandleScope scope(env);
+
+            if (!factory)
+                factory = PeerConnectionFactory::GetOrCreateDefault();
             auto object = constructor().New({factory->Value(), Napi::CreateEnvelope(env, channel)});
             auto unwrapped = ProxyT::UnwrapProxy(object);
             if (!unwrapped) {

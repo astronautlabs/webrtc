@@ -71,6 +71,8 @@ namespace node_webrtc {
     RTCPeerConnection::RTCPeerConnection(const Napi::CallbackInfo& info) :
         Proxy<RTCPeerConnection, webrtc::PeerConnectionInterface>(info) 
     {
+        InitializeUV();
+        InitializeAsyncContext();
         Construct(info);
     }
 
@@ -685,7 +687,7 @@ namespace node_webrtc {
 
         auto* callback = new webrtc::RefCountedObject<RTCStatsCollector>(this, deferred);
         _handle->GetStats(callback);
-        
+
         return deferred.Promise(); // NOLINT
     }
 

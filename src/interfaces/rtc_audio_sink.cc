@@ -32,6 +32,7 @@ namespace node_webrtc {
 
     RTCAudioSink::RTCAudioSink(const Napi::CallbackInfo& info) :
         AsyncObjectWrapWithLoop<RTCAudioSink>("RTCAudioSink", *this, info) {
+        InitializeUV();
         InitializeAsyncContext();
         auto env = info.Env();
 

@@ -30,6 +30,7 @@ namespace node_webrtc {
 
     RTCVideoSink::RTCVideoSink(const Napi::CallbackInfo& info) :
         AsyncObjectWrapWithLoop<RTCVideoSink>("RTCVideoSink", *this, info) {
+        InitializeUV();
         InitializeAsyncContext();
         if (!info.IsConstructCall()) {
             Napi::TypeError::New(info.Env(), "Use the new operator to construct an RTCVideoSink.").ThrowAsJavaScriptException();

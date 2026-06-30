@@ -30,6 +30,7 @@ namespace node_webrtc {
     RTCDataChannel::RTCDataChannel(const Napi::CallbackInfo& info) :
         Proxy<RTCDataChannel, webrtc::DataChannelInterface>(info) 
     {
+        InitializeUV();
         Construct(info);
 
         // In previous versions we had some complexity around connecting an observer early and replaying events.

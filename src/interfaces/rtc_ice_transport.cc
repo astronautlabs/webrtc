@@ -27,6 +27,7 @@ namespace node_webrtc {
 
     RTCIceTransport::RTCIceTransport(const Napi::CallbackInfo& info) :
         AsyncObjectWrapWithLoop<RTCIceTransport>("RTCIceTransport", *this, info) {
+        InitializeUV();
         InitializeAsyncContext();
         if (info.Length() != 2 || !info[0].IsObject() || !info[1].IsExternal()) {
             Napi::TypeError::New(info.Env(), "You cannot construct an RTCIceTransport").ThrowAsJavaScriptException();
