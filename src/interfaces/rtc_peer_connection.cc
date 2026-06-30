@@ -126,7 +126,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) {
-        Log(this, "RTCPeerConnection::OnSignalingChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
+        Log(this, "OnSignalingChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
         OnNodeThread([this, state]() {
             Event("signalingstatechange").Dispatch();
             if (state == webrtc::PeerConnectionInterface::kClosed) {
@@ -136,7 +136,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) {
-        Log(this, "RTCPeerConnection::OnIceConnectionChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
+        Log(this, "OnIceConnectionChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
         OnNodeThread([this, state]() {
             Event("iceconnectionstatechange")
                 .With("_state", state)
@@ -148,7 +148,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnConnectionChange(webrtc::PeerConnectionInterface::PeerConnectionState state) {
-        Log(this, "RTCPeerConnection::OnConnectionChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
+        Log(this, "OnConnectionChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
         OnNodeThread([this, state]() {
             Event("connectionstatechange")
                 .With("_state", state)
@@ -157,7 +157,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState state) {
-        Log(this, "RTCPeerConnection::OnIceGatheringChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
+        Log(this, "OnIceGatheringChange(" + std::string {webrtc::PeerConnectionInterface::AsString(state)} + ")");
 
         using IceGatheringState = webrtc::PeerConnectionInterface::IceGatheringState;
         using PeerConnectionState = webrtc::PeerConnectionInterface::PeerConnectionState;
@@ -181,7 +181,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnIceCandidate(const webrtc::IceCandidateInterface* ice_candidate) {
-        Log(this, "RTCPeerConnection::OnIceCandidate(" + ice_candidate->ToString() + ")");
+        Log(this, "OnIceCandidate(" + ice_candidate->ToString() + ")");
         std::string error;
 
         std::string sdp;
@@ -214,7 +214,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnIceCandidateError(const std::string& address, int port, const std::string& url, int error_code, const std::string& error_text) {
-        Log(this, "RTCPeerConnection::OnIceCandidateError()" + address + ":" + std::to_string(port) + ": " + std::to_string(error_code) + ": " + error_text);
+        Log(this, "OnIceCandidateError()" + address + ":" + std::to_string(port) + ": " + std::to_string(error_code) + ": " + error_text);
         OnNodeThread([this, address, port, url, error_code, error_text]() {
             Event("icecandidateerror")
                 .With("address", address)
@@ -227,7 +227,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnDataChannel(webrtc::scoped_refptr<webrtc::DataChannelInterface> channel) {
-        Log(this, "RTCPeerConnection::OnDataChannel(" + std::to_string(channel->id()) + ")");
+        Log(this, "OnDataChannel(" + std::to_string(channel->id()) + ")");
 
         // Previous versions of this codebase immediately attached an observer to the new data channel, but this is
         // unnecessary in M150. The DataChannelInterface::state() is a blocking call to the network thread, and
@@ -244,11 +244,11 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnAddStream(webrtc::scoped_refptr<webrtc::MediaStreamInterface> stream) {
-        Log(this, "RTCPeerConnection::OnAddStream(" + stream->id() + ")");
+        Log(this, "OnAddStream(" + stream->id() + ")");
     }
 
     void RTCPeerConnection::OnTrack(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver) {
-        Log(this, "RTCPeerConnection::OnTrack(" + rtpTransceiver->mid().value_or("<no-mid>") + ")");
+        Log(this, "OnTrack(" + rtpTransceiver->mid().value_or("<no-mid>") + ")");
         OnNodeThread([this, rtpTransceiver]() {
             if (!_factory || !_handle)
                 return;
@@ -273,11 +273,11 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::OnRemoveStream(webrtc::scoped_refptr<webrtc::MediaStreamInterface> stream) {
-        Log(this, "RTCPeerConnection::OnRemoveStream(" + stream->id() + ")");
+        Log(this, "OnRemoveStream(" + stream->id() + ")");
     }
 
     void RTCPeerConnection::OnRenegotiationNeeded() {
-        Log(this, "RTCPeerConnection::OnRenegotiationNeeded()");
+        Log(this, "OnRenegotiationNeeded()");
         OnNodeThread([this]() {
             Event("negotiationneeded")
                 .Dispatch();
@@ -285,7 +285,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::AddTrack(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::AddTrack()");
+        Log(this, "AddTrack()");
         auto env = info.Env();
         if (!_factory || !_handle) {
             Napi::Error(env, ErrorFactory::CreateInvalidStateError(env, "Cannot addTrack; RTCPeerConnection is closed")).ThrowAsJavaScriptException();
@@ -351,7 +351,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::AddTransceiver(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::AddTransceiver()");
+        Log(this, "AddTransceiver()");
         auto env = info.Env();
 
         if (!_factory || !_handle) {
@@ -398,7 +398,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::RemoveTrack(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::RemoveTrack()");
+        Log(this, "RemoveTrack()");
         auto env = info.Env();
         if (!_factory || !_handle) {
             Napi::Error(env, ErrorFactory::CreateInvalidStateError(env, "Cannot removeTrack; RTCPeerConnection is closed"))
@@ -433,7 +433,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::CreateOffer(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::CreateOffer()");
+        Log(this, "CreateOffer()");
         auto env = info.Env();
         auto deferred = Napi::Promise::Deferred::New(info.Env());
 
@@ -458,7 +458,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::CreateAnswer(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::CreateAnswer()");
+        Log(this, "CreateAnswer()");
         auto env = info.Env();
         auto deferred = Napi::Promise::Deferred::New(info.Env());
 
@@ -483,7 +483,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::SetLocalDescription(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::SetLocalDescription()");
+        Log(this, "SetLocalDescription()");
         auto env = info.Env();
         auto deferred = Napi::Promise::Deferred::New(info.Env());
 
@@ -514,7 +514,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::SetRemoteDescription(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::SetRemoteDescription()");
+        Log(this, "SetRemoteDescription()");
         auto env = info.Env();
         auto deferred = Napi::Promise::Deferred::New(info.Env());
 
@@ -535,7 +535,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::AddIceCandidate(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::AddIceCandidate()");
+        Log(this, "AddIceCandidate()");
         
         auto deferred = Napi::Promise::Deferred::New(info.Env());
 
@@ -559,7 +559,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::CreateDataChannel(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::CreateDataChannel()");
+        Log(this, "CreateDataChannel()");
         auto env = info.Env();
         if (_handle == nullptr) {
             Napi::Error(env, ErrorFactory::CreateInvalidStateError(env, "Failed to execute 'createDataChannel' on 'RTCPeerConnection': "
@@ -591,7 +591,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetConfiguration(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetConfiguration()");
+        Log(this, "GetConfiguration()");
         auto configuration = _handle
             ? ExtendedRTCConfiguration(_handle->GetConfiguration(), _port_range)
             : _cached_configuration;
@@ -613,7 +613,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::SetConfiguration(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::SetConfiguration()");
+        Log(this, "SetConfiguration()");
         auto env = info.Env();
 
         CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, configuration, webrtc::PeerConnectionInterface::RTCConfiguration)
@@ -645,7 +645,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetReceivers(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetReceivers()");
+        Log(this, "GetReceivers()");
         std::vector<napi_ref_ptr<RTCRtpReceiver>> receivers;
         if (_handle) {
             for (const auto& receiver : _handle->GetReceivers()) {
@@ -658,7 +658,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetSenders(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetSenders()");
+        Log(this, "GetSenders()");
         std::vector<napi_ref_ptr<RTCRtpSender>> senders;
 
         if (_handle) {
@@ -675,7 +675,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetStats(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetStats()");
+        Log(this, "GetStats()");
         auto env = info.Env();
         auto deferred = Napi::Promise::Deferred::New(info.Env());
 
@@ -691,7 +691,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetTransceivers(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetTransceivers()");
+        Log(this, "GetTransceivers()");
         std::vector<napi_ref_ptr<RTCRtpTransceiver>> transceivers;
         if (_handle
             && _handle->GetConfiguration().sdp_semantics == webrtc::SdpSemantics::kUnifiedPlan) {
@@ -705,12 +705,12 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::UpdateIce(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::UpdateIce()");
+        Log(this, "UpdateIce()");
         return info.Env().Undefined();
     }
 
     Napi::Value RTCPeerConnection::Close(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::Close()");
+        Log(this, "Close()");
         Stop();
         if (_handle) {
             _cached_configuration = ExtendedRTCConfiguration(
@@ -789,7 +789,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::RestartIce(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::RestartIce()");
+        Log(this, "RestartIce()");
         (void)info;
         if (_handle) {
             _handle->RestartIce();
@@ -798,12 +798,12 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetCanTrickleIceCandidates(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetCanTrickleIceCandidates()");
+        Log(this, "GetCanTrickleIceCandidates()");
         return info.Env().Null();
     }
 
     Napi::Value RTCPeerConnection::GetConnectionState(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetConnectionState()");
+        Log(this, "GetConnectionState()");
         auto env = info.Env();
 
         auto connectionState = _handle
@@ -815,7 +815,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetCurrentLocalDescription(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetCurrentLocalDescription()");
+        Log(this, "GetCurrentLocalDescription()");
         auto env = info.Env();
         Napi::Value result = env.Null();
         if (_handle && _handle->current_local_description()) {
@@ -830,7 +830,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetLocalDescription(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetLocalDescription()");
+        Log(this, "GetLocalDescription()");
         auto env = info.Env();
         Napi::Value result = env.Null();
         if (_handle && _handle->local_description()) {
@@ -845,7 +845,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetPendingLocalDescription(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetPendingLocalDescription()");
+        Log(this, "GetPendingLocalDescription()");
         auto env = info.Env();
         Napi::Value result = env.Null();
         if (_handle && _handle->pending_local_description()) {
@@ -860,7 +860,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetCurrentRemoteDescription(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetCurrentRemoteDescription()");
+        Log(this, "GetCurrentRemoteDescription()");
         auto env = info.Env();
         Napi::Value result = env.Null();
         if (_handle && _handle->current_remote_description()) {
@@ -875,7 +875,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetRemoteDescription(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetRemoteDescription()");
+        Log(this, "GetRemoteDescription()");
         auto env = info.Env();
         Napi::Value result = env.Null();
         if (_handle && _handle->remote_description()) {
@@ -890,7 +890,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetPendingRemoteDescription(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetPendingRemoteDescription()");
+        Log(this, "GetPendingRemoteDescription()");
         auto env = info.Env();
         Napi::Value result = env.Null();
         if (_handle && _handle->pending_remote_description()) {
@@ -905,7 +905,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetSctp(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetSctp()");
+        Log(this, "GetSctp()");
         if (!_handle || !_handle->GetSctpTransport())
             return info.Env().Null();
 
@@ -916,7 +916,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetSignalingState(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetSignalingState()");
+        Log(this, "GetSignalingState()");
         auto signalingState = _handle
             ? _handle->signaling_state()
             : webrtc::PeerConnectionInterface::SignalingState::kClosed;
@@ -925,7 +925,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetIceConnectionState(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetIceConnectionState()");
+        Log(this, "GetIceConnectionState()");
         auto iceConnectionState = _handle
             ? _handle->standardized_ice_connection_state()
             : webrtc::PeerConnectionInterface::IceConnectionState::kIceConnectionClosed;
@@ -934,7 +934,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCPeerConnection::GetIceGatheringState(const Napi::CallbackInfo& info) {
-        Log(this, "RTCPeerConnection::GetIceGatheringState()");
+        Log(this, "GetIceGatheringState()");
         auto iceGatheringState = _handle
             ? _handle->ice_gathering_state()
             : webrtc::PeerConnectionInterface::IceGatheringState::kIceGatheringComplete;
@@ -943,7 +943,7 @@ namespace node_webrtc {
     }
 
     napi_ref_ptr<RTCRtpTransceiver> RTCPeerConnection::createOrUpdateTransceiver(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver) {
-        Log(this, "RTCPeerConnection::createOrUpdateTransceiver()");
+        Log(this, "createOrUpdateTransceiver()");
         auto id = reinterpret_cast<uintptr_t>(rtpTransceiver.get());
         std::string kind = rtpTransceiver->media_type() == webrtc::MediaType::AUDIO ? "audio" : "video";
         napi_ref_ptr<RTCRtpSender> sender = createOrUpdateSender(rtpTransceiver->sender(), kind);
@@ -967,7 +967,7 @@ namespace node_webrtc {
     }
 
     napi_ref_ptr<RTCRtpReceiver> RTCPeerConnection::createOrUpdateReceiver(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver) {
-        Log(this, "RTCPeerConnection::createOrUpdateReceiver()");
+        Log(this, "createOrUpdateReceiver()");
         auto iter = _receivers.find(rtpReceiver->id());
         auto track = MediaStreamTrack::Wrap(rtpReceiver->track(), _factory);
 
@@ -993,7 +993,7 @@ namespace node_webrtc {
     }
 
     napi_ref_ptr<RTCRtpSender> RTCPeerConnection::createOrUpdateSender(webrtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender, std::string kind) {
-        Log(this, "RTCPeerConnection::createOrUpdateSender()");
+        Log(this, "createOrUpdateSender()");
         napi_ref_ptr<MediaStreamTrack> track = nullptr;
         if (rtpSender->track()) {
             track = getKnownTrack(rtpSender->track());
@@ -1025,13 +1025,13 @@ namespace node_webrtc {
     }
 
     napi_ref_ptr<MediaStreamTrack> RTCPeerConnection::getTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack) {
-        Log(this, "RTCPeerConnection::getTrack()");
+        Log(this, "getTrack()");
         auto iter = _tracks.find(rtpTrack->id());
         return iter == _tracks.end() ? nullptr : (*iter).second;
     }
 
     napi_ref_ptr<MediaStreamTrack> node_webrtc::RTCPeerConnection::getKnownTrack(webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> rtpTrack) {
-        Log(this, "RTCPeerConnection::getKnownTrack()");
+        Log(this, "getKnownTrack()");
         auto track = getTrack(rtpTrack);
 
         if (!track) {
@@ -1043,17 +1043,17 @@ namespace node_webrtc {
     }
 
     bool RTCPeerConnection::isOwned(napi_ref_ptr<MediaStreamTrack> track) {
-        Log(this, "RTCPeerConnection::isOwned(track " + track->getId() + ")");
+        Log(this, "isOwned(track " + track->getId() + ")");
         return _tracks.contains(track->getId());
     }
 
     bool RTCPeerConnection::isOwned(napi_ref_ptr<RTCRtpSender> sender) {
-        Log(this, "RTCPeerConnection::isOwned(sender " + sender->getId() + ")");
+        Log(this, "isOwned(sender " + sender->getId() + ")");
         return _senders.contains(sender->getId());
     }
 
     webrtc::scoped_refptr<webrtc::RtpSenderInterface> RTCPeerConnection::getUnderlying(napi_ref_ptr<RTCRtpSender> sender) {
-        Log(this, "RTCPeerConnection::getUnderlying(sender " + sender->getId() + ")");
+        Log(this, "getUnderlying(sender " + sender->getId() + ")");
         auto rtcSenders = _handle->GetSenders();
         for (auto candidate : rtcSenders) {
             if (candidate->id() == sender->getId()) {
@@ -1065,7 +1065,7 @@ namespace node_webrtc {
     }
 
     webrtc::scoped_refptr<webrtc::RtpReceiverInterface> RTCPeerConnection::getUnderlying(napi_ref_ptr<RTCRtpReceiver> receiver) {
-        Log(this, "RTCPeerConnection::getUnderlying(receiver " + receiver->getId() + ")");
+        Log(this, "getUnderlying(receiver " + receiver->getId() + ")");
         auto rtcReceivers = _handle->GetReceivers();
         for (auto candidate : rtcReceivers) {
             if (candidate->id() == receiver->getId()) {
@@ -1077,7 +1077,7 @@ namespace node_webrtc {
     }
 
     webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> RTCPeerConnection::getUnderlying(napi_ref_ptr<RTCRtpTransceiver> transceiver) {
-        Log(this, "RTCPeerConnection::getUnderlying(transceiver " + std::to_string(transceiver->getId()) + ")");
+        Log(this, "getUnderlying(transceiver " + std::to_string(transceiver->getId()) + ")");
         if (!transceiver)
             return nullptr;
 
@@ -1092,12 +1092,12 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::SaveLastSdp(const RTCSessionDescriptionInit& lastSdp) {
-        Log(this, "RTCPeerConnection::SaveLastSdp(" + lastSdp.sdp + " type " + to_string(lastSdp.type) + ")");
+        Log(this, "SaveLastSdp(" + lastSdp.sdp + " type " + to_string(lastSdp.type) + ")");
         this->_lastSdp = lastSdp;
     }
 
     void node_webrtc::RTCPeerConnection::onSetDescriptionComplete() {
-        Log(this, "RTCPeerConnection::onSetDescriptionComplete()");
+        Log(this, "onSetDescriptionComplete()");
         OnNodeThread([this]() {
             if (!_handle)
                 return;
@@ -1107,7 +1107,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::processStateChanges() {
-        Log(this, "RTCPeerConnection::processStateChanges()");
+        Log(this, "processStateChanges()");
         std::vector<uintptr_t> removedTransceivers;
 
         for (auto pair : _transceivers) {
