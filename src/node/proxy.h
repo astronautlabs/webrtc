@@ -33,18 +33,18 @@ namespace node_webrtc {
     class Proxy: public AsyncObjectWrapWithLoop<ProxyT> {
     public:
         Proxy(const Napi::CallbackInfo& info):
-            AsyncObjectWrapWithLoop<ProxyT>(ClassName(), static_cast<ProxyT&>(*this), info)
+            AsyncObjectWrapWithLoop<ProxyT>(className(), static_cast<ProxyT&>(*this), info)
         {
             this->Value().TypeTag(GetTypeTag());
         }
 
         static std::vector<napi_ref_ptr<ProxyT>> UnwrapArray(const Napi::Value& value) {
-            return ToOrThrow<std::vector<napi_ref_ptr<ProxyT>>>(value.Env(), value, "Expected an array of " + ClassName());
+            return ToOrThrow<std::vector<napi_ref_ptr<ProxyT>>>(value.Env(), value, "Expected an array of " + className());
         }
 
         static napi_ref_ptr<ProxyT> UnwrapProxy(const Napi::Value& value) {
             if (!IsInstance(value)) {
-                Throw<Napi::TypeError>(value.Env(), "Expected instance of " + ClassName());
+                Throw<Napi::TypeError>(value.Env(), "Expected instance of " + className());
                 return nullptr;
             }
 
@@ -59,7 +59,7 @@ namespace node_webrtc {
             return object.CheckTypeTag(GetTypeTag());
         }
 
-        static std::string ClassName() {
+        static std::string className() {
             return std::string { NAMEOF_TYPE(ProxyT) };
         }
 
@@ -68,7 +68,7 @@ namespace node_webrtc {
     protected:
         virtual void Construct(const Napi::CallbackInfo& info) {
             if (info.Length() != 2 || !info[0].IsObject() || !info[1].IsExternal()) {
-                Throw<Napi::TypeError>(info.Env(), "Invalid construction for " + ClassName());
+                Throw<Napi::TypeError>(info.Env(), "Invalid construction for " + className());
                 return;
             }
             _factory = PeerConnectionFactory::Unwrap(info[0].As<Napi::Object>());
@@ -154,7 +154,7 @@ namespace node_webrtc {
     struct Converter<webrtc::scoped_refptr<NativeT>, napi_ref_ptr<ProxyT>> {
         static Validation<napi_ref_ptr<ProxyT>> Convert(webrtc::scoped_refptr<NativeT> native) {
             if (!ProxyT::InstanceOf(native))
-                return Validation<napi_ref_ptr<ProxyT>>::Invalid("Not an instance of " + ProxyT::ClassName());
+                return Validation<napi_ref_ptr<ProxyT>>::Invalid("Not an instance of " + ProxyT::className());
             return Validation { ProxyT::Wrap(native) };
         };
     };
@@ -170,7 +170,7 @@ namespace node_webrtc {
     struct Converter<Napi::Value, napi_ref_ptr<T>> {
         static Validation<napi_ref_ptr<T>> Convert(Napi::Value value) {
             if (!T::IsInstance(value))
-                return Validation<napi_ref_ptr<T>>::Invalid("Expected instance of " + T::ClassName() + " while converting");
+                return Validation<napi_ref_ptr<T>>::Invalid("Expected instance of " + T::className() + " while converting");
             return Validation<napi_ref_ptr<T>> { T::UnwrapProxy(value) };
         };
     };
