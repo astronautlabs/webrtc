@@ -316,7 +316,6 @@ namespace node_webrtc {
         // If we have *not* seen this track before, then it does not belong to us.
         // In that case, we need to reference it and add it to our _referencedTracks array so we can dereference it when the RTCPeerConnection closes.
         if (!isOwned(mediaStreamTrack)) {
-            mediaStreamTrack->Ref();
             _externalTracks[mediaStreamTrack->getId()] = mediaStreamTrack;
         }
 
@@ -953,7 +952,6 @@ namespace node_webrtc {
 
         if (iter == _transceivers.end()) {
             transceiver = RTCRtpTransceiver::Create(this, sender.get(), receiver.get()); // TODO(liam): raw ptr
-            transceiver->Ref();
             sender->setTransceiver(transceiver.get()); // TODO(liam): raw ptr
             receiver->setTransceiver(transceiver.get()); // TODO(liam): raw ptr
             transceiver->setId(id);
@@ -974,7 +972,6 @@ namespace node_webrtc {
         napi_ref_ptr<RTCRtpReceiver> receiver = nullptr;
         if (iter == _receivers.end()) {
             receiver = RTCRtpReceiver::Create(this, track.get(), {}); // TODO(liam): raw ptr
-            receiver->Ref();
             // TODO(liam): Set muted state by default as in Chromium
             // https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/modules/peerconnection/rtc_peer_connection.cc;l=2320;drc=a8029174f1140518a446524b318fef5dda3fba79;bpv=1;bpt=1
             receiver->setId(rtpReceiver->id());
@@ -1006,7 +1003,6 @@ namespace node_webrtc {
 
         if (iter == _senders.end()) {
             sender = RTCRtpSender::Create(this, kind, track.get(), {}); // TODO(liam): raw ptr
-            sender->Ref();
             sender->setId(id);
             _senders[id] = sender;
         } else {

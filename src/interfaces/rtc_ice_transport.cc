@@ -37,7 +37,7 @@ namespace node_webrtc {
         auto transport = *info[1].As<Napi::External<webrtc::scoped_refptr<webrtc::IceTransportInterface>>>().Data();
 
         _factory = factory;
-        (void)_factory->Ref();
+        _factory->Ref();
 
         _transport = std::move(transport);
 

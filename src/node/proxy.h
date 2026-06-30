@@ -83,7 +83,6 @@ namespace node_webrtc {
             if (!unwrapped) {
                 return nullptr;
             }
-            unwrapped->Ref();
             return unwrapped;
         }
 

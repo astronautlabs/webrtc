@@ -24,6 +24,7 @@
 #include "src/interfaces/rtc_dtls_transport.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 #include "src/node/utility.h"
+#include "src/utilities/napi_ref_ptr.h"
 
 namespace node_webrtc {
 
@@ -129,10 +130,9 @@ namespace node_webrtc {
     }
 
     void RTCRtpReceiver::Init(Napi::Env env, Napi::Object exports) {
-        auto factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault();
+        napi_ref_ptr<PeerConnectionFactory> factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault();
         setAudioCapabilities(factory->factory()->GetRtpReceiverCapabilities(webrtc::MediaType::AUDIO));
         setVideoCapabilities(factory->factory()->GetRtpReceiverCapabilities(webrtc::MediaType::VIDEO));
-        factory->Release();
 
         auto func = DefineClass(env,
             "RTCRtpReceiver",
