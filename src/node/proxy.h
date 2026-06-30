@@ -129,7 +129,7 @@ namespace node_webrtc {
         }
     };
 
-    // Conversions
+    // Convert ProxyT -> NativeT
 
     template <typename ProxyT, typename NativeT>
     concept CCanConvertToNative = requires(ProxyT a) {
@@ -142,6 +142,8 @@ namespace node_webrtc {
             return Validation { proxy->Handle() };
         };
     };
+
+    // Convert NativeT -> ProxyT
 
     template <typename NativeT, typename ProxyT>
     concept CCanConvertToProxy = requires(webrtc::scoped_refptr<NativeT> a) {
@@ -157,6 +159,8 @@ namespace node_webrtc {
         };
     };
 
+    // Convert Napi::Value -> ProxyT
+
     template <typename T>
     concept CCanConvertToProxyFromNapiValue = requires(const Napi::Value& value) {
         { T::UnwrapProxy(value) } -> std::convertible_to<napi_ref_ptr<T>>;
@@ -165,6 +169,8 @@ namespace node_webrtc {
     template <CCanConvertToProxyFromNapiValue T>
     struct Converter<Napi::Value, napi_ref_ptr<T>> {
         static Validation<napi_ref_ptr<T>> Convert(Napi::Value value) {
+            if (!T::IsInstance(value))
+                return Validation<napi_ref_ptr<T>>::Invalid("Expected instance of " + T::ClassName() + " while converting");
             return Validation<napi_ref_ptr<T>> { T::UnwrapProxy(value) };
         };
     };
