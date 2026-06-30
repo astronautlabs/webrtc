@@ -28,7 +28,7 @@ namespace node_webrtc {
     #define Super Proxy<MediaStream, webrtc::MediaStreamInterface>
 
     MediaStream::MediaStream(const Napi::CallbackInfo& info):
-        Proxy<MediaStream, webrtc::MediaStreamInterface>(info)
+        Super(info)
     {
         Construct(info);
         assert(_handle);
