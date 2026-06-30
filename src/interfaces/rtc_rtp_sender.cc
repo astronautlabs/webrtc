@@ -219,7 +219,7 @@ namespace node_webrtc {
             if (object.Env().IsExceptionPending()) {
                 return Validation<RTCRtpSender*>::Invalid(object.Env().GetAndClearPendingException().Message());
             } else if (!isRTCRtpSender) {
-                return Validation<RTCRtpSender*>::Invalid("This is not an instance of RTCRtpSender");
+                return Validation<RTCRtpSender*>::Invalid("Expected instance of node_webrtc::RTCRtpSender");
             }
             return Pure(RTCRtpSender::Unwrap(object));
         });
