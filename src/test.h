@@ -23,6 +23,7 @@ namespace node_webrtc {
 
     private:
         static Napi::Value TestImpl(const Napi::CallbackInfo&);
+        static Napi::Value TraceAsyncHandles(const Napi::CallbackInfo&);
     };
 
 } // namespace node_webrtc

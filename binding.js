@@ -17,3 +17,9 @@ EventEmitter.mixin(module.exports.RTCVideoSink);
 EventEmitter.mixin(module.exports.RTCVideoSource);
 EventEmitter.mixin(module.exports.RTCAudioSink);
 EventEmitter.mixin(module.exports.RTCAudioSource);
+
+if (process.env.NODE_WEBRTC_TRACE_DELAY) {
+    setTimeout(() => {
+        module.exports.traceAsyncHandles(); 
+    }, Number(process.env.NODE_WEBRTC_TRACE_DELAY * 1000));
+}

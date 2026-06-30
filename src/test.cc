@@ -7,6 +7,7 @@
  * project authors may be found in the AUTHORS file in the root of the source
  * tree.
  */
+#include "src/node/async_object_wrap_with_loop.h"
 #ifdef DEBUG
 
 #include "src/test.h"
@@ -120,9 +121,15 @@ Napi::Value node_webrtc::Test::TestImpl(const Napi::CallbackInfo& info) {
     return value;
 }
 
+Napi::Value node_webrtc::Test::TraceAsyncHandles(const Napi::CallbackInfo& info) {
+    node_webrtc::ObjectTraces::Notify();
+    return info.Env().Undefined();
+}
+
 void node_webrtc::Test::Init(Napi::Env env, Napi::Object exports) {
-    auto func = Napi::Function::New(env, TestImpl);
-    exports.Set("test", func);
+    exports.Set("test", Napi::Function::New(env, TestImpl));
+    exports.Set("traceAsyncHandles", Napi::Function::New(env, TraceAsyncHandles));
+    
 }
 
 #endif // DEBUG
