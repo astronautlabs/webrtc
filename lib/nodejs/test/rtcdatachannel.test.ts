@@ -14,7 +14,7 @@ describe('RTCDataChannel', () => {
     const pc = new RTCPeerConnection();
     const dc1 = pc.createDataChannel('dc1');
     const dc2 = pc.createDataChannel('dc2', { maxPacketLifeTime: 0 });
-    expect(dc1.maxPacketLifeTime).to.equal(65535);
+    expect(dc1.maxPacketLifeTime).to.equal(null);
     expect(dc2.maxPacketLifeTime).to.equal(0);
     pc.close();
   });
