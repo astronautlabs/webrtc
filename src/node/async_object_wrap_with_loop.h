@@ -83,6 +83,7 @@ namespace node_webrtc {
         }
 
         void Dispatch(std::unique_ptr<Task> event) {
+            assert(_hasUV);
             queue.Enqueue(std::move(event));
             _lock.lock();
             if (!uv_is_closing(reinterpret_cast<uv_handle_t*>(&_async))) {
@@ -163,8 +164,12 @@ namespace node_webrtc {
         virtual void DidStop() {
             Log(this, "DidStop()");
             _didStop = true;
-            if (!this->IsEmpty())
-                this->Unref();
+
+            // TODO(liam): This sort of thing is a half assed hack on bad reference handling. 
+            // All object pointers should be held by napi_ref_ptr, allowing reference counts to be 
+            // managed by RAII.
+            // if (!this->IsEmpty())
+            //     this->Unref();
         }
 
         virtual void Run() {
@@ -192,12 +197,16 @@ namespace node_webrtc {
                     auto self = static_cast<AsyncObjectWrapWithLoop<T>*>(handle->data);
                     self->DidStop();
                 });
-                _hasUV = true;
+                _hasUV = false;
                 _lock.unlock();
             }
         }
 
         virtual void Stop() {
+            if (!_hasUV) {
+                Log(this, "Stop() called without an active UV async handle");
+                return;
+            }
             _shouldStop = true;
             Dispatch(Task::Create());
         }

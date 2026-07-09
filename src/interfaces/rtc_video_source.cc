@@ -45,7 +45,7 @@ namespace node_webrtc {
         // via addTrack(), that they will still be referenced by those
         // PeerConnections and thus will continue to remain uncollectable.
 
-        for (auto track : _tracks)
+        for (auto* track : _tracks)
             track->Unref();
     }
 

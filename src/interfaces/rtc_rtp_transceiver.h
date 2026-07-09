@@ -33,10 +33,10 @@ namespace node_webrtc {
         static void Init(Napi::Env, Napi::Object);
         static Napi::FunctionReference& constructor();
         void Finalize(Napi::Env env) override;
-        static RTCRtpTransceiver* Create(RTCPeerConnection* pc, RTCRtpSender* sender, RTCRtpReceiver* receiver);
+        static RTCRtpTransceiver* Create(napi_ref_ptr<RTCPeerConnection> pc, napi_ref_ptr<RTCRtpSender> sender, napi_ref_ptr<RTCRtpReceiver> receiver);
         void updateMembers(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtcTransceiver);
 
-        RTCRtpReceiver* getReceiver() { return this->receiver; }
+        napi_ref_ptr<RTCRtpReceiver> getReceiver() { return this->receiver; }
         uintptr_t getId() { return id; }
         void setId(uintptr_t value) { id = value; }
 
@@ -55,17 +55,13 @@ namespace node_webrtc {
 
         uintptr_t id;
         std::string mid = "";
-        RTCPeerConnection* pc = nullptr;
-        RTCRtpSender* sender = nullptr;
-        RTCRtpReceiver* receiver = nullptr;
+        napi_ref_ptr<RTCPeerConnection> pc = nullptr;
+        napi_ref_ptr<RTCRtpSender> sender = nullptr;
+        napi_ref_ptr<RTCRtpReceiver> receiver = nullptr;
         bool stopped = false;
         std::string direction = "inactive";
         std::string currentDirection = "inactive";
         std::string firedDirection = "inactive";
-
-        Napi::Reference<Napi::Value> pcRef;
-        Napi::Reference<Napi::Value> senderRef;
-        Napi::Reference<Napi::Value> receiverRef;
 
         Napi::Value GetMid(const Napi::CallbackInfo&);
         Napi::Value GetSender(const Napi::CallbackInfo&);

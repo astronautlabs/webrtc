@@ -9,6 +9,8 @@
  */
 #pragma once
 
+#include <src/api/rtp_sender_interface.h>
+#include <src/api/rtp_transceiver_interface.h>
 #include <vector>
 
 #include <node-addon-api/napi.h>
@@ -126,7 +128,6 @@ namespace node_webrtc {
         ExtendedRTCConfiguration _cached_configuration;
 
         napi_ref_ptr<PeerConnectionFactory> _factory = nullptr;
-        bool _shouldReleaseFactory = false;
 
         std::set<napi_ref_ptr<RTCDataChannel>> _channels;
         std::set<napi_ref_ptr<RTCDataChannel>> _peerChannels;
@@ -144,6 +145,11 @@ namespace node_webrtc {
          */
         std::map<std::string, napi_ref_ptr<MediaStreamTrack>> _externalTracks;
 
+        bool shouldTrackBeMuted(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver);
+        
+        webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> getTransceiverForSender(webrtc::scoped_refptr<webrtc::RtpSenderInterface>);
+        webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> getTransceiverForReceiver(webrtc::scoped_refptr<webrtc::RtpReceiverInterface>);
+        
         napi_ref_ptr<RTCRtpTransceiver> createOrUpdateTransceiver(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver);
         napi_ref_ptr<RTCRtpReceiver> createOrUpdateReceiver(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver);
         napi_ref_ptr<RTCRtpSender> createOrUpdateSender(webrtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender, std::string kind);

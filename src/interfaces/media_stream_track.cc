@@ -30,16 +30,22 @@ namespace node_webrtc {
         _handle->RegisterObserver(this);
     }
 
-    void MediaStreamTrack::Finalize(Napi::Env env) {
-        Super::Finalize(env);
-        if (_handle)
-            _handle->UnregisterObserver(this);
-        _handle = nullptr;
+    void MediaStreamTrack::setMuteState(bool muted) {
+        if (_muted == muted)
+            return;
+
+        _muted = muted;
+        if (_muted) {
+            Event("mute").Dispatch();
+        } else {
+            Event("unmute").Dispatch();
+        }
     }
 
     void MediaStreamTrack::Stop() {
         Log(this, "MediaStreamTrack::Stop()");
-        _handle->UnregisterObserver(this);
+        if (_handle)
+            _handle->UnregisterObserver(this);
         _ended = true;
         _enabled = _handle->enabled();
         Super::Stop();
@@ -104,7 +110,7 @@ namespace node_webrtc {
 
     Napi::Value MediaStreamTrack::GetMuted(const Napi::CallbackInfo& info) {
         Log(this, "MediaStreamTrack::GetMuted()");
-        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), false, result, Napi::Value)
+        CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), _muted, result, Napi::Value)
         return result;
     }
 

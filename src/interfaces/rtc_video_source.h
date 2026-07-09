@@ -39,8 +39,10 @@ namespace node_webrtc {
             _needs_denoising(needs_denoising) { }
 
         ~RTCVideoTrackSource() override {
-            PeerConnectionFactory::Release();
-            _factory = nullptr;
+            if (_factory) {
+                PeerConnectionFactory::Release();
+                _factory = nullptr;
+            }
         }
 
         SourceState state() const override {

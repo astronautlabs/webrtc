@@ -79,14 +79,15 @@ namespace node_webrtc {
 
         if (info.Length() == 1 && MediaStream::IsInstance(info[0])) {
             auto existingStream = MediaStream::UnwrapProxy(info[0]);
-            auto factory = existingStream->_factory;
+            _factory = existingStream->_factory;
+            assert(_factory);
+            _shouldReleaseFactory = false;
+
             auto tracks = std::vector<napi_ref_ptr<MediaStreamTrack>>();
             for (auto const& track : existingStream->tracks()) {
-                tracks.push_back(MediaStreamTrack::Wrap(Env(), track, factory));
+                tracks.push_back(MediaStreamTrack::Wrap(Env(), track, _factory));
             }
             
-            _factory = factory;
-            _shouldReleaseFactory = !factory && tracks.empty();
             _handle = _factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid());
 
             for (auto const& track : tracks) {
@@ -129,11 +130,12 @@ namespace node_webrtc {
     }
 
     void MediaStream::Finalize(Napi::Env env) {    
-        _factory = nullptr;
-
-        // TODO(liam): remove
-        if (_shouldReleaseFactory)
-            PeerConnectionFactory::Release();
+        if (_factory) {
+            // TODO(liam): remove
+            if (_shouldReleaseFactory)
+                PeerConnectionFactory::Release();
+            _factory = nullptr;
+        }
     }
 
     std::vector<webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface>> MediaStream::tracks() {

@@ -105,27 +105,26 @@ describe('RTCRTPSender', () => {
 
     let offer = await pc.createOffer({});
     
-    // even duplicates get added
-    // 3 streams per track and 2 tracks (audio + video) = 6 msid lines
+    // Previously this test asserted that duplicates should show up as distinct msid lines, but per 
+    // RFC 8830, section 2 (https://www.rfc-editor.org/rfc/rfc8830.html#name-the-msid-mechanism),
+    // > Multiple media descriptions with the same value for "msid-id" and "msid‑appdata" are not permitted.
+    // libwebrtc deduplicates these for us, so this test has been changed to assert that the stream IDs 
+    // are deduplicated.
+    // 2 unique streams per track and 2 tracks (audio + video) = 4 msid lines
 
-    expect((offer.sdp!.match(/a=msid:/g) || []).length).to.equal(6)
+    expect((offer.sdp!.match(/a=msid:/g) || []).length).to.equal(4)
     pc.close();
   });
   
-  it.only('.addTrack(track, stream) called twice', async () => {
+  it('.addTrack(track, stream) called twice', async () => {
     let stream = await getMediaStream();
-    console.log(`making pc`);
     const pc = new RTCPeerConnection();
-    console.log(`getting track`);
     const [track] = stream.getTracks();
-    console.log(`adding track`);
     pc.addTrack(track, stream);
 
-    console.log(`adding track second time`);
     expect(() => pc.addTrack(track, stream))
       .to.throw(/Sender already exists for track/);
 
-    console.log(`closing final pc`);
     pc.close();
   });
   

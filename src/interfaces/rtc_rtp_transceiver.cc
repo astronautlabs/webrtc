@@ -30,9 +30,6 @@ namespace node_webrtc {
     }
 
     void RTCRtpTransceiver::Finalize(Napi::Env env) {
-        pcRef.Unref();
-        senderRef.Unref();
-        receiverRef.Unref();
     }
 
     RTCRtpTransceiver::RTCRtpTransceiver(const Napi::CallbackInfo& info) :
@@ -43,11 +40,8 @@ namespace node_webrtc {
         }
 
         pc = info[0].As<Napi::External<RTCPeerConnection>>().Data();
-        pcRef = Napi::Reference<Napi::Value>::New(pc->Value(), 1);
         sender = info[1].As<Napi::External<RTCRtpSender>>().Data();
-        senderRef = Napi::Reference<Napi::Value>::New(sender->Value(), 1);
         receiver = info[2].As<Napi::External<RTCRtpReceiver>>().Data();
-        receiverRef = Napi::Reference<Napi::Value>::New(receiver->Value(), 1);
     }
 
     Napi::Value RTCRtpTransceiver::GetMid(const Napi::CallbackInfo& info) {
@@ -99,10 +93,14 @@ namespace node_webrtc {
         return info.Env().Undefined();
     }
 
-    RTCRtpTransceiver* RTCRtpTransceiver::Create(RTCPeerConnection* pc, RTCRtpSender* sender, RTCRtpReceiver* receiver) {
+    RTCRtpTransceiver* RTCRtpTransceiver::Create(napi_ref_ptr<RTCPeerConnection> pc, napi_ref_ptr<RTCRtpSender> sender, napi_ref_ptr<RTCRtpReceiver> receiver) {
         auto env = constructor().Env();
         Napi::HandleScope scope(env);
-        auto* unwrapped = Unwrap(constructor().New({Napi::External<RTCPeerConnection>::New(env, pc), Napi::External<RTCRtpSender>::New(env, sender), Napi::External<RTCRtpReceiver>::New(env, receiver)}));
+        auto* unwrapped = Unwrap(constructor().New({
+            Napi::External<RTCPeerConnection>::New(env, pc.get()), // TODO(liam): raw ptr(s)
+            Napi::External<RTCRtpSender>::New(env, sender.get()), 
+            Napi::External<RTCRtpReceiver>::New(env, receiver.get())
+        }));
         return unwrapped;
     }
 

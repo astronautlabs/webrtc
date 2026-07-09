@@ -37,8 +37,7 @@ namespace node_webrtc {
         // via addTrack(), that they will still be referenced by those
         // PeerConnections and thus will continue to remain uncollectable.
 
-        for (auto* track : _tracks)
-            track->Unref();
+        _tracks.clear();
     }
 
     Napi::Value RTCAudioSource::CreateTrack(const Napi::CallbackInfo&) {
@@ -50,7 +49,7 @@ namespace node_webrtc {
         // See RTCPeerConnection::AddTrack() for corresponding referencing logic in that case.
 
         auto wrappedTrack = MediaStreamTrack::Wrap(Env(), track, factory);
-        _tracks.insert(wrappedTrack.get()); // TODO(liam): raw ptr
+        _tracks.insert(wrappedTrack);
         return wrappedTrack->Value();
     }
 

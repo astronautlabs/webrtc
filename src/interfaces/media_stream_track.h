@@ -31,7 +31,6 @@ namespace node_webrtc {
     public:
         explicit MediaStreamTrack(const Napi::CallbackInfo&);
 
-        void Finalize(Napi::Env env) override;
         static void Init(Napi::Env, Napi::Object);
 
         // ~ Begin interface webrtc::ObserverInterface
@@ -54,6 +53,8 @@ namespace node_webrtc {
             return _handle->kind(); 
         }
 
+        void setMuteState(bool muted);
+
     protected:
         void Stop() override;
 
@@ -68,6 +69,7 @@ namespace node_webrtc {
         Napi::Value Clone(const Napi::CallbackInfo&);
         Napi::Value JsStop(const Napi::CallbackInfo&);
 
+        bool _muted = false;
         bool _ended = false;
         bool _enabled = false;
     };

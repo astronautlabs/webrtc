@@ -16,15 +16,14 @@
 #include "src/utilities/log.h"
 #include "src/node/async_object_wrap_with_loop.h"
 #include "src/node/envelope.h"
-#include "src/node/proxy_registry.h"
 #include "src/utilities/bidi_map.h"
 #include "src/utilities/napi_ref_ptr.h"
+#include "src/webrtc_addon.h"
 #include <concepts>
 #include <js_native_api_types.h>
 #include <node-addon-api/napi.h>
 #include <random>
 #include <src/api/scoped_refptr.h>
-#include <string_view>
 
 namespace node_webrtc {
     /**
@@ -109,6 +108,10 @@ namespace node_webrtc {
                 });
             }
 
+            napi_ref_ptr<ProxyT> GetProxy(webrtc::scoped_refptr<NativeT> key) {
+                return _map.has(key) ? _map.get(key).UnsafeFromJust() : nullptr;
+            }
+
             webrtc::scoped_refptr<NativeT> Native(napi_ref_ptr<ProxyT> key) {
                 return _map.get(key);
             }
@@ -155,6 +158,13 @@ namespace node_webrtc {
             napi_ref_ptr<PeerConnectionFactory> factory = PeerConnectionFactory::GetOrCreateDefault()
         ) {
             return ProxyT::registry(env).Proxy(object, factory);
+        }
+
+        static napi_ref_ptr<ProxyT> GetProxy(
+            Napi::Env env,
+            webrtc::scoped_refptr<NativeT> object
+        ) {
+            return ProxyT::registry(env).GetProxy(object);
         }
 
         void Finalize(Napi::Env env) override {

@@ -12,6 +12,8 @@
 #include <cassert>
 #include <memory>
 #include <node-addon-api/napi.h>
+#include <src/api/rtp_transceiver_direction.h>
+#include <src/api/units/data_size.h>
 #include <string>
 
 #include <src/api/jsep.h>
@@ -98,7 +100,6 @@ namespace node_webrtc {
         _port_range = configuration.portRange;
 
         _factory = PeerConnectionFactory::GetOrCreateDefault();
-        _shouldReleaseFactory = true;
 
         auto result = _factory->factory()->CreatePeerConnectionOrError(
             configuration.configuration,
@@ -121,9 +122,7 @@ namespace node_webrtc {
 
     void RTCPeerConnection::Finalize(Napi::Env env) {
         if (_factory) {
-            if (_shouldReleaseFactory) {
-                PeerConnectionFactory::Release();
-            }
+            PeerConnectionFactory::Release();
             _factory = nullptr;
         }
         Super::Finalize(env);
@@ -296,7 +295,8 @@ namespace node_webrtc {
             return env.Undefined();
         }
 
-        // Acquire arguments
+        //// Acquire arguments
+        // First, a single track
 
         auto mediaStreamTrack = MediaStreamTrack::UnwrapProxy(info[0].As<Napi::Object>());
         if (!mediaStreamTrack) {
@@ -305,9 +305,17 @@ namespace node_webrtc {
             return Env().Undefined();
         }
 
-        std::vector<MediaStream*> mediaStreams;
+        // The rest should be media streams.
+        std::vector<napi_ref_ptr<MediaStream>> mediaStreams;
         for (uint64_t i = 1, max = info.Length(); i < max; ++i) {
-            auto* stream = info[i].As<Napi::External<MediaStream>>().Data();
+            napi_ref_ptr<MediaStream> stream = nullptr;
+
+            if (MediaStream::IsInstance(info[i])) {
+                stream = MediaStream::UnwrapProxy(info[i]);
+            } else if (info[i].IsExternal()) {
+                stream = info[i].As<Napi::External<MediaStream>>().Data();
+            }
+
             if (!stream) {
                 Napi::TypeError::New(Env(), "all streams must be MediaStream instances")
                     .ThrowAsJavaScriptException();
@@ -338,12 +346,8 @@ namespace node_webrtc {
 
         const auto& rtpSender = result.value();
         webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver;
-        for (const auto& candidate : _handle->GetTransceivers()) {
-            if (candidate->sender() == rtpSender) {
-                rtpTransceiver = candidate;
-            }
-        }
 
+        rtpTransceiver = getTransceiverForSender(rtpSender);
         assert(rtpTransceiver);
         createOrUpdateTransceiver(rtpTransceiver);
 
@@ -752,9 +756,7 @@ namespace node_webrtc {
         _handle = nullptr;
 
         if (_factory) {
-            if (_shouldReleaseFactory) {
-                PeerConnectionFactory::Release();
-            }
+            PeerConnectionFactory::Release();
             _factory = nullptr;
         }
 
@@ -945,6 +947,40 @@ namespace node_webrtc {
         return result;
     }
 
+    bool RTCPeerConnection::shouldTrackBeMuted(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver) {
+        bool should_be_muted = false;
+        if (rtpTransceiver->current_direction()) {
+            auto dir = *rtpTransceiver->current_direction();
+            should_be_muted = (dir == webrtc::RtpTransceiverDirection::kSendOnly || 
+                            dir == webrtc::RtpTransceiverDirection::kInactive);
+        } else {
+            // If there is no current direction yet, it's not receiving
+            should_be_muted = true;
+        }
+
+        return should_be_muted;
+    }
+
+    webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> RTCPeerConnection::getTransceiverForSender(webrtc::scoped_refptr<webrtc::RtpSenderInterface> sender) {
+        for (const auto& candidate : _handle->GetTransceivers()) {
+            if (candidate->sender() == sender) {
+                return candidate;
+            }
+        }
+
+        return nullptr;
+    }
+
+    webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> RTCPeerConnection::getTransceiverForReceiver(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
+        for (const auto& candidate : _handle->GetTransceivers()) {
+            if (candidate->receiver() == receiver) {
+                return candidate;
+            }
+        }
+
+        return nullptr;
+    }
+
     napi_ref_ptr<RTCRtpTransceiver> RTCPeerConnection::createOrUpdateTransceiver(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver) {
         Log(this, "createOrUpdateTransceiver()");
         auto id = reinterpret_cast<uintptr_t>(rtpTransceiver.get());
@@ -965,6 +1001,26 @@ namespace node_webrtc {
             transceiver->updateMembers(rtpTransceiver);
         }
 
+        // Update the mute status of the associated media stream track, if any (and only if that track has a 
+        // realized proxy associated with it)
+
+        Log(
+            this, 
+            "Updating transceiver state, dir=" 
+                + std::to_string((int)rtpTransceiver->direction()) 
+                + ", curdir=" + (rtpTransceiver->current_direction().has_value() 
+                    ? std::to_string((int)rtpTransceiver->current_direction().value())
+                    : "<none>")
+        );
+
+        if (auto track = rtpTransceiver->receiver()->track()) {
+            if (auto proxy = MediaStreamTrack::GetProxy(Env(), track)) {
+                bool shouldBeMuted = shouldTrackBeMuted(rtpTransceiver);
+                Log(this, "Setting mute state to " + std::to_string(shouldBeMuted) + " for track " + proxy->handle()->id());
+                proxy->setMuteState(shouldBeMuted);
+            }
+        }
+
         return transceiver;
     }
 
@@ -972,6 +1028,10 @@ namespace node_webrtc {
         Log(this, "createOrUpdateReceiver()");
         auto iter = _receivers.find(rtpReceiver->id());
         auto track = MediaStreamTrack::Wrap(Env(), rtpReceiver->track(), _factory);
+
+        auto transceiver = getTransceiverForReceiver(rtpReceiver);
+        assert(transceiver);
+        track->setMuteState(shouldTrackBeMuted(transceiver));
 
         napi_ref_ptr<RTCRtpReceiver> receiver = nullptr;
         if (iter == _receivers.end()) {

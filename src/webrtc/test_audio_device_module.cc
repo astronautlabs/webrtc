@@ -91,6 +91,10 @@ namespace node_webrtc {
             }
 
             int32_t Init() override {
+                if (initialized_)
+                    return 0;
+
+                initialized_ = true;
                 thread_ = webrtc::PlatformThread::SpawnJoinable(
                     [&]() { TestAudioDeviceModuleImpl::Run(this); },
                     "TestAudioDeviceModuleImpl",
@@ -254,6 +258,7 @@ namespace node_webrtc {
             webrtc::BufferT<int16_t> recording_buffer_ RTC_GUARDED_BY(lock_);
 
             webrtc::PlatformThread thread_;
+            bool initialized_ = false;
             bool stop_thread_ RTC_GUARDED_BY(lock_);
         };
 

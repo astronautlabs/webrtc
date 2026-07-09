@@ -27,8 +27,10 @@ namespace node_webrtc {
         RTCAudioTrackSource() { }
 
         ~RTCAudioTrackSource() override {
-            PeerConnectionFactory::Release();
-            _factory = nullptr;
+            if (_factory) {
+                PeerConnectionFactory::Release();
+                _factory = nullptr;
+            }
         }
 
         SourceState state() const override {
@@ -82,7 +84,7 @@ namespace node_webrtc {
         Napi::Value OnData(const Napi::CallbackInfo&);
 
         webrtc::scoped_refptr<RTCAudioTrackSource> _source;
-        std::set<MediaStreamTrack*> _tracks;
+        std::set<napi_ref_ptr<MediaStreamTrack>> _tracks;
     };
 
 } // namespace node_webrtc

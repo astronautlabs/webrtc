@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { describe, it } from '@jest/globals';
-import { getUserMedia, MediaStream, RTCPeerConnection } from '..';
+import { getUserMedia, MediaStream, RTCPeerConnection, RTCSessionDescription } from '..';
 
 var sdp = [
     'v=0',

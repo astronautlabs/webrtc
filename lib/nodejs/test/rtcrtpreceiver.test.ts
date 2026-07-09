@@ -74,6 +74,37 @@ var sdp2 = [
   'a=rtcp-mux',
 ].join('\r\n') + '\r\n';
 
+var sdpPortZero = [
+  'v=0',
+  'o=- 0 2 IN IP4 0.0.0.0',
+  's=-',
+  't=0 0',
+  'a=group:BUNDLE audio video',
+  'a=msid-semantic:WMS *',
+  'a=ice-ufrag:0000',
+  'a=ice-pwd:0000000000000000000000',
+  'a=fingerprint:sha-256 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00',
+  'm=audio 0 UDP/TLS/RTP/SAVPF 109 9 0 8 101',
+  'c=IN IP4 0.0.0.0',
+  'a=mid:audio',
+  'a=recvonly',
+  'a=rtpmap:109 opus/48000/2',
+  'a=rtpmap:9 G722/8000/1',
+  'a=rtpmap:0 PCMU/8000',
+  'a=rtpmap:8 PCMA/8000',
+  'a=rtpmap:101 PCMA/16000',
+  'a=rtcp-mux',
+  'm=video 0 UDP/TLS/RTP/SAVPF 120 121 126 97',
+  'c=IN IP4 0.0.0.0',
+  'a=mid:video',
+  'a=recvonly',
+  'a=rtpmap:120 VP8/90000',
+  'a=rtpmap:121 VP9/90000',
+  'a=rtpmap:126 H264/90000',
+  'a=rtpmap:97 H264/180000',
+  'a=rtcp-mux',
+].join('\r\n') + '\r\n';
+
 describe('RTCRTPReceiver', () => {
   it('applying a remote offer creates receivers (checked via .getReceivers)', async () => {
     // NOTE(mroberts): Create and close the RTCPeerConnection inside a Promise,
@@ -229,37 +260,56 @@ describe('RTCRTPReceiver', () => {
     }, 'the video RTCRtpReceiver\'s .getParameters() returns the expected RTCRtpParameters');
     pc.close();
   });
-  
-  // TODO(liam): should test be removed with plan-b removal or updated to use unified-plan
-  it('negotiating MediaStreamTracks and then renegotiating without them', async () => {
-    var pc = new RTCPeerConnection(<any>{ sdpSemantics: 'plan-b' });
-    var offer1 = new RTCSessionDescription({ type: 'offer', sdp: sdp1 });
 
-    expect(pc.getReceivers().length).to.equal(0);
+  it('negotiating MediaStreamTracks and then renegotiating them to port zero', async () => {
+    var pc = new RTCPeerConnection();
+    try {
+        expect(pc.getReceivers().length).to.equal(0);
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: sdp1 }))
+        expect(pc.getReceivers().length).to.equal(2);
 
-    await pc.setRemoteDescription(offer1)
-  
-    var receivers = pc.getReceivers();
-    expect(receivers.length).to.equal(2);
+        // NOTE(mroberts): Flaky
+        // NOTE(liam): It might not be anymore, but if its failing, then it is. We should 
+        // investigate further.
+        expect(pc.getReceivers()[0].track.readyState).to.equal('live');
+        expect(pc.getReceivers()[1].track.readyState).to.equal('live');
 
-    // NOTE(mroberts): Flaky
-    // t.equal(receivers[0].track.readyState, 'live', 'the audio RTCRtpReceiver\'s .track has .readyState "live"');
-    // t.equal(receivers[1].track.readyState, 'live', 'the video RTCRtpReceiver\'s .track has .readyState "live"');
-    let answer1 = await pc.createAnswer();
-    await pc.setLocalDescription(answer1);
-    var offer2 = new RTCSessionDescription({ type: 'offer', sdp: sdp2 });
-    await pc.setRemoteDescription(offer2);
-  
-    expect(pc.getReceivers().length).to.equal(0);
-    expect(receivers[0].track.readyState).to.equal('ended');
-    expect(receivers[1].track.readyState).to.equal('ended');
+        await pc.setLocalDescription(await pc.createAnswer());
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: sdpPortZero }));
+        await pc.setLocalDescription(await pc.createAnswer());
 
-    let answer2 = await pc.createAnswer();
-    await pc.setLocalDescription(answer2);
-    expect(pc.getReceivers().length).to.equal(0);
-    pc.close();
-    expect(receivers[0].track.readyState).to.equal('ended');
-    expect(receivers[1].track.readyState).to.equal('ended');
+        expect(pc.getReceivers().length).to.equal(0);
+        expect(pc.getTransceivers().length).to.equal(0);
+    } finally {
+        pc.close();
+    }
+  });
+  it('negotiating MediaStreamTracks and then renegotiating without them (changing directions)', async () => {
+    var pc = new RTCPeerConnection();
+    try {
+        expect(pc.getReceivers().length).to.equal(0);
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: sdp1 }))
+        expect(pc.getReceivers().length).to.equal(2);
+
+        // NOTE(mroberts): Flaky
+        // NOTE(liam): It might not be anymore, but if its failing, then it is. We should 
+        // investigate further.
+        expect(pc.getReceivers()[0].track.readyState).to.equal('live');
+        expect(pc.getReceivers()[1].track.readyState).to.equal('live');
+
+        await pc.setLocalDescription(await pc.createAnswer());
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: sdp2 }));
+        await pc.setLocalDescription(await pc.createAnswer());
+    
+        expect(pc.getReceivers().length).to.equal(2);
+        expect(pc.getTransceivers().length).to.equal(2);
+        expect(pc.getReceivers()[0].track.readyState).to.equal('live');
+        expect(pc.getReceivers()[0].track.muted).to.equal(true);
+        expect(pc.getReceivers()[1].track.readyState).to.equal('live');
+        expect(pc.getReceivers()[1].track.muted).to.equal(true);
+    } finally {
+        pc.close();
+    }
   });
   it('accessing remote MediaStreamTrack after RTCPeerConnection is destroyed', async () => {
     var pc = new RTCPeerConnection();
