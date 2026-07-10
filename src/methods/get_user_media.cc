@@ -107,7 +107,7 @@ Napi::Value node_webrtc::GetUserMedia::GetUserMediaImpl(const Napi::CallbackInfo
 
     CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, constraints, MediaStreamConstraints)
 
-    auto* factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault();
+    auto factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault(info.Env());
     auto stream = factory->factory()->CreateLocalMediaStream(webrtc::CreateRandomUuid());
 
     auto audio = constraints.audio.Map([](auto constraint) {

@@ -9,17 +9,12 @@
  */
 #pragma once
 
-#include <memory>
-
 #include <absl/types/optional.h>
 #include <node-addon-api/napi.h>
 #include <webrtc/api/media_stream_interface.h>
 #include <webrtc/api/scoped_refptr.h>
 #include <webrtc/media/base/adapted_video_track_source.h>
-
-#include "src/dictionaries/node_webrtc/rtc_video_source_init.h"
 #include "src/interfaces/media_stream_track.h"
-#include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 
 namespace webrtc {
     class VideoFrame;
@@ -29,20 +24,15 @@ namespace node_webrtc {
 
     class RTCVideoTrackSource : public webrtc::AdaptedVideoTrackSource {
     public:
-        RTCVideoTrackSource() :
-            webrtc::AdaptedVideoTrackSource(),
-            _is_screencast(false) { }
+        RTCVideoTrackSource():
+            _is_screencast(false) 
+        {
+        }
 
-        RTCVideoTrackSource(const bool is_screencast, const absl::optional<bool> needs_denoising) :
-            webrtc::AdaptedVideoTrackSource(),
+        RTCVideoTrackSource(const bool is_screencast, const absl::optional<bool> needs_denoising):
             _is_screencast(is_screencast),
-            _needs_denoising(needs_denoising) { }
-
-        ~RTCVideoTrackSource() override {
-            if (_factory) {
-                PeerConnectionFactory::Release();
-                _factory = nullptr;
-            }
+            _needs_denoising(needs_denoising) 
+        {
         }
 
         SourceState state() const override {
@@ -66,7 +56,6 @@ namespace node_webrtc {
         }
 
     private:
-        PeerConnectionFactory* _factory = PeerConnectionFactory::GetOrCreateDefault();
         const bool _is_screencast;
         const absl::optional<bool> _needs_denoising;
     };

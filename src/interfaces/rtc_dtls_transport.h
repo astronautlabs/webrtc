@@ -17,6 +17,7 @@
 
 #include "src/node/async_object_wrap_with_loop.h"
 #include "src/node/wrap.h"
+#include "src/utilities/napi_ref_ptr.h"
 
 namespace webrtc {
     class RTCError;
@@ -65,7 +66,7 @@ namespace node_webrtc {
         webrtc::DtlsTransportState _state;
         std::vector<webrtc::Buffer> _certs;
 
-        PeerConnectionFactory* _factory;
+        napi_ref_ptr<PeerConnectionFactory> _factory;
         webrtc::scoped_refptr<webrtc::DtlsTransportInterface> _transport;
     };
 

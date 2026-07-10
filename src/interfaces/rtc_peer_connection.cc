@@ -99,7 +99,7 @@ namespace node_webrtc {
 
         _port_range = configuration.portRange;
 
-        _factory = PeerConnectionFactory::GetOrCreateDefault();
+        _factory = PeerConnectionFactory::GetOrCreateDefault(Env());
 
         auto result = _factory->factory()->CreatePeerConnectionOrError(
             configuration.configuration,
@@ -121,10 +121,7 @@ namespace node_webrtc {
     }
 
     void RTCPeerConnection::Finalize(Napi::Env env) {
-        if (_factory) {
-            PeerConnectionFactory::Release();
-            _factory = nullptr;
-        }
+        _factory = nullptr;
         Super::Finalize(env);
     }
 
@@ -754,11 +751,7 @@ namespace node_webrtc {
         }
 
         _handle = nullptr;
-
-        if (_factory) {
-            PeerConnectionFactory::Release();
-            _factory = nullptr;
-        }
+        _factory = nullptr;
 
         // We also need to remove our references to the underlying channels and tracks
         // so that in the event that they are unreachable in the GC they can be collected.

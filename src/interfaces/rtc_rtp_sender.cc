@@ -66,7 +66,7 @@ namespace node_webrtc {
     Napi::Value RTCRtpSender::GetCapabilities(const Napi::CallbackInfo& info) {
         CONVERT_ARGS_OR_THROW_AND_RETURN_NAPI(info, kindString, std::string)
         if (kindString == "audio" || kindString == "video") {
-            auto factory = PeerConnectionFactory::GetOrCreateDefault();
+            auto factory = PeerConnectionFactory::GetOrCreateDefault(info.Env());
             auto capabilities = kindString == "audio" ? audioCapabilities : videoCapabilities;
             CONVERT_OR_THROW_AND_RETURN_NAPI(info.Env(), capabilities, result, Napi::Value)
             return result;
@@ -188,10 +188,9 @@ namespace node_webrtc {
     }
 
     void RTCRtpSender::Init(Napi::Env env, Napi::Object exports) {
-        auto factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault();
+        auto factory = node_webrtc::PeerConnectionFactory::GetOrCreateDefault(env);
         setAudioCapabilities(factory->factory()->GetRtpSenderCapabilities(webrtc::MediaType::AUDIO));
         setVideoCapabilities(factory->factory()->GetRtpSenderCapabilities(webrtc::MediaType::VIDEO));
-        factory->Release();
         Napi::Function func = DefineClass(env,
             "RTCRtpSender",
             {

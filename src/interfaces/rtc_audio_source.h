@@ -24,15 +24,7 @@ namespace node_webrtc {
 
     class RTCAudioTrackSource : public webrtc::LocalAudioSource {
     public:
-        RTCAudioTrackSource() { }
-
-        ~RTCAudioTrackSource() override {
-            if (_factory) {
-                PeerConnectionFactory::Release();
-                _factory = nullptr;
-            }
-        }
-
+        RTCAudioTrackSource() = default;
         SourceState state() const override {
             return webrtc::MediaSourceInterface::SourceState::kLive;
         }
@@ -65,8 +57,6 @@ namespace node_webrtc {
         }
 
     private:
-        PeerConnectionFactory* _factory = PeerConnectionFactory::GetOrCreateDefault();
-
         std::atomic<webrtc::AudioTrackSinkInterface*> _sink = { nullptr };
     };
 

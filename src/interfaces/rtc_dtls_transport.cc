@@ -69,7 +69,7 @@ namespace node_webrtc {
         _transport = std::move(transport);
 
         // NOTE(mroberts): Ensure we create this.
-        RTCIceTransport::wrap()->GetOrCreate(_factory, _transport->ice_transport());
+        RTCIceTransport::wrap()->GetOrCreate(_factory.get(), _transport->ice_transport()); // TODO(liam): raw ptr
 
         _factory->_networkThread->BlockingCall([this]() {
             _transport->RegisterObserver(this);
@@ -83,8 +83,7 @@ namespace node_webrtc {
     }
 
     void RTCDtlsTransport::Finalize(Napi::Env env) {
-        Napi::HandleScope scope(PeerConnectionFactory::constructor().Env());
-        _factory->Unref();
+        Napi::HandleScope scope(env);
         _factory = nullptr;
         wrap()->Release(this);
     }
@@ -124,7 +123,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCDtlsTransport::GetIceTransport(const Napi::CallbackInfo&) {
-        return RTCIceTransport::wrap()->GetOrCreate(_factory, _transport->ice_transport())->Value();
+        return RTCIceTransport::wrap()->GetOrCreate(_factory.get(), _transport->ice_transport())->Value(); // TODO(liam): raw ptr
     }
 
     Napi::Value RTCDtlsTransport::GetState(const Napi::CallbackInfo& info) {

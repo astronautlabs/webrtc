@@ -50,8 +50,6 @@ namespace node_webrtc {
     }
 
     void RTCSctpTransport::Finalize(Napi::Env env) {
-        Napi::HandleScope scope(PeerConnectionFactory::constructor().Env());
-        _factory->Unref();
         _factory = nullptr;
         wrap()->Release(this);
     }
@@ -103,7 +101,7 @@ namespace node_webrtc {
     }
 
     Napi::Value RTCSctpTransport::GetTransport(const Napi::CallbackInfo&) {
-        return RTCDtlsTransport::wrap()->GetOrCreate(_factory, _dtls_transport)->Value();
+        return RTCDtlsTransport::wrap()->GetOrCreate(_factory.get(), _dtls_transport)->Value(); // TODO(liam): raw ptr
     }
 
     Napi::Value RTCSctpTransport::GetState(const Napi::CallbackInfo& info) {

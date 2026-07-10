@@ -25,7 +25,7 @@ namespace node_webrtc {
             if (args.HasFragment<PeerConnectionFactoryReference>())
                 _factory = args.Fragment<PeerConnectionFactoryReference>().factory();
             else
-                _factory = PeerConnectionFactory::GetOrCreateDefault();
+                _factory = PeerConnectionFactory::GetOrCreateDefault(this->Env());
             assert(_factory);
         }
 

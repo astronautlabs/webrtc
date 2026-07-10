@@ -22,6 +22,7 @@
 #include "src/dictionaries/webrtc/video_frame_buffer.h"
 #include "src/functional/maybe.h"
 #include "src/interfaces/media_stream_track.h"
+#include "src/dictionaries/node_webrtc/rtc_video_source_init.h"
 
 #include <chrono>
 #include <ctime>
@@ -71,7 +72,7 @@ namespace node_webrtc {
 
     Napi::Value RTCVideoSource::CreateTrack(const Napi::CallbackInfo&) {
         // TODO(mroberts): Again, we have some implicit factory we are threading around. How to handle?
-        auto factory = PeerConnectionFactory::GetOrCreateDefault();
+        auto factory = PeerConnectionFactory::GetOrCreateDefault(Env());
         auto track = factory->factory()->CreateVideoTrack(_source, webrtc::CreateRandomUuid());
 
         // Here the default reference will be owned by the RTCVideoSource.

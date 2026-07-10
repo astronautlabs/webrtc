@@ -11,9 +11,11 @@
 
 #include <memory>
 
+#include "src/interfaces/rtc_peer_connection/peer_connection_factory_reference.h"
 #include "src/utilities/log.h"
 #include "src/webrtc/test_audio_device_module.h"
 #include "src/webrtc/zero_capturer.h"
+#include "src/webrtc_addon.h"
 #include <src/rtc_base/network.h>
 #include <webrtc/api/audio/create_audio_device_module.h>
 #include <webrtc/api/audio_codecs/builtin_audio_decoder_factory.h>
@@ -32,28 +34,14 @@
 #include <webrtc/rtc_base/ssl_adapter.h>
 #include <webrtc/rtc_base/thread.h>
 
+#define Super Proxy<PeerConnectionFactory, webrtc::PeerConnectionFactoryInterface>
 namespace node_webrtc {
-
-    Napi::FunctionReference& PeerConnectionFactory::constructor() {
-        static Napi::FunctionReference constructor;
-        return constructor;
-    }
-
-    PeerConnectionFactory* PeerConnectionFactory::_default = nullptr;
     std::mutex PeerConnectionFactory::_mutex {}; // NOLINT
-    int PeerConnectionFactory::_references = 0;
 
-    PeerConnectionFactory::PeerConnectionFactory(const Napi::CallbackInfo& info) :
-        Napi::ObjectWrap<PeerConnectionFactory>(info) {
-        auto env = info.Env();
+    PeerConnectionFactory::PeerConnectionFactory(const Napi::CallbackInfo& info):
+        Super(info)
+    {
         bool result = false;
-
-        if (!info.IsConstructCall()) {
-            Napi::TypeError::New(
-                env, "Use the new operator to construct a PeerConnectionFactory.")
-                .ThrowAsJavaScriptException();
-            return;
-        }
 
         // TODO(mroberts): Read `audioLayer` from some PeerConnectionFactoryOptions?
         auto audioLayer = MakeNothing<webrtc::AudioDeviceModule::AudioLayer>();
@@ -108,6 +96,30 @@ namespace node_webrtc {
         _factory->SetOptions(options);
     }
 
+    void PeerConnectionFactory::Construct(const Napi::CallbackInfo &info) {
+
+    }
+
+    void PeerConnectionFactory::Init(Napi::Env env, Napi::Object exports) {
+        assert(webrtc::InitializeSSL());
+
+        auto func = DefineClass(env,
+            "RTCPeerConnectionFactory",
+            {
+
+            });
+
+        constructor(env) = Napi::Persistent(func);
+        constructor(env).SuppressDestruct();
+
+        exports.Set("RTCPeerConnectionFactory", func);
+    }
+
+    void PeerConnectionFactory::Finalize(Napi::Env env) {
+        Log(this, "Finalize()");
+        Destruct();
+    }
+
     PeerConnectionFactory::~PeerConnectionFactory() {
         Log(this, "~PeerConnectionFactory()");
         Destruct();
@@ -131,55 +143,17 @@ namespace node_webrtc {
         _networkThread = nullptr;
     }
 
-    void PeerConnectionFactory::Finalize(Napi::Env env) {
-        Log(this, "Finalize()");
-        Destruct();
-    }
-
-    PeerConnectionFactory* PeerConnectionFactory::GetOrCreateDefault() {
-        Log<PeerConnectionFactory>("GetOrCreateDefault()");
-        _mutex.lock();
-        _references++;
-        if (_references == 1) {
-            assert(_default == nullptr);
-            auto env = constructor().Env();
+    napi_ref_ptr<PeerConnectionFactory> PeerConnectionFactory::GetOrCreateDefault(Napi::Env env) {
+        auto& ref = Addon::Fragment<PeerConnectionFactoryReference>(env);
+        if (!ref.factory()) {
             Napi::HandleScope scope(env);
-            auto object = constructor().New({});
+            auto object = constructor(env).New({});
             auto* factory = Unwrap(object);
-            _default = factory;
-            _default->Ref();
+            //factory->Ref();
+            ref.setFactory(factory);
         }
-        _mutex.unlock();
-        return _default;
-    }
 
-    void PeerConnectionFactory::Release() {
-        Log<PeerConnectionFactory>("Release()");
-        _mutex.lock();
-        _references--;
-        assert(_references >= 0);
-        if (!_references) {
-            assert(_default != nullptr);
-            _default->Destruct();
-            _default->Unref();
-            _default = nullptr;
-        }
-        _mutex.unlock();
-    }
-
-    void PeerConnectionFactory::Init(Napi::Env env, Napi::Object exports) {
-        assert(webrtc::InitializeSSL());
-
-        auto func = DefineClass(env,
-            "RTCPeerConnectionFactory",
-            {
-
-            });
-
-        constructor() = Napi::Persistent(func);
-        constructor().SuppressDestruct();
-
-        exports.Set("RTCPeerConnectionFactory", func);
+        return ref.factory();
     }
 
 } // namespace node_webrtc

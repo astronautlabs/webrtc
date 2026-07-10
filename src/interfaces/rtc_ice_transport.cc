@@ -69,8 +69,6 @@ namespace node_webrtc {
     }
 
     void RTCIceTransport::Finalize(Napi::Env env) {
-        Napi::HandleScope scope(PeerConnectionFactory::constructor().Env());
-        (void)_factory->Unref();
         _factory = nullptr;
         wrap()->Release(this);
     }

@@ -42,7 +42,7 @@ namespace node_webrtc {
 
     Napi::Value RTCAudioSource::CreateTrack(const Napi::CallbackInfo&) {
         // TODO(mroberts): Again, we have some implicit factory we are threading around. How to handle?
-        auto* factory = PeerConnectionFactory::GetOrCreateDefault();
+        auto factory = PeerConnectionFactory::GetOrCreateDefault(Env());
         auto track = factory->factory()->CreateAudioTrack(webrtc::CreateRandomUuid(), _source.get());
 
         // Here the default reference will be owned by the RTCAudioSource.

@@ -19,6 +19,7 @@
 #include <webrtc/modules/audio_device/include/audio_device.h>
 
 #include "src/functional/maybe.h"
+#include "src/node/proxy.h"
 
 namespace rtc {
 
@@ -37,34 +38,28 @@ namespace webrtc {
 namespace node_webrtc {
 
     class PeerConnectionFactory
-        : public Napi::ObjectWrap<PeerConnectionFactory> {
+        : public Proxy<PeerConnectionFactory, webrtc::PeerConnectionFactoryInterface> 
+    {
     public:
         explicit PeerConnectionFactory(const Napi::CallbackInfo&);
+        void Construct(const Napi::CallbackInfo &info) override;
+        static void Init(Napi::Env, Napi::Object);
+        void Finalize(Napi::Env env) override;
 
         ~PeerConnectionFactory();
 
         void Destruct();
-        void Finalize(Napi::Env env) override;
 
         /**
          * Get or create the default PeerConnectionFactory. The default uses
          * webrtc::AudioDeviceModule::AudioLayer::kDummyAudio. Call {@link Release} when done.
          */
-        static PeerConnectionFactory* GetOrCreateDefault();
-
-        /**
-         * Release a reference to the default PeerConnectionFactory.
-         */
-        static void Release();
+        static napi_ref_ptr<PeerConnectionFactory> GetOrCreateDefault(Napi::Env env);
 
         /**
          * Get the underlying webrtc::PeerConnectionFactoryInterface.
          */
         webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory() { return _factory; }
-
-        static void Init(Napi::Env, Napi::Object);
-
-        static Napi::FunctionReference& constructor();
 
         std::unique_ptr<webrtc::Thread> _signalingThread;
         std::unique_ptr<webrtc::Thread> _workerThread;
@@ -72,9 +67,7 @@ namespace node_webrtc {
 
     private:
         bool _destructed = false;
-        static PeerConnectionFactory* _default;
         static std::mutex _mutex;
-        static int _references;
 
         webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
         webrtc::scoped_refptr<webrtc::AudioDeviceModule> _audioDeviceModule;

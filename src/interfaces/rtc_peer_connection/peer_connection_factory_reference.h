@@ -17,5 +17,6 @@ namespace node_webrtc {
         }
 
         auto factory() { return _factory; }
+        void setFactory(decltype(_factory) value) { _factory = value; }
     };
 } // namespace node_webrtc

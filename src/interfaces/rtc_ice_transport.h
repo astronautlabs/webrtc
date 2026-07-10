@@ -72,7 +72,7 @@ namespace node_webrtc {
         Napi::Value GetRemoteParameters(const Napi::CallbackInfo&);
 
         RTCIceComponent _component = RTCIceComponent::kRtp;
-        PeerConnectionFactory* _factory;
+        napi_ref_ptr<PeerConnectionFactory> _factory;
         webrtc::IceGatheringState _gathering_state = webrtc::IceGatheringState::kIceGatheringNew;
         std::mutex _mutex { };
         webrtc::IceRole _role = webrtc::IceRole::ICEROLE_UNKNOWN;

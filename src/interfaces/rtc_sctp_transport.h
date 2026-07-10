@@ -17,6 +17,7 @@
 
 #include "src/node/async_object_wrap_with_loop.h"
 #include "src/node/wrap.h"
+#include "src/utilities/napi_ref_ptr.h"
 
 namespace node_webrtc {
 
@@ -57,7 +58,7 @@ namespace node_webrtc {
         Napi::Value GetMaxChannels(const Napi::CallbackInfo&);
 
         webrtc::scoped_refptr<webrtc::DtlsTransportInterface> _dtls_transport;
-        PeerConnectionFactory* _factory;
+        napi_ref_ptr<PeerConnectionFactory> _factory;
         webrtc::scoped_refptr<webrtc::SctpTransportInterface> _transport;
     };
 
