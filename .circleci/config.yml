@@ -10,14 +10,14 @@ executors:
     resource_class: medium
   linux-x86_64: &linux-x86_64
     docker:
-      - image: ubuntu:22.04
+      - image: ubuntu:26.10
     environment:
       TARGET_ARCH: x86_64
       CMAKE_BUILD_TYPE: Release
       PLATFORM: linux
   linux-arm64: &linux-arm64
     machine:
-      image: ubuntu-2004:current
+      image: ubuntu-2610:current
     resource_class: arm.medium
     environment:
       TARGET_ARCH: arm64
@@ -139,7 +139,7 @@ jobs:
             - run: 
                 name: Install platform dependencies via Apt and Pip
                 command: |
-                  sudo apt update && sudo apt install cmake build-essential curl git python3 python3-pkg-resources libglib2.0-dev ninja -y
+                  sudo apt update && sudo apt install cmake build-essential curl git python3 python3-pkg-resources libglib2.0-dev ninja-build -y
                   wget https://apt.llvm.org/llvm.sh
                   chmod +x llvm.sh
                   sudo ./llvm.sh 23
