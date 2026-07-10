@@ -151,9 +151,9 @@ jobs:
                   sudo apt install -y \
                       lsb-release software-properties-common gnupg wget cmake build-essential curl git \
                       python3 python3-pkg-resources libglib2.0-dev ninja-build
-                  wget https://apt.llvm.org/llvm.sh
-                  chmod +x llvm.sh
-                  sudo ./llvm.sh 23
+                  curl https://apt.llvm.org/llvm.sh >/tmp/llvm.sh
+                  chmod +x /tmp/llvm.sh
+                  sudo /tmp/llvm.sh 23
 
                   sudo ln -s `which python3` /usr/local/bin/python
                   sudo ln -s `which clang-23` /usr/local/bin/clang
