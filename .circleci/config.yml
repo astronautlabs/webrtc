@@ -190,7 +190,7 @@ jobs:
       - run:
           name: npm install
           command: |
-            export PARALLELISM=2 # Reduce PARALLELISM during the build; otherwise, we run out of memory.
+            export PARALLELISM=8 # Reduce PARALLELISM during the build; otherwise, we run out of memory.
             export TAR_OPTIONS=--no-same-owner # This fixes up some odd behavior when untar-ing as root.
             export SKIP_DOWNLOAD=true # Do not use prebuilt binaries
             export PATH="$PATH:/c/Program Files/CMake/bin:/c/Program Files/Git/usr/bin:/c/Program Files/Git/mingw64/libexec/git-core" # Needed for Windows
@@ -208,7 +208,9 @@ jobs:
             - node_modules
       - run:
           name: Build libwebrtc + Node.js bindings
-          command: npm run build:native
+          command: |
+            export PARALLELISM=8
+            npm run build:native
       - save_cache:
           key: asset-cache-v2-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
           paths:
