@@ -10,8 +10,6 @@
 
 #include "src/converters.h"
 #include "src/functional/validation.h"
-#include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
-#include "src/interfaces/rtc_peer_connection/peer_connection_factory_reference.h"
 #include "src/node/utility.h"
 #include "src/utilities/bundle.h"
 #include "src/utilities/nameof.h"
@@ -87,10 +85,6 @@ namespace node_webrtc {
         virtual void ConstructFromHandle(webrtc::scoped_refptr<NativeT> handle, Bundle args) {
             _handle = handle;
             assert(_handle);
-
-            _factory = args.Fragment<PeerConnectionFactoryReference>().factory();
-            assert(_factory);
-            
         }
 
         /**
@@ -109,16 +103,12 @@ namespace node_webrtc {
             Napi::Env _env;
 
             napi_ref_ptr<ProxyT> Proxy(webrtc::scoped_refptr<NativeT> key, Bundle args) {
-                auto factory = args.Fragment<PeerConnectionFactoryReference>().factory();
-                if (!factory)
-                    factory = PeerConnectionFactory::GetOrCreateDefault();
-
-                return _map.computeIfAbsent(key, [this, key, factory]() {
+                return _map.computeIfAbsent(key, [this, key, args]() {
                     Napi::HandleScope scope(_env);
                     return ProxyT::UnwrapProxy(
                         constructor(_env).New({
                             Napi::CreateEnvelope(_env, key),
-                            Napi::CreateEnvelope(_env, Bundle {}.AddFragment(PeerConnectionFactoryReference { factory ? factory : PeerConnectionFactory::GetOrCreateDefault() }))
+                            Napi::CreateEnvelope(_env, args)
                         })
                     );
                 });
@@ -156,7 +146,6 @@ namespace node_webrtc {
         }
 
         webrtc::scoped_refptr<NativeT> _handle;
-        napi_ref_ptr<PeerConnectionFactory> _factory;
 
         class JSConstructor: public Napi::FunctionReference {};
 
@@ -187,7 +176,6 @@ namespace node_webrtc {
             this->Stop();
             UnregisterProxy();
             _handle = nullptr;
-            _factory = nullptr;
         }
     };
 

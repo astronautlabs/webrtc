@@ -17,7 +17,7 @@
 #include "src/utilities/cast.h"
 #include "src/converters/napi.h"
 #include "src/node/async_object_wrap_with_loop.h"
-#include "src/node/proxy.h"
+#include "src/node/factory_owned_proxy.h"
 #include "src/node/wrap.h"
 #include "src/utilities/napi_ref_ptr.h"
 
@@ -26,7 +26,7 @@ namespace node_webrtc {
     class PeerConnectionFactory;
 
     class MediaStreamTrack
-        : public Proxy<MediaStreamTrack, webrtc::MediaStreamTrackInterface>,
+        : public FactoryOwnedProxy<MediaStreamTrack, webrtc::MediaStreamTrackInterface>,
           public webrtc::ObserverInterface {
     public:
         explicit MediaStreamTrack(const Napi::CallbackInfo&);

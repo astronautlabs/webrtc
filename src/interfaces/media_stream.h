@@ -11,7 +11,7 @@
 
 #include <node-addon-api/napi.h>
 #include <webrtc/api/scoped_refptr.h>
-#include "src/node/proxy.h"
+#include "src/node/factory_owned_proxy.h"
 
 namespace webrtc {
     class MediaStreamInterface;
@@ -23,7 +23,7 @@ namespace node_webrtc {
     class PeerConnectionFactory;
     struct RTCMediaStreamInit;
 
-    class MediaStream: public Proxy<MediaStream, webrtc::MediaStreamInterface> {
+    class MediaStream: public FactoryOwnedProxy<MediaStream, webrtc::MediaStreamInterface> {
     public:
         MediaStream(const Napi::CallbackInfo&);
         void Construct(const Napi::CallbackInfo &info) override;

@@ -25,10 +25,11 @@
 #include "src/utilities/napi_ref_ptr.h"
 #include "src/utilities/task.h"
 
+#define Super FactoryOwnedProxy<RTCDataChannel, webrtc::DataChannelInterface>
 namespace node_webrtc {
 
     RTCDataChannel::RTCDataChannel(const Napi::CallbackInfo& info) :
-        Proxy<RTCDataChannel, webrtc::DataChannelInterface>(info) 
+        Super(info) 
     {
         InitializeUV();
         Construct(info);

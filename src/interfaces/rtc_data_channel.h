@@ -13,7 +13,7 @@
 #include <webrtc/api/scoped_refptr.h>
 
 #include "src/enums/node_webrtc/binary_type.h"
-#include "src/node/proxy.h"
+#include "src/node/factory_owned_proxy.h"
 #include "src/utilities/napi_ref_ptr.h"
 
 namespace node_webrtc {
@@ -24,7 +24,7 @@ namespace node_webrtc {
      * Represents the RTCDataChannel Javascript object, and manages all state related to webrtc::DataChannelInterface.
      */
     class RTCDataChannel
-        : public Proxy<RTCDataChannel, webrtc::DataChannelInterface>,
+        : public FactoryOwnedProxy<RTCDataChannel, webrtc::DataChannelInterface>,
           public webrtc::DataChannelObserver {
         bool hasOpened = false;
 

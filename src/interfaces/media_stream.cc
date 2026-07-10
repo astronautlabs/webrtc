@@ -25,7 +25,7 @@
 
 
 namespace node_webrtc {
-    #define Super Proxy<MediaStream, webrtc::MediaStreamInterface>
+    #define Super FactoryOwnedProxy<MediaStream, webrtc::MediaStreamInterface>
 
     MediaStream::MediaStream(const Napi::CallbackInfo& info):
         Super(info)

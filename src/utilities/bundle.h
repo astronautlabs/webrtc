@@ -11,17 +11,20 @@ namespace node_webrtc {
     public:
         template <typename T>
         T& RequireFragment() {
-            const auto fragmentName = std::string { NAMEOF_TYPE(T) };
-            if (!fragments.contains(fragmentName))
+            if (!HasFragment<T>())
                 throw std::invalid_argument { std::string { "Must contain fragment " } + NAMEOF_TYPE(T) };
 
             return Fragment<T>();
+        }
+        template <typename T>
+        bool HasFragment() {
+            return fragments.contains(std::string { NAMEOF_TYPE(T) });
         }
 
         template <typename T>
         T& Fragment() {
             const auto fragmentName = std::string { NAMEOF_TYPE(T) };
-            if (!fragments.contains(fragmentName)) {
+            if (!HasFragment<T>()) {
                 T* fragment = nullptr;
                 fragment = new T();
                 fragments[fragmentName] = fragment;
@@ -33,7 +36,7 @@ namespace node_webrtc {
         template <typename T, typename Self>
         Self&& AddFragment(this Self&& self, const T&& fragmentTemplate) {
             const auto fragmentName = std::string { NAMEOF_TYPE(T) };
-            if (self.fragments.contains(fragmentName))
+            if (self.template HasFragment<T>())
                 throw std::invalid_argument { std::string { "Already contains fragment " } + std::string { NAMEOF_TYPE(T) } };
 
             T* fragment = nullptr;

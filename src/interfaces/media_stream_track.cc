@@ -21,7 +21,7 @@
 #include "src/enums/webrtc/track_state.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 
-#define Super Proxy<MediaStreamTrack, webrtc::MediaStreamTrackInterface>
+#define Super FactoryOwnedProxy<MediaStreamTrack, webrtc::MediaStreamTrackInterface>
 
 namespace node_webrtc {
     MediaStreamTrack::MediaStreamTrack(const Napi::CallbackInfo& info) :

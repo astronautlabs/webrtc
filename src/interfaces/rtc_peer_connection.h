@@ -27,7 +27,7 @@
 #include "src/interfaces/rtc_rtp_transceiver.h"
 #include "src/interfaces/rtc_sctp_transport.h"
 #include "src/node/async_object_wrap_with_loop.h"
-#include "src/node/proxy.h"
+#include "src/node/factory_owned_proxy.h"
 
 namespace webrtc {
 
@@ -44,7 +44,7 @@ namespace node_webrtc {
     class PeerConnectionFactory;
 
     class RTCPeerConnection
-        : public Proxy<RTCPeerConnection, webrtc::PeerConnectionInterface>,
+        : public FactoryOwnedProxy<RTCPeerConnection, webrtc::PeerConnectionInterface>,
           public webrtc::PeerConnectionObserver {
     public:
         explicit RTCPeerConnection(const Napi::CallbackInfo&);

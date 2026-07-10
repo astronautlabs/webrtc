@@ -1,3 +1,5 @@
+#pragma once
+
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory.h"
 #include "src/utilities/napi_ref_ptr.h"
 namespace node_webrtc {

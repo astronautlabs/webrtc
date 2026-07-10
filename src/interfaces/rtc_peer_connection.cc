@@ -68,7 +68,7 @@ namespace {
     }
 }
 
-#define Super Proxy<RTCPeerConnection, webrtc::PeerConnectionInterface>
+#define Super FactoryOwnedProxy<RTCPeerConnection, webrtc::PeerConnectionInterface>
 
 namespace node_webrtc {
     RTCPeerConnection::RTCPeerConnection(const Napi::CallbackInfo& info):
