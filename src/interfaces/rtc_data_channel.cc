@@ -32,6 +32,7 @@ namespace node_webrtc {
         Super(info) 
     {
         InitializeUV();
+        InitializeAsyncContext();
         Construct(info);
 
         // In previous versions we had some complexity around connecting an observer early and replaying events.
@@ -47,6 +48,7 @@ namespace node_webrtc {
         if (_handle == nullptr)
             return;
 
+        DestroyAsyncContext();
         UnregisterProxy();
         _handle->UnregisterObserver();
         _cached_id = _handle->id();
@@ -62,8 +64,8 @@ namespace node_webrtc {
 
     void RTCDataChannel::OnPeerConnectionClosed() {
         if (_handle != nullptr) {
-            Stop();
             CleanupInternals();
+            Stop();
         }
     }
 

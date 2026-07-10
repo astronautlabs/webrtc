@@ -24,32 +24,32 @@ describe('RTCVideoSource', () => {
   it('simple usage', async () => {
     await (async () => {
       const source = new RTCVideoSource();
-      printSource(source);
+      //printSource(source);
       await tick();
   
       source.onFrame(frame);
       await tick();
   
       const track = source.createTrack();
-      printTrack(track);
+      //printTrack(track);
       await tick();
   
       const clonedTrack = track.clone();
-      printTrack(clonedTrack);
+      //printTrack(clonedTrack);
       await tick();
   
       source.onFrame(frame);
       await tick();
   
       track.stop();
-      printTrack(track);
+      //printTrack(track);
       await tick();
   
       source.onFrame(frame);
       await tick();
   
       clonedTrack.stop();
-      printTrack(clonedTrack);
+      //printTrack(clonedTrack);
       await tick();
   
       source.onFrame(frame);

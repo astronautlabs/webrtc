@@ -36,7 +36,8 @@ namespace node_webrtc {
     }
 
     RTCRtpSender::RTCRtpSender(const Napi::CallbackInfo& info) :
-        Napi::ObjectWrap<RTCRtpSender>(info) {
+        Napi::ObjectWrap<RTCRtpSender>(info) 
+    {
         if (info.Length() != 3 || !info[0].IsExternal() || !info[1].IsString() || !info[2].IsExternal()) {
             Napi::TypeError::New(info.Env(), "You cannot construct a RTCRtpSender").ThrowAsJavaScriptException();
             return;

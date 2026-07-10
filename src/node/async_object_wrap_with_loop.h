@@ -63,6 +63,7 @@ namespace node_webrtc {
         std::atomic<bool> _shouldStop = false;
         std::atomic<bool> _didStop = false;
 
+    protected:
         void DestroyAsyncContext() {
             Log(this, "Destroying async context");
             _async_context_mutex.lock();
@@ -164,7 +165,7 @@ namespace node_webrtc {
         virtual void DidStop() {
             Log(this, "DidStop()");
             _didStop = true;
-
+            DestroyAsyncContext();
             // TODO(liam): This sort of thing is a half assed hack on bad reference handling. 
             // All object pointers should be held by napi_ref_ptr, allowing reference counts to be 
             // managed by RAII.
@@ -191,6 +192,7 @@ namespace node_webrtc {
                 }
             }
             if (_shouldStop) {
+                Log(this, "AsyncObjectWrapWithLoop::Run(): Stopping due to signal");
                 Log(this, "uv: Unregistering async handle");
                 _lock.lock();
                 uv_close(reinterpret_cast<uv_handle_t*>(&_async), [](auto handle) {
@@ -203,10 +205,14 @@ namespace node_webrtc {
         }
 
         virtual void Stop() {
+            Log(this, "AsyncObjectWrapWithLoop::Stop()");
+
             if (!_hasUV) {
                 Log(this, "Stop() called without an active UV async handle");
                 return;
             }
+            
+            Log(this, "AsyncObjectWrapWithLoop::Stop(): Signaling stop");
             _shouldStop = true;
             Dispatch(Task::Create());
         }

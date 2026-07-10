@@ -130,6 +130,7 @@ namespace node_webrtc {
         OnNodeThread([this, state]() {
             Event("signalingstatechange").Dispatch();
             if (state == webrtc::PeerConnectionInterface::kClosed) {
+                Log(this, "Stopping");
                 Stop();
             }
         });
@@ -716,6 +717,8 @@ namespace node_webrtc {
     Napi::Value RTCPeerConnection::Close(const Napi::CallbackInfo& info) {
         Log(this, "Close()");
         SetKeepAlive(false);
+        DestroyAsyncContext();
+        
         if (_handle) {
             _cached_configuration = ExtendedRTCConfiguration(
                 _handle->GetConfiguration(),

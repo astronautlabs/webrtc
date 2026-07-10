@@ -37,6 +37,7 @@ const typesToIgnore = new Set([
 export function trackDestructors() {
     const asyncIds = new WeakMap<object, number>();
     const destructorDeferreds = new Map();
+    const breadcrumbs = new Map();
 
     function createDestructorDeferred(resource: object, asyncId: number) {
         const destructorDeferred = createDeferred();
@@ -48,6 +49,7 @@ export function trackDestructors() {
     function maybeResolveDestructorDeferred(asyncId: number) {
         const destructorDeferred = destructorDeferreds.get(asyncId);
         if (destructorDeferred) {
+            //console.log(`destruct ${asyncId}: ${breadcrumbs.get(asyncId)}`);
             destructorDeferreds.delete(asyncId);
             destructorDeferred.resolve();
             return true;
@@ -58,7 +60,7 @@ export function trackDestructors() {
     function getDestructorPromise(resource: object) {
         const asyncId = asyncIds.get(resource);
         if (!asyncId) {
-            return Promise.reject(new Error('Unknown resource'));
+            return Promise.reject(new Error(`Unknown resource ${resource} [${resource.constructor.name}]`));
         }
         const destructorDeferred = destructorDeferreds.get(asyncId);
         return destructorDeferred
@@ -73,6 +75,8 @@ export function trackDestructors() {
             if (typesToIgnore.has(type)) {
                 return;
             }
+            //console.log(`resource ${type} id=${asyncId}: ${resource}: ctor=${resource.constructor}`);
+            breadcrumbs.set(asyncId, `resource ${type} id=${asyncId}: ${resource}: ctor=${resource.constructor}`);
             createDestructorDeferred(resource, asyncId);
         },
         destroy(asyncId) {

@@ -54,22 +54,22 @@ async function setupRTCDataChannels() {
 }
 
 describe('RTCPeerConnection', () => {
-    it.skip("RTCPeerConnection's destructor fires", async () => {
+    it("RTCPeerConnection's destructor fires", async () => {
         const { destructor, stop } = trackDestructors();
         const pc = new RTCPeerConnection();
         pc.close();
-        await destructor((pc as any)._pc);
+        await destructor(pc);
 
         stop();
     });
-    it.skip('Destructors fire in RTCDataChannel use-case', async () => {
+    it('Destructors fire in RTCDataChannel use-case', async () => {
         const { destructor, stop } = trackDestructors();
 
         const { pc1, pc2, dc1, dc2 } = await setupRTCDataChannels();
 
         const destructors = [
-            destructor((pc1 as any)._pc),
-            destructor((pc2 as any)._pc),
+            destructor(pc1),
+            destructor(pc2),
             destructor(dc1),
             destructor(dc2),
             destructor(pc1.sctp!),
@@ -87,7 +87,7 @@ describe('RTCPeerConnection', () => {
 
         stop();
     });
-    it.skip('Destructors fire in MediaStreamTrack use-case', async () => {
+    it('Destructors fire in MediaStreamTrack use-case', async () => {
         const { destructor, stop } = trackDestructors();
 
         await (async () => {
@@ -99,33 +99,22 @@ describe('RTCPeerConnection', () => {
                 }
             });
 
-            const localTracks = stream1.getTracks().map(destructor);
-            const remoteTracks = pc2.getReceivers().map(receiver => destructor(receiver.track));
-            const senders = pc1.getSenders().concat(pc2.getSenders()).map(destructor);
-            const receivers = pc1.getReceivers().concat(pc2.getReceivers()).map(destructor);
-            const transceivers = pc1.getTransceivers().concat(pc2.getTransceivers()).map(destructor);
-
             const dtlsTransports = pc1.getReceivers().concat(pc2.getReceivers()).map(receiver => receiver.transport!);
             const iceTransports = dtlsTransports.map(dtlsTransport => dtlsTransport.iceTransport);
 
             const destructors = [
-                destructor((pc1 as any)['_pc']),
-                destructor((pc2 as any)['_pc'])
-            ].concat(
-                localTracks
-            ).concat(
-                remoteTracks
-            ).concat(
-                senders
-            ).concat(
-                receivers
-            ).concat(
-                transceivers
-            ).concat(
-                dtlsTransports.map(destructor)
-            ).concat(
-                iceTransports.map(destructor)
-            );
+                ...stream1.getTracks().map(destructor),
+                ...pc2.getReceivers()
+                    .map(receiver => receiver.track)
+                    .map(track => destructor(track)),
+                // ...pc1.getReceivers().concat(pc2.getReceivers()).map(destructor),
+                // ...pc1.getSenders().concat(pc2.getSenders()).map(destructor),
+                // ...pc1.getTransceivers().concat(pc2.getTransceivers()).map(destructor),
+                destructor(pc1),
+                destructor(pc2),
+                ...dtlsTransports.map(destructor),
+                ...iceTransports.map(destructor)
+            ];
 
             stream1.getTracks().forEach(track => track.stop());
             pc1.close();
@@ -169,13 +158,13 @@ async function testSink(kind: 'audio' | 'video') {
 }
 
 describe('RTCAudioSink', () => {
-    it.skip('RTCAudioSink\'s destructor fires', async () => {
+    it('RTCAudioSink\'s destructor fires', async () => {
         await testSink('audio');
     });
 });
 
 describe('RTCVideoSink', () => {
-    it.skip('RTCVideoSink\'s destructor fires', async () => {
+    it('RTCVideoSink\'s destructor fires', async () => {
         await testSink('video');
     });
 });

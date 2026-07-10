@@ -27,6 +27,8 @@ namespace node_webrtc {
     MediaStreamTrack::MediaStreamTrack(const Napi::CallbackInfo& info) :
         Super(info) 
     {
+        InitializeUV();
+        InitializeAsyncContext();
         Construct(info);
         assert(_handle);
         _handle->RegisterObserver(this);

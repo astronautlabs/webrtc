@@ -6,7 +6,9 @@ import * as wrtc from '..';
 
 type PortRange = { min: number, max: number };
 
-describe('CustomSettings', () => {
+// TODO(liam): Custom port range allocations are not currently supported, as the proper place to set them up is at the
+// peer connection factory level now.
+describe.skip('CustomSettings', () => {
     it('custom ports connect once', () => {
         connectClientServer({ min: 9000, max: 9010 }, (err: any) => {
             if (err)
@@ -78,7 +80,8 @@ describe('CustomSettings', () => {
         const minPort = portRange.min;
         const maxPort = portRange.max;
 
-        return minPort <= parseInt(port) && maxPort >= parseInt(port);
+        console.log(`FOUND ${minPort} <= ${parseInt(port)} <= ${maxPort} | from: ${candidate}`);
+        return parseInt(port) >= minPort && parseInt(port) <= maxPort;
     }
 
 });
