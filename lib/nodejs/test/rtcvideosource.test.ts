@@ -61,11 +61,8 @@ describe('RTCVideoSource', () => {
     }
   });
   
-  // TODO(liam):
-  //     Fatal error in: ../../download/src/pc/ice_transport.cc, line 28
-  //     last system error: 0
-  //     Check failed: (creator_thread_)->IsCurrent()
-  //     Aborted
+  // we are no longer sending custom frameWidth/frameHeight, so this test fails
+  // TODO(liam): investigate what happened here and restore the functionality if it makes sense
   it.skip('getStats()', async () => {
     const source = new RTCVideoSource();
     const track = source.createTrack();

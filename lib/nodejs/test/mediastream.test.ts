@@ -107,7 +107,7 @@ describe('MediaStream', () => {
         ).to.be.true;
     });
 
-    it.skip('.clone and .stop', async () => {
+    it('.clone and .stop', async () => {
         let stream1 = await getUserMedia({ audio: true });
         var track1 = stream1.getTracks()[0];
 

@@ -221,9 +221,7 @@ namespace node_webrtc {
             auto self = this->Value();
             auto maybeFunction = self.Get(name);
             if (maybeFunction.IsFunction()) {
-                _async_context_mutex.lock();
                 maybeFunction.template As<Napi::Function>().MakeCallback(self, args, _context ? *_context : nullptr);
-                _async_context_mutex.unlock();
             }
         }
     };

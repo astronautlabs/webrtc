@@ -96,14 +96,13 @@ export async function negotiateRTCPeerConnections(
     }
 }
 
-export async function getLocalTrackStats(pc: RTCPeerConnection, track: MediaStreamTrack, check = (stats: RTCStatsReport) => true) {
+export async function getLocalTrackStats(pc: RTCPeerConnection, track: MediaStreamTrack, check = (stats: RTCInboundRtpStreamStats) => true) {
     let stats;
     do {
         const report = await pc.getStats();
         stats = [...report.values()]
-            .find(stats => stats.type === 'track'
+            .find((stats: RTCInboundRtpStreamStats) => stats.type === 'media-source'
                 && stats.trackIdentifier === track.id
-                && !stats.remote
                 && check(stats));
     } while (!stats);
     return stats;

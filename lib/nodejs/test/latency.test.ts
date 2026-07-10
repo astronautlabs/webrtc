@@ -157,6 +157,7 @@ async function measureTimeThroughUnorderedUnreliableRTCDataChannel() {
     }
 }
 
+// TODO(liam): latency tests need to be reworked
 describe.skip('Latency', () => {
     it(': Average Time through Unordered, Unreliable RTCDataChannel', async () => {
         const averageTime = await measureTimeThroughUnorderedUnreliableRTCDataChannel();
