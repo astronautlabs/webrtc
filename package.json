@@ -58,7 +58,7 @@
     "@types/which": "^2.0.1",
     "aws-sdk": "^2.2.10",
     "browserify-middleware": "^8.1.1",
-    "canvas": "^2.5.0",
+    "canvas": "^3.2.3",
     "chai": "^4.3.6",
     "cross-env": "^5.1.4",
     "debug": "^4.4.3",
