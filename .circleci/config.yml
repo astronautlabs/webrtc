@@ -157,6 +157,7 @@ jobs:
 
                   sudo ln -s `which python3` /usr/local/bin/python
                   sudo ln -s `which clang-23` /usr/local/bin/clang
+                  sudo ln -s `which clang++-23` /usr/local/bin/clang++
                   set -x
                   clang --version
                   cmake --version
