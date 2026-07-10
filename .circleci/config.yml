@@ -215,7 +215,7 @@ jobs:
           key: asset-cache-v2-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
           paths:
             - build/external
-      - run: npm run build
+      - run: npm run build:tsc
       # - run:
       #     name: Before save workspace...
       #     command: |
@@ -239,17 +239,11 @@ jobs:
             # them fail (and I'm not sure all the reasons why, yet).
             export NODE_VERSION=$(node -v | tr -d '\n')
             if [[ "$TARGET_ARCH" == arm64 ]]; then
-              qemu-aarch64 -L ~/node-webrtc/build/external/libwebrtc/download/src/build/linux/debian_sid_arm64-sysroot ~/node-$NODE_VERSION-linux-arm64/bin/node test/create-offer.js
+              qemu-aarch64 -L ~/node-webrtc/build/external/libwebrtc/download/src/build/linux/debian_sid_arm64-sysroot ~/node-$NODE_VERSION-linux-arm64/bin/node node_modules/.bin/jest
             else
-              # NOTE(mroberts): First run C++ tests, if any.
               node dist/nodejs/test/cpp-test.js
-
               export CHECK_REFLEXIVE=true
               npm test
-
-              # TODO
-              # cd example
-              # npm test
             fi
         
       ###
