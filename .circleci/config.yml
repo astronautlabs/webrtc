@@ -167,6 +167,9 @@ jobs:
       ###
       - node/install:
           node-version: << parameters.node-version >>
+      - run:
+          name: Update NPM
+          command: npm install npm@latest -g
       - checkout
       - run:
           name: Build environment
