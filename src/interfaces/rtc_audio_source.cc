@@ -48,7 +48,7 @@ namespace node_webrtc {
         // Here the default reference will be owned by the RTCAudioSource.
         // See RTCPeerConnection::AddTrack() for corresponding referencing logic in that case.
 
-        auto wrappedTrack = MediaStreamTrack::Wrap(Env(), track, factory);
+        auto wrappedTrack = MediaStreamTrack::Wrap(Env(), track, Bundle {}.AddFragment(PeerConnectionFactoryReference { factory }));
         _tracks.insert(wrappedTrack);
         return wrappedTrack->Value();
     }

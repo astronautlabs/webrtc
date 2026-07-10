@@ -4,7 +4,12 @@ namespace node_webrtc {
     class PeerConnectionFactoryReference {
         napi_ref_ptr<PeerConnectionFactory> _factory;
     public:
-        explicit PeerConnectionFactoryReference(napi_ref_ptr<PeerConnectionFactory> factory): 
+        PeerConnectionFactoryReference(): 
+            _factory(nullptr)
+        {
+        }
+
+        explicit PeerConnectionFactoryReference(const napi_ref_ptr<PeerConnectionFactory>& factory): 
             _factory(factory)
         {
         }

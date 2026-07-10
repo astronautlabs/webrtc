@@ -238,7 +238,7 @@ namespace node_webrtc {
         // no need to rush to attach an observer.
 
         OnNodeThread([this, channel]() {
-            auto jsChannel = RTCDataChannel::Wrap(Env(), channel, _factory);
+            auto jsChannel = RTCDataChannel::Wrap(Env(), channel, Bundle {}.AddFragment(PeerConnectionFactoryReference { _factory }));
             _peerChannels.insert(jsChannel);
             Event("datachannel")
                 .With("channel", jsChannel)
@@ -261,7 +261,7 @@ namespace node_webrtc {
 
             auto mediaStreams = std::vector<napi_ref_ptr<MediaStream>>();
             for (auto const& stream : receiver->streams()) {
-                auto mediaStream = MediaStream::Wrap(Env(), stream, _factory);
+                auto mediaStream = MediaStream::Wrap(Env(), stream, Bundle {}.AddFragment(PeerConnectionFactoryReference { _factory }));
                 _streams.insert(mediaStream);
                 mediaStreams.push_back(mediaStream);
             }
@@ -383,7 +383,7 @@ namespace node_webrtc {
             }
         } else {
             auto rtcTrack = kindOrTrack.UnsafeFromRight()->track();
-            auto track = MediaStreamTrack::Wrap(Env(), rtcTrack, _factory);
+            auto track = MediaStreamTrack::Wrap(Env(), rtcTrack, Bundle {}.AddFragment(PeerConnectionFactoryReference { _factory }));
             _tracks[rtcTrack->id()] = track;
 
             if (maybeInit.IsNothing()) {
@@ -592,7 +592,7 @@ namespace node_webrtc {
             return env.Undefined();
         }
 
-        auto channel = RTCDataChannel::Wrap(Env(), data_channel_interface, _factory);
+        auto channel = RTCDataChannel::Wrap(Env(), data_channel_interface, Bundle {}.AddFragment(PeerConnectionFactoryReference { _factory }));
         _channels.insert(channel);
         return channel->Value();
     }
@@ -1027,7 +1027,7 @@ namespace node_webrtc {
     napi_ref_ptr<RTCRtpReceiver> RTCPeerConnection::createOrUpdateReceiver(webrtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver) {
         Log(this, "createOrUpdateReceiver()");
         auto iter = _receivers.find(rtpReceiver->id());
-        auto track = MediaStreamTrack::Wrap(Env(), rtpReceiver->track(), _factory);
+        auto track = MediaStreamTrack::Wrap(Env(), rtpReceiver->track(), Bundle {}.AddFragment(PeerConnectionFactoryReference { _factory }));
 
         auto transceiver = getTransceiverForReceiver(rtpReceiver);
         assert(transceiver);

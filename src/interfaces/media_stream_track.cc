@@ -9,6 +9,7 @@
  */
 #include "src/interfaces/media_stream_track.h"
 #include "src/node/envelope.h"
+#include "src/node/proxy.h"
 #include "src/utilities/log.h"
 #include <src/api/media_stream_interface.h>
 #include <src/api/scoped_refptr.h>
@@ -27,6 +28,7 @@ namespace node_webrtc {
         Super(info) 
     {
         Construct(info);
+        assert(_handle);
         _handle->RegisterObserver(this);
     }
 
@@ -126,7 +128,7 @@ namespace node_webrtc {
             clonedTrack = _factory->factory()->CreateVideoTrack(webrtc::scoped_refptr {videoTrack->GetSource()}, label);
         }
 
-        auto clonedMediaStreamTrack = Wrap(Env(), clonedTrack, _factory);
+        auto clonedMediaStreamTrack = Wrap(Env(), clonedTrack, Bundle {}.AddFragment(PeerConnectionFactoryReference { _factory }));
         if (_ended) {
             clonedMediaStreamTrack->Stop();
         }

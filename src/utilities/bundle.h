@@ -31,15 +31,16 @@ namespace node_webrtc {
         }
 
         template <typename T, typename Self>
-        Self& AddFragment(this Self& self) {
+        Self&& AddFragment(this Self&& self, const T&& fragmentTemplate) {
             const auto fragmentName = std::string { NAMEOF_TYPE(T) };
-            if (!self->fragments.contains(fragmentName)) {
-                T* fragment = nullptr;
-                fragment = new T();
-                self->fragments[fragmentName] = fragment;
-            }
+            if (self.fragments.contains(fragmentName))
+                throw std::invalid_argument { std::string { "Already contains fragment " } + std::string { NAMEOF_TYPE(T) } };
 
-            return *static_cast<T*>(self->fragments[fragmentName]);
+            T* fragment = nullptr;
+            fragment = new T();
+            *fragment = fragmentTemplate;
+            self.fragments[fragmentName] = fragment;
+            return self;
         }
     };
 } // namespace node_webrtc

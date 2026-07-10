@@ -131,7 +131,7 @@ Napi::Value node_webrtc::GetUserMedia::GetUserMediaImpl(const Napi::CallbackInfo
         stream->AddTrack(track);
     }
 
-    node_webrtc::Resolve(deferred, MediaStream::Wrap(info.Env(), stream, factory));
+    node_webrtc::Resolve(deferred, MediaStream::Wrap(info.Env(), stream, Bundle {}.AddFragment(PeerConnectionFactoryReference { factory })));
     return deferred.Promise();
 }
 
