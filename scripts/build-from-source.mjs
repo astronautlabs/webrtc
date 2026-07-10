@@ -40,6 +40,7 @@ function main(args) {
     }
 
     if (arch !== os.arch()) {
+        console.log(`Setting up cross-compilation (building ${platform}-${arch} on ${os.platform()}-${os.arch()})`);
         cmakeJsArgs.push(
             `--CDCMAKE_TOOLCHAIN_FILE=toolchains/${platform}-${arch}.toolchain`,
         );
