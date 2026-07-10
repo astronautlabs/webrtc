@@ -151,12 +151,8 @@ async function getMediaStream() {
   var trackEventPromise = new Promise<RTCTrackEvent>(function(resolve) {
     pc.ontrack = resolve;
   });
-  console.log(`wait for remote desc`);
   await pc.setRemoteDescription(offer);
-  console.log(`wait for track event`);
   let trackEvent = await trackEventPromise;
-  console.log(`closing pc`);
   pc.close();
-  console.log(`returning stream`);
   return trackEvent.streams[0];
 }
