@@ -182,10 +182,10 @@ jobs:
             cat CACHE_KEY
       - restore_cache:
           name: Restore cached libwebrtc build
-          key: asset-cache-v1-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+          key: asset-cache-v2-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
       - restore_cache:
           name: Restore cached NPM modules
-          key: modules-cache-v1-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "package.json" }}
+          key: modules-cache-v2-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "package.json" }}
       - run:
           name: npm install
           command: |
@@ -202,14 +202,14 @@ jobs:
             # fi
       - save_cache:
           name: Cache NPM modules
-          key: modules-cache-v1-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "package.json" }}
+          key: modules-cache-v2-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "package.json" }}
           paths:
             - node_modules
       - run:
           name: Build libwebrtc + Node.js bindings
           command: npm run build:native
       - save_cache:
-          key: asset-cache-v1-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+          key: asset-cache-v2-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
           paths:
             - build/external
       - run: npm run build
