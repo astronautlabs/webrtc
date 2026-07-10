@@ -15,4 +15,4 @@ if [ -z "$PARALLELISM" ]; then
   PARALLELISM=24
 fi
 
-ninja $TARGETS -v -j $PARALLELISM 
+ninja $TARGETS -j $PARALLELISM 
