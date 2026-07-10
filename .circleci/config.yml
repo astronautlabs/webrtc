@@ -15,6 +15,7 @@ executors:
       TARGET_ARCH: x64
       CMAKE_BUILD_TYPE: Release
       PLATFORM: linux
+    resource_class: xlarge
   linux-arm64: &linux-arm64
     machine:
       image: ubuntu-2604:current
