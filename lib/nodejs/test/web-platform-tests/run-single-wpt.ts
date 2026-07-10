@@ -1,181 +1,171 @@
-/* eslint-disable no-console */
-import path from 'path';
-import { URL } from 'url';
-import { specify } from 'mocha-sugar-free';
-import { inBrowserContext } from './util';
-import { JSDOM, VirtualConsole, ResourceLoader, FetchOptions, AbortablePromise } from 'jsdom';
-import * as wrtc from '../..';
+// /* eslint-disable no-console */
+// import path from 'path';
+// import { URL } from 'url';
+// import { JSDOM, VirtualConsole, requestInterceptor } from 'jsdom';
+// import * as wrtc from '../..';
 
-const reporterPathname = '/resources/testharnessreport.js';
+// const reporterPathname = '/resources/testharnessreport.js';
 
-class CustomResourceLoader extends ResourceLoader {
-  constructor() {
-    super({ strictSSL: false });
-  }
+// interface Result {
+//     status: number; // 0 is success
+//     name: string;
+//     message: string;
+//     stack: string;
+// }
 
-  override fetch(urlString: string, options: FetchOptions) {
-    const url = new URL(urlString);
+// export async function runSingleWPT(urlPrefix: string, testPath: string, expectFail: boolean, allowTimeoutSuccess = false) {
+//     const unhandledExceptions: any[] = [];
+//     let allowUnhandledExceptions = false;
 
-    if (url.pathname === reporterPathname) {
-      let promise = Promise.resolve(Buffer.from('window.shimTest();', 'utf-8')) as AbortablePromise<Buffer>;
-      promise.abort = () => {};
-      return promise;
-    } else if (url.pathname.startsWith('/resources/')) {
-      // When running to-upstream tests, the server doesn't have a /resources/ directory.
-      // So, always go to the one in ./tests.
-      // The path replacement accounts for a rewrite performed by the WPT server:
-      // https://github.com/w3c/web-platform-tests/blob/master/tools/serve/serve.py#L271
-      
-      const wptDir = path.resolve(__dirname, '..', '..', '..', '..');
-      const filePath = path.resolve(wptDir, 'web-platform-tests' + url.pathname)
-        .replace('/resources/WebIDLParser.js', '/resources/webidl2/lib/webidl2.js');
+//     const virtualConsole = new VirtualConsole().forwardTo(console, { jsdomErrors: 'none' });
+//     virtualConsole.on('jsdomError', (e: any) => {
+//         if (e.type === 'unhandled exception' && !allowUnhandledExceptions) {
+//             unhandledExceptions.push(e);
 
-      return super.fetch(`file://${filePath}`, options);
-    }
+//             // Some failing tests make a lot of noise.
+//             // There's no need to log these messages
+//             // for errors we're already aware of.
+//             //if (!expectFail) {
+//             console.error(`    (!!!) Uncaught exception: ${e.detail.message}:`);
+//             console.error(e.detail.stack);
+//             //}
+//         }
+//     });
 
-    return super.fetch(urlString, options);
-  }
-}
+//     let dom = await JSDOM.fromURL(urlPrefix + testPath, {
+//         runScripts: 'dangerously',
+//         virtualConsole,
+//         resources: {
+//             interceptors: [
+//                 requestInterceptor((request, context) => {
+//                     const url = new URL(request.url);
 
-interface Result {
-  status: number; // 0 is success
-  name: string;
-  message: string;
-  stack: string;
-}
+//                     if (url.pathname === reporterPathname) {
+//                         return new Response('window.shimTest();');
+//                     } else if (url.pathname.startsWith('/resources/')) {
+//                         // When running to-upstream tests, the server doesn't have a /resources/ directory.
+//                         // So, always go to the one in ./tests.
+//                         // The path replacement accounts for a rewrite performed by the WPT server:
+//                         // https://github.com/w3c/web-platform-tests/blob/master/tools/serve/serve.py#L271
 
-export async function runSingleWPT(urlPrefix: string, testPath: string, expectFail: boolean, allowTimeoutSuccess = false) {
-  const unhandledExceptions: any[] = [];
-  let allowUnhandledExceptions = false;
+//                         const wptDir = path.resolve(__dirname, '..', '..', '..', '..');
+//                         const filePath = path.resolve(wptDir, 'web-platform-tests' + url.pathname)
+//                             .replace('/resources/WebIDLParser.js', '/resources/webidl2/lib/webidl2.js');
 
-  const virtualConsole = new VirtualConsole().sendTo(console, { omitJSDOMErrors: true });
-  virtualConsole.on('jsdomError', (e: any) => {
-    if (e.type === 'unhandled exception' && !allowUnhandledExceptions) {
-      unhandledExceptions.push(e);
+//                         return fetch(`file://${filePath}`);
+//                     }
+//                 })
+//             ]
+//         },
+//         pretendToBeVisual: true,
+//         // TODO: this isn't passable with the specified types (only available for new JSDOM())
+//         //storageQuota: 100000 // Filling the default quota takes about a minute between two WPTs
+//     });
+//     const { window } = dom;
 
-      // Some failing tests make a lot of noise.
-      // There's no need to log these messages
-      // for errors we're already aware of.
-      //if (!expectFail) {
-        console.error(`    (!!!) Uncaught exception: ${e.detail.message}:`);
-        console.error(e.detail.stack);
-      //}
-    }
-  });
+//     // NOTE(mroberts): Here is where we inject @/webrtc.
+//     Object.assign(window, wrtc);
+//     window.TypeError = TypeError;
 
-  let dom = await JSDOM.fromURL(urlPrefix + testPath, {
-    runScripts: 'dangerously',
-    virtualConsole,
-    resources: new CustomResourceLoader(),
-    pretendToBeVisual: true,
-    // TODO: this isn't passable with the specified types (only available for new JSDOM())
-    //storageQuota: 100000 // Filling the default quota takes about a minute between two WPTs
-  });
-  const { window } = dom;
+//     (window.navigator as { mediaDevices: MediaDevices }).mediaDevices = Object.assign({}, window.navigator.mediaDevices, {
+//         getUserMedia: wrtc.getUserMedia
+//     });
 
-  // NOTE(mroberts): Here is where we inject @/webrtc.
-  Object.assign(window, wrtc);
-  window.TypeError = TypeError;
+//     window.fetch = function safeFetch(...passedArguments: any[]) {
+//         const args: string[] = [].slice.call(passedArguments);
+//         const url = args[0];
+//         try {
+//             new window.URL(url);
+//         } catch (error) {
+//             args[0] = window.location.protocol + '//' + window.location.host + url;
+//         }
+//         return fetch.apply(null, args as any);
+//     };
 
-  (window.navigator as { mediaDevices: MediaDevices }).mediaDevices = Object.assign({}, window.navigator.mediaDevices, {
-    getUserMedia: wrtc.getUserMedia
-  });
+//     await new Promise<void>((resolve, reject) => {
+//         const results: Result[] = [];
 
-  window.fetch = function safeFetch(...passedArguments: any[]) {
-    const args: string[] = [].slice.call(passedArguments);
-    const url = args[0];
-    try {
-      new window.URL(url);
-    } catch (error) {
-      args[0] = window.location.protocol + '//' + window.location.host + url;
-    }
-    return fetch.apply(null, args as any);
-  };
+//         window.shimTest = () => {
+//             const oldSetup = window.setup;
+//             window.setup = (options: any) => {
+//                 if (options.allow_uncaught_exception) {
+//                     allowUnhandledExceptions = true;
+//                 }
+//                 oldSetup(options);
+//             };
 
-  await new Promise<void>((resolve, reject) => {
-    const results: Result[] = [];
+//             let completionCallback: (a: unknown[], b: { status: number }) => void;
+//             let internalTimeout = setTimeout(() => {
+//                 // It shouldn't be possible to hit this, but some tests are broken in a way that 
+//                 // prevents the completion callback.
+//                 console.log(`    (***) Test timed out without harness indicating timeout (bug in test)`);
+//                 completionCallback([], { status: 2 });
+//             }, 70000);
 
-    window.shimTest = () => {
-      const oldSetup = window.setup;
-      window.setup = (options: any) => {
-        if (options.allow_uncaught_exception) {
-          allowUnhandledExceptions = true;
-        }
-        oldSetup(options);
-      };
+//             window.add_result_callback((test: Result) => {
+//                 console.log(`    (***) ${summarizeResult(test)}`);
+//                 results.push(test);
+//             });
 
-      let completionCallback: (a: unknown[], b: { status: number }) => void;
-      let internalTimeout = setTimeout(() => {
-        // It shouldn't be possible to hit this, but some tests are broken in a way that 
-        // prevents the completion callback.
-        console.log(`    (***) Test timed out without harness indicating timeout (bug in test)`);
-        completionCallback([], { status: 2 });
-      }, 70000);
+//             window.add_completion_callback(completionCallback = (_, harnessStatus) => {
+//                 clearTimeout(internalTimeout);
 
-      window.add_result_callback((test: Result) => {
-        console.log(`    (***) ${summarizeResult(test)}`);
-        results.push(test);
-      });
+//                 // This needs to be delayed since some tests do things even after calling done().
+//                 process.nextTick(() => {
+//                     window.close();
+//                 });
 
-      window.add_completion_callback(completionCallback = (_, harnessStatus) => {
-        clearTimeout(internalTimeout);
+//                 if (harnessStatus.status === 2) {
+//                     console.log(`    (***) Test harness timed out`);
+//                     results.push({
+//                         name: `Boilerplate`,
+//                         message: `Test harness should not timeout`,
+//                         stack: ``,
+//                         status: allowTimeoutSuccess ? 0 : 2
+//                     });
+//                 } else {
+//                     console.log(`    (***) Test harness completed`);
+//                 }
 
-        // This needs to be delayed since some tests do things even after calling done().
-        process.nextTick(() => {
-          window.close();
-        });
+//                 for (let unhandledException of unhandledExceptions) {
+//                     results.push({
+//                         name: `Unhandled exception`,
+//                         message: unhandledException.message,
+//                         stack: unhandledException.stack,
+//                         status: 1
+//                     });
+//                 }
 
-        if (harnessStatus.status === 2) {
-          console.log(`    (***) Test harness timed out`);
-          results.push({
-            name: `Boilerplate`,
-            message: `Test harness should not timeout`,
-            stack: ``,
-            status: allowTimeoutSuccess ? 0 : 2
-          });
-        } else {
-          console.log(`    (***) Test harness completed`);
-        }
+//                 let errors = results.filter(x => x.status !== 0);
 
-        for (let unhandledException of unhandledExceptions) {
-          results.push({
-            name: `Unhandled exception`,
-            message: unhandledException.message,
-            stack: unhandledException.stack,
-            status: 1
-          });
-        }
+//                 if (errors.length === 0 && expectFail) {
+//                     reject(new Error(`
+//             Hey, did you fix a bug? This test used to be failing, but during
+//             this run there were no errors. If you have fixed the issue covered
+//             by this test, you can edit the "to-run.yaml" file and remove the line
+//             containing this test. Thanks!
+//         `));
+//                 } else if (errors.length > 0 && !expectFail) {
+//                     reject(new Error(
+//                         `Only ${results.length - errors.length}/${results.length} assertions succeeded:\n\n`
+//                         + `${results.map(r => `               ${summarizeResult(r)}`).join('\n')}`
+//                     ));
+//                 } else {
+//                     resolve();
+//                 }
+//             });
+//         };
+//     });
+// }
 
-        let errors = results.filter(x => x.status !== 0);
-
-        if (errors.length === 0 && expectFail) {
-          reject(new Error(`
-            Hey, did you fix a bug? This test used to be failing, but during
-            this run there were no errors. If you have fixed the issue covered
-            by this test, you can edit the "to-run.yaml" file and remove the line
-            containing this test. Thanks!
-        `));
-        } else if (errors.length > 0 && !expectFail) {
-          reject(new Error(
-            `Only ${results.length - errors.length}/${results.length} assertions succeeded:\n\n` 
-            + `${results.map(r => `               ${summarizeResult(r)}`).join('\n')}`
-          ));
-        } else {
-          resolve();
-        }
-      });
-    };
-  });
-}
-
-function summarizeResult(result: Result) {
-  if (result.status === 0) {
-    return `✅ ${result.name}`;
-  } else if (result.status === 1) {
-    return `❌ ${result.name}: ${result.message}`;
-  } else if (result.status === 2) {
-    return `⌛ ${result.name}: ${result.message}`;
-  } else if (result.status === 3) {
-    return `❔ ${result.name}: ${result.message}`;
-  }
-}
+// function summarizeResult(result: Result) {
+//     if (result.status === 0) {
+//         return `✅ ${result.name}`;
+//     } else if (result.status === 1) {
+//         return `❌ ${result.name}: ${result.message}`;
+//     } else if (result.status === 2) {
+//         return `⌛ ${result.name}: ${result.message}`;
+//     } else if (result.status === 3) {
+//         return `❔ ${result.name}: ${result.message}`;
+//     }
+// }

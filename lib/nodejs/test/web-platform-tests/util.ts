@@ -1,12 +1,9 @@
-'use strict';
 import path from 'path';
 import fs from 'fs';
 import http from 'http';
 import https from 'https';
 import enableDestroy from 'server-destroy';
-import request from 'request';
 import { JSDOM } from 'jsdom';
-import { Canvas } from 'canvas';
 
 declare var WorkerGlobalScope: any;
 
@@ -149,19 +146,17 @@ export const getTestFixtureUrl = (relativePath: string) => {
  * If running tests using karma, a http request will be performed to retrieve the file using karma's server.
  * @param {string} relativePath Relative path within the test directory. For example "jsdom/files/test.html"
  */
-export const readTestFixture = (relativePath: string) => {
-    const useRequest = inBrowserContext();
+export const readTestFixture = async (relativePath: string) => {
+    if (inBrowserContext()) {
+        const abort = new AbortController();
+        setTimeout(() => abort.abort(), 5000);
+        let response = await fetch(getTestFixtureUrl(relativePath), { signal: abort.signal });
+        return await response.text();
+    }
 
-    return nodeResolverPromise(nodeResolver => {
-        if (useRequest) {
-            request.get(getTestFixtureUrl(relativePath), { timeout: 5000 }, nodeResolver);
-        } else {
-            fs.readFile(path.resolve(__dirname, relativePath), { encoding: 'utf8' }, nodeResolver);
-        }
-    })
-        // request passes (error, response, content) to the callback
-        // we are only interested in the `content`
-        .then((result: any) => useRequest ? result[1] : result);
+    return new Promise(async (res, rej) => {
+        fs.readFile(path.resolve(__dirname, relativePath), { encoding: 'utf8' }, (err, data) => err ? rej(err) : res(data));
+    });
 };
 
 export const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
