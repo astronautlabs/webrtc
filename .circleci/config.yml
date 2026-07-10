@@ -134,7 +134,7 @@ jobs:
                 name: "Install sudo if required (to unify ARM and Docker builds)"
                 command: |
                   if ! which sudo &>/dev/null; then
-                    apt update && apt install sudo
+                    apt update && apt install sudo -y
                   fi
             - run: 
                 name: Install platform dependencies via Apt and Pip
