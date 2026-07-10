@@ -363,6 +363,11 @@ ExternalProject_Add(
   CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env BINARY_DIR=<BINARY_DIR> DEPOT_TOOLS=${depot_tools_install_dir} GN_GEN_ARGS=${GN_GEN_ARGS} SOURCE_DIR=<SOURCE_DIR> ${CMAKE_SOURCE_DIR}/scripts/configure-webrtc.${suffix}
   BUILD_COMMAND     ${CMAKE_COMMAND} -E env CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} DEPOT_TOOLS=${depot_tools_install_dir} ${CMAKE_SOURCE_DIR}/scripts/build-webrtc.${suffix}
   INSTALL_COMMAND   ""
+  
+  # Need these to avoid timeouts during CI (and also to see more progress for these steps which are quite heavy)
+  USES_TERMINAL_DOWNLOAD 1
+  USES_TERMINAL_CONFIGURE 1
+  USES_TERMINAL_BUILD 1
 )
 
 add_dependencies(project_libwebrtc project_depot_tools)
