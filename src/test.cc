@@ -7,6 +7,9 @@
  * project authors may be found in the AUTHORS file in the root of the source
  * tree.
  */
+
+#include "src/converters.h"
+#include "src/converters/napi.h"
 #include "src/node/async_object_wrap_with_loop.h"
 #ifdef DEBUG
 
@@ -14,9 +17,6 @@
 
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
-
-#include "src/converters.h"
-#include "src/converters/napi.h"
 
 TEST_CASE("converting booleans", "[converting-booleans]") {
     auto env = *node_webrtc::Test::env;

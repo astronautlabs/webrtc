@@ -1,5 +1,6 @@
 
 #include "src/converters.h"
+#include "src/converters/napi.h" // IWYU: keep
 #include <node-addon-api/napi.h>
 
 namespace node_webrtc {
