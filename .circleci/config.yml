@@ -145,7 +145,8 @@ jobs:
                 command: |
                   apt install -y \
                       sudo lsb-release software-properties-common gnupg wget cmake build-essential curl git \
-                      python3 python3-pkg-resources libglib2.0-dev ninja-build libnspr4 libnss3
+                      python3 python3-pkg-resources libglib2.0-dev ninja-build libnspr4 libnss3 \
+                      libatk1.0-0 libatk-bridge2.0-0 libcups2 libcairo2 libgtk-3-0 liboss4-salsa-asound2
                   curl https://apt.llvm.org/llvm.sh >/tmp/llvm.sh
                   chmod +x /tmp/llvm.sh
                   sudo /tmp/llvm.sh 23
@@ -283,8 +284,8 @@ jobs:
             fi
 
             if [[ "$(uname)" == Linux ]]; then
-              sudo apt install -y xvfb
-              xvfb-run ./node_modules/.bin/electron test/electron --no-sandbox
+              sudo apt install -y xvfb libatk1.0-0
+              xvfb-run ./node_modules/.bin/electron dist/nodejs/test/electron/index.js --no-sandbox
             else
               npm run test:electron
             fi
