@@ -1,47 +1,25 @@
 @ECHO OFF
-SET EL=0
 
-ECHO Add depot_tools to PATH
+echo ==========================================================
+echo Downloading libwebrtc
+echo ==========================================================
+
 set PATH=%DEPOT_TOOLS%;%PATH%
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+set DEPOT_TOOLS_WIN_TOOLCHAIN=0
 
-ECHO SET DEPOT_TOOLS_WIN_TOOLCHAIN=0
-SET DEPOT_TOOLS_WIN_TOOLCHAIN=0
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-ECHO gclient config
-CALL gclient config --unmanaged --spec solutions=[{\"name\":\"src\",\"url\":\"https://webrtc.googlesource.com/src.git\"}]
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-ECHO gclient sync
-CALL gclient sync --shallow --no-history --nohooks --with_branch_heads -r %WEBRTC_REVISION% -R
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-ECHO lastchange
-CALL python src\build\util\lastchange.py -o src\build\util\LASTCHANGE
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-ECHO update toolchain
-CALL python src\build\vs_toolchain.py update --force
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-ECHO download clang
-CALL python src\tools\clang\scripts\update.py
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-ECHO rmdir webrtc
+@ECHO ON
+CALL gclient config --unmanaged --spec solutions=[{\"name\":\"src\",\"url\":\"https://webrtc.googlesource.com/src.git\"}] || goto :error
+CALL gclient sync --shallow --no-history --nohooks --with_branch_heads -r %WEBRTC_REVISION% -R || goto :error
+CALL python src\build\util\lastchange.py -o src\build\util\LASTCHANGE || goto :error
+CALL python src\build\vs_toolchain.py update --force || goto :error
+CALL python src\tools\clang\scripts\update.py || goto :error
 rmdir webrtc
+mklink /j webrtc src || goto :error
 
-ECHO mklink /j webrtc src
-mklink /j webrtc src
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-GOTO DONE
-
-:ERROR
-ECHO ERRORLEVEL^: %ERRORLEVEL%
-SET EL=%ERRORLEVEL%
-
-:DONE
-
-EXIT /b %EL%
+: ------------------------------------------------------------------------------------
+goto :EOF
+:error
+@ECHO OFF
+echo ======================================================================
+echo Failed with error #%errorlevel%
+exit /b %errorlevel%

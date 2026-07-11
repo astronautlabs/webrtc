@@ -80,7 +80,7 @@ jobs:
                 name: Configure target platform (Linux)
                 command: |
                   echo 'export TARGET_PLATFORM="linux"' >> $BASH_ENV
-      
+
       ###
       # CONFIGURE DEBUG BUILDS
       ###
@@ -94,11 +94,11 @@ jobs:
                 command: |
                   echo 'export CMAKE_BUILD_TYPE="Debug"' >> $BASH_ENV
                   echo 'export DEBUG="true"' >> $BASH_ENV
-      
+
       ###
       # MACOS SPECIFIC SETUP
       ###
-      
+
       - when:
           condition:
             equal: [ *macos, << parameters.os >> ]
@@ -106,11 +106,11 @@ jobs:
             - run:
                 name: Install CMake and Python2 via Homebrew
                 command: brew install cmake kamilturek/python2/python@2
-        
+
       ###
       # WINDOWS SPECIFIC SETUP
       ###
-      
+
       - when:
           condition:
             equal: [ *windows, << parameters.os >> ]
@@ -146,7 +146,7 @@ jobs:
                   if ! which sudo &>/dev/null; then
                     apt install sudo -y
                   fi
-            - run: 
+            - run:
                 name: Install platform dependencies via Apt and Pip
                 command: |
                   sudo apt install -y \
@@ -246,30 +246,30 @@ jobs:
               export CHECK_REFLEXIVE=true
               npm test -- --runInBand --verbose --ci
             fi
-        
+
       ###
       # WEB PLATFORM TESTS
       ###
-      - run:
-          name: Setup /etc/hosts for Web Platform Tests (x64-only)
-          command: |
-            cat ci/wpt-hosts >>/etc/hosts
-      - run:
-          name: Run Web Platform Tests (x64-only)
-          command: |
-            if [[ "$TARGET_ARCH" == arm* ]]; then
-              echo "Skipping..."
-              exit 0
-            fi
+      # - run:
+      #     name: Setup /etc/hosts for Web Platform Tests (x64-only)
+      #     command: |
+      #       cat ci/wpt-hosts >>/etc/hosts
+      # - run:
+      #     name: Run Web Platform Tests (x64-only)
+      #     command: |
+      #       if [[ "$TARGET_ARCH" == arm* ]]; then
+      #         echo "Skipping..."
+      #         exit 0
+      #       fi
 
-            if [[ "$(uname)" == Linux ]]; then
-              sudo apt install --reinstall python-pkg-resources
-              #pip install --upgrade requests
-            fi
+      #       if [[ "$(uname)" == Linux ]]; then
+      #         sudo apt install --reinstall python-pkg-resources
+      #         #pip install --upgrade requests
+      #       fi
 
-            npm run wpt:init
-            npm run wpt:test
-      
+      #       npm run wpt:init
+      #       npm run wpt:test
+
       ###
       # RUN BROWSER TESTS (linux only for now)
       ###

@@ -1,7 +1,10 @@
 #!/bin/bash
 
-set -e
+echo ==========================================================
+echo Building libwebrtc
+echo ==========================================================
 
+set -e
 set -v
 
 export PATH=$DEPOT_TOOLS:$PATH
@@ -15,4 +18,4 @@ if [ -z "$PARALLELISM" ]; then
   PARALLELISM=24
 fi
 
-ninja $TARGETS -j $PARALLELISM 
+ninja $TARGETS -j $PARALLELISM
