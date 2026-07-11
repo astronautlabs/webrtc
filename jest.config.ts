@@ -3,11 +3,18 @@
  * https://jestjs.io/docs/configuration
  */
 
-export default {
+import type { Config } from 'jest';
+import { createDefaultPreset } from 'ts-jest';
+
+const config: Config = {
   collectCoverage: true,
   coverageDirectory: "coverage",
   coverageProvider: "v8",
-  preset: 'ts-jest',
+  ...createDefaultPreset({
+    diagnostics: {
+        ignoreCodes: [151002] // TS151002: Using hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true"
+    }
+  }),
   roots: [
     "lib/"
   ],
@@ -21,3 +28,5 @@ export default {
   // TODO(liam): I still think we can do better than this.
   openHandlesTimeout: 5000,
 };
+
+export default config;
