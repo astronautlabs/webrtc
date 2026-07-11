@@ -141,7 +141,7 @@ jobs:
                   DEBIAN_FRONTEND=noninteractive apt install -y tzdata
                   dpkg-reconfigure --frontend noninteractive tzdata
             - run:
-                name: Install platform dependencies via Apt and Pip
+                name: Install platform dependencies
                 command: |
                   apt install -y \
                       sudo lsb-release software-properties-common gnupg wget cmake build-essential curl git \
