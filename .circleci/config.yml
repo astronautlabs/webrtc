@@ -244,7 +244,7 @@ jobs:
             else
               node dist/nodejs/test/cpp-test.js
               export CHECK_REFLEXIVE=true
-              npm test
+              npm test -- --runInBand --verbose --ci
             fi
 
       ###
