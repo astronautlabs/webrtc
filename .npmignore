@@ -8,7 +8,7 @@ dist/test/**
 dist/**/*.test.js
 dist/test.js
 docs/
-karma/
+test/
 node/
 out/
 private/
