@@ -4,9 +4,8 @@
 appveyor.yml
 build/
 ci/
-dist/test/**
+dist/nodejs/test/**
 dist/**/*.test.js
-dist/test.js
 docs/
 test/
 node/

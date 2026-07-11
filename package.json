@@ -28,7 +28,7 @@
     "moduleName": "wrtc"
   },
   "engines": {
-    "node": "^18.0.0 || ^19.0.0"
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@astronautlabs/segfault-handler": "^1.0.0",
@@ -68,6 +68,7 @@
     "chai": "^4.3.6",
     "debug": "^4.4.3",
     "dotenv": "^16.0.1",
+    "electron": "^41.7.1",
     "eslint": "^4.14.0",
     "jest": "^30.4.2",
     "js-yaml": "^3.13.0",
@@ -106,7 +107,7 @@
     "test:cpp": "node --expose-gc --enable-source-maps dist/nodejs/test/cpp-test.js",
     "test:vgdb": "cd build/external/libwebrtc/build/Debug && vgdb --args node node_modules/.bin/jest",
     "test:browser": "ts-node test/browser/test.ts",
-    "test:electron": "electron test/electron",
+    "test:electron": "electron dist/nodejs/test/electron/index.js",
     "wpt:init": "git submodule update --init --recursive",
     "wpt:reset": "rimraf ./web-platform-tests && npm run wpt:init",
     "wpt:test": "node dist/nodejs/test/web-platform-tests/run-wpts.js",
