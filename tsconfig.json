@@ -11,7 +11,11 @@
         "esModuleInterop": true,
         "outDir": "dist",
         "rootDir": "lib",
-        "strict": true
+        "strict": true,
+        "types": [
+            "@types/node",
+            "@types/jest"
+        ]
     },
     "include": [
         "lib/**/*.ts"

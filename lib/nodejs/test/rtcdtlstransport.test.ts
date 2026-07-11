@@ -1,6 +1,5 @@
 import { Certificate } from '@fidm/x509';
 import { expect } from 'chai';
-import { describe, it } from '@jest/globals';
 import { RTCDtlsTransport, RTCIceTransport, RTCRtpSender, RTCRtpReceiver } from '..';
 import { createRTCPeerConnections, gatherCandidates, negotiate, waitForStateChange } from './lib/pc';
 

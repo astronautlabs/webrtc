@@ -1,4 +1,3 @@
-import { describe, it } from '@jest/globals';
 import { RTCPeerConnection } from '..';
 import { expect } from 'chai';
 

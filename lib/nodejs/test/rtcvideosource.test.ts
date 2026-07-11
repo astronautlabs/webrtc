@@ -3,7 +3,6 @@
 import { RTCVideoSource } from '..';
 import { confirmSentFrameDimensions, negotiateRTCPeerConnections } from './lib/pc';
 import { I420Frame } from './lib/frame';
-import { describe, it } from '@jest/globals';
 import { expect } from 'chai';
 
 const frame = new I420Frame(640, 480);

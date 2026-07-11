@@ -1,5 +1,3 @@
-import { describe, it } from '@jest/globals';
-
 import { RTCPeerConnection } from '..';
 
 const offer: RTCSessionDescriptionInit = {

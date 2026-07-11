@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { describe, it } from '@jest/globals';
 import {
   RTCPeerConnection,
   RTCSessionDescription

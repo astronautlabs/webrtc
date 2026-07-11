@@ -1,5 +1,4 @@
 import * as wrtc from '..';
-import { describe, it } from '@jest/globals';
 import { expect } from 'chai';
 
 var log = process.env.LOG ? console.log : function () { };

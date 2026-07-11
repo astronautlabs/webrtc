@@ -109,7 +109,7 @@ These tests are run by CircleCI to ensure `@/webrtc` remains compatible with the
 Firefox.
 
 ```
-npm run test:browsers
+npm run test:browser
 ```
 
 ## Electron Test

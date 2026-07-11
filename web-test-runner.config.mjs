@@ -9,6 +9,11 @@ const nodeResolve = fromRollup(rollupNodeResolve);
 const nodePolyfills = fromRollup(rollupNodePolyfills);
 export default {
     nodeResolve: true,
+    testFramework: {
+        config: {
+            timeout: '20000',
+        },
+    },
     plugins: [
         nodePolyfills(),
         nodeResolve({
@@ -20,8 +25,8 @@ export default {
             ],
             strictRequires: true
         }),
-        esbuildPlugin({ 
-            ts: true, 
+        esbuildPlugin({
+            ts: true,
             //tsconfig: './tsconfig.esm.json',
             target: 'auto'
         })

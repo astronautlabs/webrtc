@@ -1,6 +1,5 @@
 /* eslint no-console:0 */
 
-import { describe, it } from '@jest/globals';
 import SimplePeer from 'simple-peer';
 import * as wrtc from '..';
 

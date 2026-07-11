@@ -155,6 +155,12 @@ chmod +x llvm.sh
 sudo ./llvm.sh 23
 ```
 
+You also need to install `libnspr4` and `libnss3` for the browser tests. 
+
+```bash
+sudo apt install libnspr4 libnss3
+```
+
 # Examples
 
 See [astronautlabs/webrtc-examples](https://github.com/astronautlabs/webrtc-examples).

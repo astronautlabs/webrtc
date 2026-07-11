@@ -543,20 +543,44 @@ namespace node_webrtc {
         Log(this, "AddIceCandidate()");
         
         auto deferred = Napi::Promise::Deferred::New(info.Env());
+        if (!_handle || _handle->signaling_state() == webrtc::PeerConnectionInterface::SignalingState::kClosed) {
+            Reject(deferred, SomeError("Failed to set ICE candidate; RTCPeerConnection is closed."));
+            return deferred.Promise();
+        }
+
+        // Short circuit "end of candidates", which libwebrtc does not itself handle
+        // Context: https://crbug.com/935898
+        if (info.Length() > 0) {
+            // null/undefined
+            if (info[0].IsNull() || info[0].IsUndefined()) {
+                Resolve(deferred, this->Env().Undefined());
+                return deferred.Promise();
+            }
+
+            if (info[0].IsObject()) {
+                // object missing `candidate` property
+                if (!info[0].As<Napi::Object>().Has("candidate")) {
+                    Resolve(deferred, this->Env().Undefined());
+                    return deferred.Promise();
+                }
+
+                auto candidateValue = info[0].As<Napi::Object>().Get("candidate");
+                
+                // object `candidate` property is empty string
+                if (candidateValue.IsString() && candidateValue.ToString().Utf8Value() == "") {
+                    Resolve(deferred, this->Env().Undefined());
+                    return deferred.Promise();
+                }
+            }
+
+        }
 
         CONVERT_ARGS_OR_REJECT_AND_RETURN_NAPI(deferred, info, candidate, std::shared_ptr<webrtc::IceCandidateInterface>)
 
-        if (_handle
-            && _handle->signaling_state() != webrtc::PeerConnectionInterface::SignalingState::kClosed
-            && _handle->AddIceCandidate(candidate.get())) {
+        if (_handle->AddIceCandidate(candidate.get())) {
             Resolve(deferred, this->Env().Undefined());
         } else {
-            std::string error = std::string("Failed to set ICE candidate");
-            if (!_handle
-                || _handle->signaling_state() == webrtc::PeerConnectionInterface::SignalingState::kClosed) {
-                error += "; RTCPeerConnection is closed";
-            }
-            error += ".";
+            std::string error = std::string("Failed to set ICE candidate.");
             Reject(deferred, SomeError(error));
         }
 

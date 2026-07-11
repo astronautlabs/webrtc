@@ -1,5 +1,4 @@
 import { RTCPeerConnection } from '..';
-import { describe, it } from '@jest/globals';
 import { expect } from 'chai';
 
 describe('RTCDataChannel', () => {

@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { describe, it } from '@jest/globals';
 import { getUserMedia } from '..';
 import { RTCAudioSink } from '..';
 

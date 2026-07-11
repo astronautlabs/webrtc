@@ -9,7 +9,6 @@ import {
 
 import { negotiateRTCPeerConnections } from './lib/pc';
 import { createDeferred, trackDestructors } from './destructor/util';
-import { describe, it } from '@jest/globals';
 
 async function waitUntilOpen(dataChannel: RTCDataChannel) {
     if (dataChannel.readyState === 'open') {

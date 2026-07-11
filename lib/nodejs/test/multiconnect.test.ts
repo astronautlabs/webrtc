@@ -3,7 +3,6 @@ import SimplePeer from 'simple-peer';
 import * as simplepeer from 'simple-peer';
 
 import * as wrtc from '..';
-import { describe, it } from '@jest/globals';
 
 var log = process.env.LOG ? console.log : function() {};
 

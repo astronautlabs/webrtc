@@ -342,7 +342,7 @@ jobs:
               exit 0
             fi
 
-            npm run test:browsers
+            npm run test:browser
       ###
       # TEST ELECTRON ON ALL PLATFORMS
       ###
