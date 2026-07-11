@@ -18,13 +18,17 @@ function main(args) {
         process.exit(0);
     }
     const isDevWorkspace = args[0] === 'workspace';
+    const debugMode = process.env.DEBUG === '1';
     const platform = os.platform();
     const arch = process.env.TARGET_ARCH ?? os.arch();
     const buildFolder = isDevWorkspace ? `build` : `build-${platform}-${arch}`;
     const cmakeJsArgs = ["-O", buildFolder, "-a", arch];
 
     if (isDevWorkspace)
-        cmakeJsArgs.push("--debug", "--CDCMAKE_EXPORT_COMPILE_COMMANDS=1");
+        cmakeJsArgs.push("--CDCMAKE_EXPORT_COMPILE_COMMANDS=1");
+
+    if (isDevWorkspace || debugMode)
+        cmakeJsArgs.push("--debug");
 
     prependToPath(path.resolve(__dirname, 'ninja', os.platform()));
 
