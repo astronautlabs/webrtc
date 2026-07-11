@@ -21,7 +21,7 @@ function main(args) {
     const debugMode = process.env.DEBUG === '1';
     const platform = os.platform();
     const arch = process.env.TARGET_ARCH ?? os.arch();
-    const buildFolder = isDevWorkspace ? `build` : `build-${platform}-${arch}`;
+    const buildFolder = isDevWorkspace ? `build/dev` : `build/${platform}-${arch}`;
     const cmakeJsArgs = ["-O", buildFolder, "-a", arch];
 
     if (isDevWorkspace)

@@ -177,7 +177,7 @@ jobs:
             cat CACHE_KEY
       - restore_cache:
           name: Restore cached libwebrtc build
-          key: asset-cache-v3-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+          key: asset-cache-v4-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
       - restore_cache:
           name: Restore cached NPM modules
           key: modules-cache-v2-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "package.json" }}
@@ -207,7 +207,7 @@ jobs:
             export DEBUG=1 # Enables test.cc/test.h for C++ test runs.
             npm run build:native
       - save_cache:
-          key: asset-cache-v3-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+          key: asset-cache-v4-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
           paths:
             - build
       - run: npm run build:tsc
