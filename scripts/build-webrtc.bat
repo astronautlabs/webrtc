@@ -1,26 +1,20 @@
 @ECHO OFF
-SET EL=0
 
-ECHO Add depot_tools to PATH
+echo ==========================================================
+echo Building libwebrtc
+echo ==========================================================
+
 set PATH=%DEPOT_TOOLS%;%PATH%
-
-ECHO PATH is: %PATH%
-
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
 set TARGETS=libjingle_peerconnection builtin_video_encoder_factory builtin_video_decoder_factory media_engine
 : TODO: ARM specific targets (see build-webrtc.sh)
 
-ECHO ninja
-call ninja webrtc %TARGETS% -j 24
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+@ECHO ON
+call ninja webrtc %TARGETS% -j 24 || goto :error
 
-GOTO DONE
-
-:ERROR
-ECHO ERRORLEVEL^: %ERRORLEVEL%
-SET EL=%ERRORLEVEL%
-
-:DONE
-
-EXIT /b %EL%
+: ------------------------------------------------------------------------------------
+goto :EOF
+:error
+@ECHO OFF
+echo ======================================================================
+echo Failed with error #%errorlevel%
+exit /b %errorlevel%
