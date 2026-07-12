@@ -23,7 +23,7 @@ workflows:
               node-version: [<< pipeline.parameters.main_node_version >>]
       - test:
           alias: canary_test
-          filters: { tags: { only: /^v.*/ } }
+          filters: { tags: { only: /^v.*|^x-ci-test-tag-.*/ } }
           requires: [canary_build]
           matrix:
             parameters:
