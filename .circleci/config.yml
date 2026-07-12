@@ -361,7 +361,7 @@ commands:
       - run:
           name: Acquire Binary (<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>)
           command: |
-            rmdir -Rf build/Release build/Debug
+            rm -Rf build/Release build/Debug
             cp /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node build/<<parameters.build-type>>/
   ###
   # PLATFORM-SPECIFIC INSTALLATIONS
