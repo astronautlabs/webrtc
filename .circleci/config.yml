@@ -363,7 +363,7 @@ commands:
           steps:
             - set_env_var:
                 label: Set target platform
-                name: TARGET_PLATFORM
+                var: TARGET_PLATFORM
                 value: darwin
             - run:
                 name: Install CMake and Python2 via Homebrew
@@ -376,7 +376,7 @@ commands:
           steps:
             - set_env_var:
                 label: Set target platform
-                name: TARGET_PLATFORM
+                var: TARGET_PLATFORM
                 value: windows
             - run:
                 name: Install CMake, Python, Windows 10 SDK
@@ -391,7 +391,7 @@ commands:
           steps:
             - set_env_var:
                 label: Set target platform
-                name: TARGET_PLATFORM
+                var: TARGET_PLATFORM
                 value: linux
             - run:
                 name: Install platform dependencies
@@ -419,14 +419,14 @@ commands:
     parameters:
       label:
         type: string
-      name:
+      var:
         type: string
       value:
         type: string
     steps:
       - run:
           name: << parameters.label >>
-          command: echo 'export << parameters.name >>="<< parameters.value >>"' >> $BASH_ENV
+          command: echo 'export << parameters.var >>="<< parameters.value >>"' >> $BASH_ENV
   ###
   # CONFIGURE DEBUG BUILDS
   ###
@@ -438,18 +438,18 @@ commands:
           steps:
             - set_env_var:
                 label: Set CMake build type (Debug)
-                name: CMAKE_BUILD_TYPE
+                var: CMAKE_BUILD_TYPE
                 value: Debug
             - set_env_var:
                 label: Set DEBUG=true
-                name: DEBUG
+                var: DEBUG
                 value: "true"
   configure_parallelism:
     parameters:
       value:
         type: integer
     steps:
-      - set_env_var: { label: "Configure parallelism", name: PARALLELISM, value: "<< parameters.value >>" }
+      - set_env_var: { label: "Configure parallelism", var: PARALLELISM, value: "<< parameters.value >>" }
   run_tests:
     steps:
       - cpp_tests
