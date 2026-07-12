@@ -203,8 +203,6 @@ commands:
           name: Toolchain versions
           command: |
             set -x
-            npm -v
-            node -v
             clang --version
             cmake --version
             ninja --version
