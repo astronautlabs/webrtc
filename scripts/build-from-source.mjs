@@ -18,7 +18,7 @@ function main(args) {
         process.exit(0);
     }
     const isDevWorkspace = args[0] === 'workspace';
-    const debugMode = process.env.DEBUG === '1';
+    const debugMode = ['1', 'true'].includes(process.env.DEBUG);
     const platform = os.platform();
     const arch = process.env.TARGET_ARCH ?? os.arch();
     const buildFolder = isDevWorkspace ? `build` : `build/${platform}-${arch}`;
