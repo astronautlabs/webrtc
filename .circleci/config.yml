@@ -2,6 +2,7 @@ version: 2.1
 orbs:
   node: circleci/node@7.2.1
   win: circleci/windows@5.1.1
+  macos: circleci/macos@2.4.1
 parameters:
   main_node_version:
     type: string
@@ -14,18 +15,18 @@ workflows:
       # - For normal commits, run a single build with no binary publishing
       #################################
       - build:
-          alias: canary_build
           matrix:
+            alias: canary_build
             parameters:
               os: [linux]
               arch: [x64]
               build-type: ["Debug"]
               node-version: [<< pipeline.parameters.main_node_version >>]
       - test:
-          alias: canary_test
           filters: { tags: { only: /^v.*|^x-ci-test-tag-.*/ } }
           requires: [canary_build]
           matrix:
+            alias: canary_test
             parameters:
               os: [linux]
               arch: [x64]
@@ -39,10 +40,10 @@ workflows:
       # - For normal commits, run a single build with no binary publishing
       #################################
       - build:
-          alias: build_release
           requires: [canary_test]
           filters: { tags: { only: /^v.*/ } }
           matrix:
+            alias: build_release
             parameters:
               os: [linux, windows, darwin]
               arch: [x64, arm64]
@@ -54,10 +55,10 @@ workflows:
               - { os: darwin, arch: x64 }
               - { os: windows, arch: arm64 }
       - test:
-          alias: test_release
           filters: { tags: { only: /^v.*/ } }
           requires: [build_release]
           matrix:
+            alias: test_release
             parameters:
               os: [linux, windows, darwin]
               arch: [x64, arm64]
@@ -108,9 +109,24 @@ executors:
     resource_class: medium
     environment:
       PLATFORM: windows
+  windows-arm64:
+    machine:
+      image: windows-default
+    resource_class: arm.medium
+    environment:
+      PLATFORM: windows
   darwin-arm64:
     macos:
       xcode: "14.0.0"
+    resource_class: m4pro.medium
+    environment:
+      TARGET_ARCH: x64
+      CMAKE_BUILD_TYPE: Release
+      PLATFORM: darwin
+  darwin-x64:
+    macos:
+      xcode: "14.0.0"
+    resource_class: m4pro.medium
     environment:
       TARGET_ARCH: x64
       CMAKE_BUILD_TYPE: Release
@@ -118,22 +134,23 @@ executors:
 jobs:
   build:
     parameters:
-      executor:     { type: executor }
       node-version: { type: string }
       os:           { type: string }
       arch:         { type: string }
       build-type:   { type: string }
-    executor: << parameters.os >>-<< parameters.arch >>
+    executor: "<< parameters.os >>-<< parameters.arch >>"
     working_directory: ~/node-webrtc
     steps:
-      - configure_debug_builds
-      - platform_setup
+      - configure_builds:
+          build-type: <<parameters.build-type>>
+      - platform_setup:
+          os: <<parameters.os>>
       - node/install: { node-version: "<< parameters.node-version >>" }
       - setup_workspace
       - checkout
       - setup_cache_key
       - npm_install
-      - configure_parallelism: { value: 8 }
+      - configure_parallelism: { value: "8" }
       - build_addon
       - store_binary:
           os: << parameters.os >>
@@ -361,6 +378,7 @@ commands:
       - when:
           condition: { equal: [ darwin, << parameters.os >> ] }
           steps:
+            - macos/install-rosetta
             - set_env_var:
                 label: Set target platform
                 var: TARGET_PLATFORM
@@ -430,7 +448,9 @@ commands:
   ###
   # CONFIGURE DEBUG BUILDS
   ###
-  configure_debug_builds:
+  configure_builds:
+    parameters:
+      build-type: { type: string }
     steps:
       - when:
           condition:
@@ -447,7 +467,7 @@ commands:
   configure_parallelism:
     parameters:
       value:
-        type: integer
+        type: string
     steps:
       - set_env_var: { label: "Configure parallelism", var: PARALLELISM, value: "<< parameters.value >>" }
   run_tests:
