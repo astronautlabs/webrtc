@@ -18,6 +18,9 @@ const config: Config = {
   roots: [
     "lib/"
   ],
+  setupFiles: [
+    './jest.setup.ts'
+  ],
   testMatch: [ "**/*.test.ts" ],
   watchman: false,
 
