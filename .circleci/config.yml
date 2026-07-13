@@ -269,6 +269,7 @@ commands:
       - run:
           name: Test Electron
           command: |
+            ulimit -c unlimited
             if [[ "$(uname)" == Linux ]]; then
               xvfb-run ./node_modules/.bin/electron dist/nodejs/test/electron/index.js --no-sandbox
             else
@@ -289,6 +290,7 @@ commands:
       - run:
           name: Run C++ unit tests
           command: |
+            ulimit -c unlimited
             if [[ "$CMAKE_BUILD_TYPE" == Debug ]]; then
               node dist/nodejs/test/cpp-test.js
             else
@@ -299,6 +301,7 @@ commands:
       - run:
           name: Run Unit and Integration Tests
           command: |
+            ulimit -c unlimited
             export CHECK_REFLEXIVE=true
             npm test -- --runInBand --verbose --ci
   ###
@@ -309,6 +312,7 @@ commands:
       - run:
           name: Run Unit and Integration Tests
           command: |
+            ulimit -c unlimited
             export NODE_VERSION=$(node -v | tr -d '\n')
             export CHECK_REFLEXIVE=true
             qemu-aarch64 -L ~/node-webrtc/build/external/libwebrtc/download/src/build/linux/debian_sid_arm64-sysroot ~/node-$NODE_VERSION-linux-arm64/bin/node node_modules/.bin/jest
@@ -324,6 +328,7 @@ commands:
       - run:
           name: Run Web Platform Tests (x64-only)
           command: |
+            ulimit -c unlimited
             if [[ "$TARGET_ARCH" == arm* ]]; then
               echo "Skipping..."
               exit 0
@@ -344,6 +349,7 @@ commands:
       - run:
           name: Browser Tests
           command: |
+            ulimit -c unlimited
             npm run test:browser
   ###
   # STORE BUILD FOR LATER USE
@@ -494,7 +500,6 @@ commands:
       - set_env_var: { label: "Configure parallelism", var: PARALLELISM, value: "<< parameters.value >>" }
   run_tests:
     steps:
-      - run: ulimit -c unlimited
       - cpp_tests
       - unit_tests
       # - wpt_tests
