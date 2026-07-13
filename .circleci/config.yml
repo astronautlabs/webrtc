@@ -379,7 +379,7 @@ commands:
           condition: { equal: [ darwin, << parameters.os >> ] }
           steps:
             - macos/install-rosetta
-            - brew install ccache
+            - run: brew install ccache
             - set_env_var:
                 label: Set target platform
                 var: TARGET_PLATFORM
