@@ -143,7 +143,7 @@ jobs:
     steps:
       - configure_builds:
           build-type: <<parameters.build-type>>
-      - build_platform_setup:
+      - platform_setup:
           os: <<parameters.os>>
       - node/install: { node-version: "<< parameters.node-version >>" }
       - setup_workspace
@@ -167,7 +167,7 @@ jobs:
       build-type:   { type: string }
     executor: << parameters.os >>-<< parameters.arch >>
     steps:
-      - minimal_platform_setup:
+      - platform_setup:
           os: <<parameters.os>>
       - node/install: { node-version: "<< parameters.node-version >>" }
       - setup_workspace
@@ -188,7 +188,7 @@ jobs:
       build-type:   { type: string }
     executor: linux-x64
     steps:
-      - minimal_platform_setup:
+      - platform_setup:
           os: <<parameters.os>>
       - node/install: { node-version: "<< parameters.node-version >>" }
       - setup_workspace
@@ -377,7 +377,7 @@ commands:
   ###
   # PLATFORM-SPECIFIC INSTALLATIONS
   ###
-  build_platform_setup:
+  platform_setup:
     parameters:
       os: { type: string }
     steps:
@@ -445,54 +445,6 @@ commands:
                   clang --version
                   cmake --version
                   ninja --version
-  minimal_platform_setup:
-    parameters:
-      os: { type: string }
-    steps:
-      ###
-      # MACOS SPECIFIC SETUP (NON-BUILD)
-      ###
-      - when:
-          condition: { equal: [ darwin, << parameters.os >> ] }
-          steps:
-            - macos/install-rosetta
-            - set_env_var:
-                label: Set target platform
-                var: TARGET_PLATFORM
-                value: darwin
-      ###
-      # WINDOWS SPECIFIC SETUP (NON-BUILD)
-      ###
-      - when:
-          condition: { equal: [ windows, << parameters.os >> ] }
-          steps:
-            - set_env_var:
-                label: Set target platform
-                var: TARGET_PLATFORM
-                value: windows
-      ###
-      # LINUX SPECIFIC SETUP (NON-BUILD)
-      ###
-      - when:
-          condition: { equal: [ linux, << parameters.os >> ] }
-          steps:
-            - set_env_var:
-                label: Set target platform
-                var: TARGET_PLATFORM
-                value: linux
-            - run:
-                name: Install platform dependencies
-                command: |
-                  apt update
-                  ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
-                  DEBIAN_FRONTEND=noninteractive apt install -y tzdata
-                  dpkg-reconfigure --frontend noninteractive tzdata
-                  apt install -y \
-                      sudo lsb-release software-properties-common gnupg wget curl git \
-                      python3 python3-pkg-resources libglib2.0-dev libnspr4 libnss3 \
-                      libatk1.0-0 libatk-bridge2.0-0 libcups2 libcairo2 libgtk-3-0 libasound2t64 xvfb ccache \
-                      git-restore-mtime
-                  sudo ln -s `which python3` /usr/local/bin/python
   ###
   # UTILITY: SET ENVIRONMENT VARIABLE
   # - Ensures the environment variable will be available for subsequent steps
