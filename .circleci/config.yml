@@ -221,6 +221,7 @@ commands:
           name: Build Typescript
           command: npm run build:tsc
       - save_cache:
+          name: Saving build cache
           key: asset-cache-v4-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
           paths:
             - build
