@@ -92,6 +92,9 @@ elseif(NOT WIN32)
 endif()
 
 # Use ccache if requested and available. This caches by file contents instead of file timestamp.
+# This produces a large amount of files under .cache/ccache which take a lot of time to hoover up in CI, so 
+# we don't currently use this in our CI, but it may be useful in the future. Instead we use git-restore-mtime to 
+# ensure timestamps will reflect last modified time, not checkout time (see download-webrtc.sh)
 if(DEFINED ENV{USE_CCACHE})
     find_program(CCACHE_PROGRAM NAMES sccache ccache)
     if(CCACHE_PROGRAM)

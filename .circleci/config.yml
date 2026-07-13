@@ -213,7 +213,7 @@ commands:
     steps:
       - restore_cache:
           name: Restore cached libwebrtc build
-          key: asset-cache-v4-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
       - run:
           name: Build libwebrtc + Node.js bindings
           command: npm run build:native
@@ -222,7 +222,7 @@ commands:
           command: npm run build:tsc
       - save_cache:
           name: Saving build cache
-          key: asset-cache-v4-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
           paths:
             - build
             - ~/.cache/ccache
@@ -415,10 +415,6 @@ commands:
                 label: Set target platform
                 var: TARGET_PLATFORM
                 value: linux
-            - set_env_var:
-                label: Use ccache
-                var: USE_CCACHE
-                value: "1"
             - run:
                 name: Install platform dependencies
                 command: |
@@ -429,7 +425,8 @@ commands:
                   apt install -y \
                       sudo lsb-release software-properties-common gnupg wget cmake build-essential curl git \
                       python3 python3-pkg-resources libglib2.0-dev ninja-build libnspr4 libnss3 \
-                      libatk1.0-0 libatk-bridge2.0-0 libcups2 libcairo2 libgtk-3-0 libasound2t64 xvfb ccache
+                      libatk1.0-0 libatk-bridge2.0-0 libcups2 libcairo2 libgtk-3-0 libasound2t64 xvfb ccache \
+                      git-restore-mtime
                   curl https://apt.llvm.org/llvm.sh >/tmp/llvm.sh
                   chmod +x /tmp/llvm.sh
                   sudo /tmp/llvm.sh 23
