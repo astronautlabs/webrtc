@@ -167,7 +167,11 @@ jobs:
       build-type:   { type: string }
     executor: << parameters.os >>-<< parameters.arch >>
     steps:
+      - node/install: { node-version: "<< parameters.node-version >>" }
       - setup_workspace
+      - checkout
+      - setup_cache_key
+      - npm_install
       - acquire_binary:
           os: << parameters.os >>
           arch: << parameters.arch >>
@@ -182,7 +186,11 @@ jobs:
       build-type:   { type: string }
     executor: linux-x64
     steps:
+      - node/install: { node-version: "<< parameters.node-version >>" }
       - setup_workspace
+      - checkout
+      - setup_cache_key
+      - npm_install
       - acquire_binary:
           os: << parameters.os >>
           arch: << parameters.arch >>
