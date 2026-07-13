@@ -503,8 +503,8 @@ commands:
       - run:
           command: |
             mkdir -p /tmp/core_dumps
-            cp core.* /tmp/core_dumps
-            cp report.*.json /tmp/core_dumps
+            cp core.* /tmp/core_dumps || true
+            cp report.*.json /tmp/core_dumps || true
           when: on_fail
       - store_artifacts:
           path: /tmp/core_dumps
