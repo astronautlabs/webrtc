@@ -511,7 +511,7 @@ commands:
       - run:
           command: |
             mkdir -p /tmp/core_dumps
-            cp core.* /tmp/core_dumps || true
+            cp core* /tmp/core_dumps || true
             cp report.*.json /tmp/core_dumps || true
             cp /var/crash/* /tmp/core_dumps || true
             cp /var/lib/apport/coredump/* /tmp/core_dumps || true
