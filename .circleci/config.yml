@@ -368,7 +368,7 @@ commands:
             cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.node wrtc.node
       - store_artifacts:
           path: /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node
-          destination: <<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/
+          destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
