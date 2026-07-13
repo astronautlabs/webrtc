@@ -91,6 +91,18 @@ elseif(NOT WIN32)
   endif()
 endif()
 
+# Use ccache if requested and available. This caches by file contents instead of file timestamp.
+if(DEFINED ENV{USE_CCACHE})
+    find_program(CCACHE_PROGRAM sccache ccache)
+    if(CCACHE_PROGRAM)
+        message(STATUS "Using ccache at: ${CCACHE_PROGRAM}")
+        set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    else()
+        message(WARNING "ccache is requested (environment USE_CCACHE), but ccache was not found on the system, it will be skipped")
+    endif()
+endif()
+
 set(MODULE wrtc)
 project(${MODULE})
 
