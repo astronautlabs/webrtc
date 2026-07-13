@@ -494,8 +494,17 @@ commands:
       - set_env_var: { label: "Configure parallelism", var: PARALLELISM, value: "<< parameters.value >>" }
   run_tests:
     steps:
+      - run: ulimit -c unlimited
       - cpp_tests
       - unit_tests
       # - wpt_tests
       - browser_tests
       - test_electron
+      - run:
+          command: |
+            mkdir -p /tmp/core_dumps
+            cp core.* /tmp/core_dumps
+            cp report.*.json /tmp/core_dumps
+          when: on_fail
+      - store_artifacts:
+          path: /tmp/core_dumps
