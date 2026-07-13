@@ -210,19 +210,6 @@ commands:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-  ###
-  # USEFUL INFO
-  ###
-  useful_info:
-    description: Print some useful information
-    steps:
-      - run:
-          name: Toolchain versions
-          command: |
-            set -x
-            clang --version
-            cmake --version
-            ninja --version
   build_addon:
     description: Build @/webrtc
     steps:
@@ -451,7 +438,13 @@ commands:
                   sudo ln -s `which python3` /usr/local/bin/python
                   sudo ln -s `which clang-23` /usr/local/bin/clang
                   sudo ln -s `which clang++-23` /usr/local/bin/clang++
-            - useful_info
+            - run:
+                name: Toolchain versions
+                command: |
+                  set -x
+                  clang --version
+                  cmake --version
+                  ninja --version
   minimal_platform_setup:
     parameters:
       os: { type: string }
@@ -500,7 +493,6 @@ commands:
                       libatk1.0-0 libatk-bridge2.0-0 libcups2 libcairo2 libgtk-3-0 libasound2t64 xvfb ccache \
                       git-restore-mtime
                   sudo ln -s `which python3` /usr/local/bin/python
-            - useful_info
   ###
   # UTILITY: SET ENVIRONMENT VARIABLE
   # - Ensures the environment variable will be available for subsequent steps
