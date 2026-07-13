@@ -513,16 +513,10 @@ commands:
             mkdir -p /tmp/core_dumps
             cp core.* /tmp/core_dumps || true
             cp report.*.json /tmp/core_dumps || true
+            cp /var/crash/* /tmp/core_dumps || true
+            cp /var/lib/apport/coredump/* /tmp/core_dumps || true
           when: on_fail
       - store_artifacts:
           name: Uploading core dumps (current directory)
           path: /tmp/core_dumps
-          destination: core-dumps/
-      - store_artifacts:
-          name: Uploading core dumps (/var/crash)
-          path: /var/crash/
-          destination: core-dumps/
-      - store_artifacts:
-          name: Uploading core dumps (/var/lib/apport/coredump)
-          path: /var/lib/apport/coredump/
           destination: core-dumps/
