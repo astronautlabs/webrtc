@@ -148,6 +148,9 @@ jobs:
       - node/install: { node-version: "<< parameters.node-version >>" }
       - setup_workspace
       - checkout
+      - run: 
+          name: Restore file modification timestamps for faster build
+          command: git restore-mtime
       - setup_cache_key
       - npm_install
       - configure_parallelism: { value: "8" }
