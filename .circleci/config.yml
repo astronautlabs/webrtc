@@ -500,6 +500,9 @@ commands:
       - set_env_var: { label: "Configure parallelism", var: PARALLELISM, value: "<< parameters.value >>" }
   run_tests:
     steps:
+      - run:
+          name: Determine core dump location
+          command: cat /proc/sys/kernel/core_pattern
       - cpp_tests
       - unit_tests
       # - wpt_tests
@@ -512,4 +515,14 @@ commands:
             cp report.*.json /tmp/core_dumps || true
           when: on_fail
       - store_artifacts:
+          name: Uploading core dumps (current directory)
           path: /tmp/core_dumps
+          destination: core-dumps/
+      - store_artifacts:
+          name: Uploading core dumps (/var/crash)
+          path: /var/crash/
+          destination: core-dumps/
+      - store_artifacts:
+          name: Uploading core dumps (/var/lib/apport/coredump)
+          path: /var/lib/apport/coredump/
+          destination: core-dumps/
