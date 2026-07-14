@@ -116,13 +116,15 @@ executors:
       PLATFORM: linux
   windows-x64:
     machine:
-      image: windows-server-2025-gui
+      image: windows-server-2025-gui:current
+      shell: powershell.exe -ExecutionPolicy Bypass
     resource_class: windows.medium
     environment:
       PLATFORM: windows
   windows-arm64:
     machine:
-      image: windows-server-2025-gui
+      image: windows-server-2025-gui:current
+      shell: powershell.exe -ExecutionPolicy Bypass
     resource_class: arm.medium # probably wrong, not sure circle supports windows/arm
     environment:
       PLATFORM: windows
