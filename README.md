@@ -189,8 +189,11 @@ Pre-steps:
     - Set `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnable` to `1`
     - `git config --global core.longpaths true`
     - `git config core.longpaths true`
-- Install VS 2019 (not just the VS 2019 build tools from a newer VS release like 2022)
-    - `libwebrtc` is the limiting factor here
+- Install VS 2026 [Community edition is fine]
+    - Include the Clang toolset (version 22)
+    - NOTE: `libwebrtc` is the limiting factor here, it builds with its own Clang, we need a new enough Clang to build 
+      the addon sources with so that we can link libwebrtc to the addon objects, and VS 2022's Clang 19 is not new enough.
+- Install cmake 4.4 or later
 - Install Windows 10 SDK v10.0.19041.0
     * Use the Windows SDK installer, make sure to include the required Debugging Tools for Windows
     * (!!) Do not use the Visual Studio installer, if you have previously installed this SDK via Visual Studio Installer, 

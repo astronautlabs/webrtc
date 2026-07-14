@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-const __dirname = import.meta.dirname ? import.meta.dirname 
+const __dirname = import.meta.dirname ? import.meta.dirname
     : import.meta.filename ? path.dirname(import.meta.filename)
     : path.dirname(new URL(import.meta.url).pathname)
 ;
@@ -23,7 +23,7 @@ function main(args) {
     const arch = process.env.TARGET_ARCH ?? os.arch();
     const buildFolder = isDevWorkspace ? `build` : `build/${platform}-${arch}`;
     const cmakeJsArgs = [
-        "-O", buildFolder, 
+        "-O", buildFolder,
         "-a", arch,
         "--CDCMAKE_EXPORT_COMPILE_COMMANDS=1"
     ];
@@ -34,7 +34,9 @@ function main(args) {
     prependToPath(path.resolve(__dirname, 'ninja', os.platform()));
 
     if (platform === "win32") {
-        cmakeJsArgs.push(...['--toolset=ClangCL']);
+        // We really need VS 2026, because Clang 19 (from VS 2022) is too old to handle the object files that libwebrtc
+        // will compile using Clang 23.
+        cmakeJsArgs.push(...['-G', '"Visual Studio 18 2026"', '--toolset=ClangCL']);
 
         // Explicitly find the real rc.exe from the Windows SDK and pass it to
         // CMake, since cmake-js may still find the npm "rc" package otherwise.

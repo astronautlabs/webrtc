@@ -9,7 +9,7 @@ set -v
 
 export PATH=$DEPOT_TOOLS:$PATH
 
-export TARGETS="webrtc libjingle_peerconnection builtin_video_encoder_factory builtin_video_decoder_factory media_engine"
+export TARGETS="webrtc libjingle_peerconnection builtin_video_encoder_factory builtin_video_decoder_factory media_engine rtc_software_fallback_wrappers"
 if [[ "$TARGET_ARCH" == arm* ]]; then
   export TARGETS="$TARGETS pc:peerconnection libc++ libc++abi"
 fi

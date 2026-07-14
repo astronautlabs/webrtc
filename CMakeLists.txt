@@ -19,7 +19,7 @@ function(PARSE_CMAKEJS_PROPERTIES)
   function(GET_VARIABLE INPUT_STRING VARIABLE_TO_SELECT OUTPUT_VARIABLE)
     # Matches: '-D[VARIABLE_TO_SELECT]=[capture everything up to the next single quote]'
     string(REGEX MATCH "'-D${VARIABLE_TO_SELECT}=([^']*)'" _discard "${INPUT_STRING}")
-    
+
     # CMAKE_MATCH_1 contains the captured group inside the parentheses
     set("${OUTPUT_VARIABLE}" "${CMAKE_MATCH_1}" PARENT_SCOPE)
   endfunction(GET_VARIABLE)
@@ -38,7 +38,7 @@ function(PARSE_CMAKEJS_PROPERTIES)
   endif()
 
   execute_process(
-      COMMAND ${NODE_EXECUTABLE} ./node_modules/.bin/cmake-js ${CMAKE_JS_ARGS}
+      COMMAND ${NODE_EXECUTABLE} ./node_modules/cmake-js/bin/cmake-js ${CMAKE_JS_ARGS}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       OUTPUT_VARIABLE CMAKE_JS_OUTPUT
       OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -92,8 +92,8 @@ elseif(NOT WIN32)
 endif()
 
 # Use ccache if requested and available. This caches by file contents instead of file timestamp.
-# This produces a large amount of files under .cache/ccache which take a lot of time to hoover up in CI, so 
-# we don't currently use this in our CI, but it may be useful in the future. Instead we use git-restore-mtime to 
+# This produces a large amount of files under .cache/ccache which take a lot of time to hoover up in CI, so
+# we don't currently use this in our CI, but it may be useful in the future. Instead we use git-restore-mtime to
 # ensure timestamps will reflect last modified time, not checkout time (see download-webrtc.sh)
 if(DEFINED ENV{USE_CCACHE})
     find_program(CCACHE_PROGRAM NAMES sccache ccache)
@@ -155,7 +155,7 @@ else()
   set(obj_ext .o)
 endif()
 
-# To update this set based on the built libc++ when upgrading the project, use the following command to obtain a new 
+# To update this set based on the built libc++ when upgrading the project, use the following command to obtain a new
 # list:
 # ls build/external/libwebrtc/build/Debug/obj/buildtools/third_party/libc++/libc++/*.o | xargs -n 1 basename | sed 's/\.o/${obj_ext}/'
 set(libc++_objects
@@ -171,7 +171,6 @@ set(libc++_objects
     condition_variable_destructor${obj_ext}
     d2fixed${obj_ext}
     d2s${obj_ext}
-    directory_entry${obj_ext}
     directory_iterator${obj_ext}
     error_category${obj_ext}
     exception${obj_ext}
@@ -212,12 +211,14 @@ set(libc++_objects
 
 if(WIN32)
   list(APPEND libc++_objects
-    legacy_debug_handler${obj_ext}
-    legacy_pointer_safety${obj_ext}
     locale_win32${obj_ext}
     support${obj_ext}
     thread_win32${obj_ext}
     verbose_abort${obj_ext}
+  )
+else()
+  list(APPEND libc++_objects
+    directory_entry${obj_ext}
   )
 endif()
 
@@ -338,30 +339,15 @@ else()
   endif()
 endif()
 
-if (WIN32)
-  set(byproducts
+set(byproducts
     ${libc++_objects}
-    ${libwebrtc_binary_dir}/obj/webrtc.lib
-    ${libwebrtc_binary_dir}/obj/api/video_codecs/builtin_video_encoder_factory.lib
-    ${libwebrtc_binary_dir}/obj/api/video_codecs/builtin_video_decoder_factory.lib
-    ${libwebrtc_binary_dir}/obj/media/rtc_internal_video_codecs.lib
-    ${libwebrtc_binary_dir}/obj/media/media_engine.lib
-    ${libwebrtc_binary_dir}/obj/media/rtc_simulcast_encoder_adapter.lib
-  )
-else()
-  set(byproducts
-    ${libc++_objects}
-    ${libc++abi_objects}
-    ${libwebrtc_binary_dir}/obj/libwebrtc.a
-    ${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_encoder_factory.a
-    ${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_decoder_factory.a
-    ${libwebrtc_binary_dir}/obj/media/librtc_internal_video_codecs.a
-    ${libwebrtc_binary_dir}/obj/media/libmedia_engine.a
-    ${libwebrtc_binary_dir}/obj/media/librtc_simulcast_encoder_adapter.a
-    
-    
-  )
-endif()
+    ${libwebrtc_binary_dir}/obj/${CMAKE_STATIC_LIBRARY_PREFIX}webrtc${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${libwebrtc_binary_dir}/obj/api/video_codecs/${CMAKE_STATIC_LIBRARY_PREFIX}builtin_video_encoder_factory${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${libwebrtc_binary_dir}/obj/api/video_codecs/${CMAKE_STATIC_LIBRARY_PREFIX}builtin_video_decoder_factory${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${libwebrtc_binary_dir}/obj/media/${CMAKE_STATIC_LIBRARY_PREFIX}rtc_internal_video_codecs${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${libwebrtc_binary_dir}/obj/media/${CMAKE_STATIC_LIBRARY_PREFIX}media_engine${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${libwebrtc_binary_dir}/obj/media/${CMAKE_STATIC_LIBRARY_PREFIX}rtc_simulcast_encoder_adapter${CMAKE_STATIC_LIBRARY_SUFFIX}
+)
 
 ExternalProject_Add(
   project_libwebrtc
@@ -379,7 +365,7 @@ ExternalProject_Add(
   CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env BINARY_DIR=<BINARY_DIR> DEPOT_TOOLS=${depot_tools_install_dir} GN_GEN_ARGS=${GN_GEN_ARGS} SOURCE_DIR=<SOURCE_DIR> ${CMAKE_SOURCE_DIR}/scripts/configure-webrtc.${suffix}
   BUILD_COMMAND     ${CMAKE_COMMAND} -E env CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} DEPOT_TOOLS=${depot_tools_install_dir} ${CMAKE_SOURCE_DIR}/scripts/build-webrtc.${suffix}
   INSTALL_COMMAND   ""
-  
+
   # Need these to avoid timeouts during CI (and also to see more progress for these steps which are quite heavy)
   USES_TERMINAL_DOWNLOAD 1
   USES_TERMINAL_CONFIGURE 1
@@ -442,51 +428,21 @@ ExternalProject_Add(
 ExternalProject_Get_Property(project_catch2 SOURCE_DIR)
 set(catch2_install_dir ${SOURCE_DIR})
 
-# libbuiltin_video_encoder_factory
-# -----------------------------------------------------------------------------
+function(import_webrtc_static_lib base_name sub_dir)
+  add_library(${base_name} STATIC IMPORTED)
+  set_target_properties(${base_name} PROPERTIES
+    IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/${sub_dir}/${CMAKE_STATIC_LIBRARY_PREFIX}${base_name}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+  )
+  add_dependencies(${base_name} project_libwebrtc)
+endfunction()
 
-add_library(libbuiltin_video_encoder_factory STATIC IMPORTED)
-set_target_properties(libbuiltin_video_encoder_factory PROPERTIES
-    IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_encoder_factory.a"
-)
-add_dependencies(libbuiltin_video_encoder_factory project_libwebrtc)
-
-# libbuiltin_video_decoder_factory
-# -----------------------------------------------------------------------------
-
-add_library(libbuiltin_video_decoder_factory STATIC IMPORTED)
-set_target_properties(libbuiltin_video_decoder_factory PROPERTIES 
-  IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/api/video_codecs/libbuiltin_video_decoder_factory.a"
-)
-add_dependencies(libbuiltin_video_decoder_factory project_libwebrtc)
-
-# librtc_internal_video_codecs
-# -----------------------------------------------------------------------------
-
-add_library(librtc_internal_video_codecs STATIC IMPORTED)
-set_target_properties(librtc_internal_video_codecs PROPERTIES 
-  IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/media/librtc_internal_video_codecs.a"
-)
-add_dependencies(librtc_internal_video_codecs project_libwebrtc)
-
-# libmedia_engine
-# -----------------------------------------------------------------------------
-
-add_library(libmedia_engine STATIC IMPORTED)
-set_target_properties(libmedia_engine PROPERTIES 
-  IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/media/libmedia_engine.a"
-)
-add_dependencies(libmedia_engine project_libwebrtc)
-
-# librtc_simulcast_encoder_adapter
-# -----------------------------------------------------------------------------
-
-add_library(librtc_simulcast_encoder_adapter STATIC IMPORTED)
-set_target_properties(librtc_simulcast_encoder_adapter PROPERTIES 
-  IMPORTED_LOCATION "${libwebrtc_binary_dir}/obj/media/librtc_simulcast_encoder_adapter.a"
-)
-add_dependencies(librtc_simulcast_encoder_adapter project_libwebrtc)
-
+# ----------------------------
+import_webrtc_static_lib(builtin_video_encoder_factory "api/video_codecs")
+import_webrtc_static_lib(builtin_video_decoder_factory "api/video_codecs")
+import_webrtc_static_lib(rtc_internal_video_codecs "media")
+import_webrtc_static_lib(media_engine "media")
+import_webrtc_static_lib(rtc_simulcast_encoder_adapter "media")
+import_webrtc_static_lib(rtc_software_fallback_wrappers "api/video_codecs")
 
 # node-webrtc
 # -----------------------------------------------------------------------------
@@ -523,11 +479,12 @@ target_include_directories(${MODULE} PRIVATE
 target_link_libraries(${MODULE} PRIVATE
   ${CMAKE_THREAD_LIBS_INIT}
   libwebrtc
-  libbuiltin_video_encoder_factory
-  libbuiltin_video_decoder_factory
-  librtc_internal_video_codecs
-  libmedia_engine
-  librtc_simulcast_encoder_adapter
+  builtin_video_encoder_factory
+  builtin_video_decoder_factory
+  rtc_internal_video_codecs
+  media_engine
+  rtc_simulcast_encoder_adapter
+  rtc_software_fallback_wrappers
   ${CMAKE_JS_LIB}
 )
 
@@ -556,9 +513,17 @@ if(WIN32)
   )
 
   if (${use_custom_libcxx})
-    target_include_directories(${MODULE} SYSTEM PRIVATE
-      ${libc++_include_dir}
+    # ignore MSVC's C++ standard library headers
+    target_compile_options(${MODULE} PRIVATE
+        "SHELL:-Xclang -nostdinc++"
     )
+
+    # inject libc++ as system headers before clang's builtins
+    foreach(DIR IN LISTS libc++_include_dir)
+      target_compile_options(${MODULE} PRIVATE
+        "SHELL:-Xclang -isystem -Xclang \"${DIR}\""
+      )
+    endforeach()
 
     target_link_libraries(${MODULE} PRIVATE
       libc++
@@ -585,15 +550,15 @@ if(WIN32)
     -DNOGDI
     -DNOMINMAX
     -DWEBRTC_WIN
-    "$<$<CONFIG:Debug>:-D_HAS_ITERATOR_DEBUGGING=0>"
+    "$<$<CONFIG:Debug>:_HAS_ITERATOR_DEBUGGING=0>"
   )
 else()
   target_link_libraries(${MODULE} PRIVATE
     -lc
     -lm
   )
-  target_link_options(${MODULE} PRIVATE 
-    "-B${libwebrtc_source_dir}/webrtc/third_party/llvm-build/Release+Asserts/bin" # prefer the lld built by webrtc 
+  target_link_options(${MODULE} PRIVATE
+    "-B${libwebrtc_source_dir}/webrtc/third_party/llvm-build/Release+Asserts/bin" # prefer the lld built by webrtc
     "-fuse-ld=lld" # force LLVM linker, required because libwebrtc is using Compact Relocation and GNU LD does not support it
   )
   target_compile_options(${MODULE} PRIVATE
