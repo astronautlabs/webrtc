@@ -470,7 +470,7 @@ commands:
 
                   $sudo apt update
                   $sudo ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
-                  DEBIAN_FRONTEND=noninteractive sudo apt install -y tzdata
+                  DEBIAN_FRONTEND=noninteractive $sudo apt install -y tzdata
                   $sudo dpkg-reconfigure --frontend noninteractive tzdata
                   
                   $sudo apt install -y \
