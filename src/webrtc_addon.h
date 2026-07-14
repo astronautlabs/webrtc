@@ -1,12 +1,13 @@
 #pragma once 
 
 #include "src/utilities/nameof.h"
+#include "src/utilities/napi_ref_ptr.h"
 #include <concepts>
 #include <map>
 #include <node-addon-api/napi.h>
 
 namespace node_webrtc {
-    class Addon: public Napi::Addon<Addon> {
+    class Addon: public Napi::Addon<Addon>, public NapiRefTeardownIndicator {
     public:
         Addon(Napi::Env env, Napi::Object exports);
         
