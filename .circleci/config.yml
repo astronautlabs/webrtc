@@ -41,7 +41,7 @@ workflows:
       #################################
       - build:
           requires: [canary_test]
-          filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*/ } }
+          filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-*/ } }
           matrix:
             alias: build_release
             parameters:
@@ -55,7 +55,7 @@ workflows:
               - { os: darwin, arch: x64 }
               - { os: windows, arch: arm64 }
       - test:
-          filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*/ } }
+          filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
           requires: [build_release]
           matrix:
             alias: test_release
