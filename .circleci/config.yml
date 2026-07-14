@@ -460,27 +460,32 @@ commands:
             - run:
                 name: Install platform dependencies
                 command: |
+                  # Ubuntu on arm64 doesn't run as root, but ubuntu on x64 does.
+                  # Ubuntu on x64 doesn't have sudo installed by default, but, naturally, ubuntu on arm64 does
+                  # Just use sudo if it exists, otherwise don't. We'll install sudo so we don't have to do this 
+                  # for other incidental package installation though.
                   if ! which sudo &>/dev/null; then
-                    apt update
-                    apt install sudo -y
+                    SUDO=sudo
                   else
-                    sudo apt update
+                    SUDO=
                   fi
-                  sudo ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
-                  DEBIAN_FRONTEND=noninteractive sudo apt install -y tzdata
-                  sudo dpkg-reconfigure --frontend noninteractive tzdata
+
+                  SUDO apt update
+                  SUDO ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+                  DEBIAN_FRONTEND=noninteractive SUDO apt install -y tzdata
+                  SUDO dpkg-reconfigure --frontend noninteractive tzdata
                   
-                  sudo apt install -y \
-                      lsb-release software-properties-common gnupg wget cmake build-essential curl git \
+                  SUDO apt install -y \
+                      sudo lsb-release software-properties-common gnupg wget cmake build-essential curl git \
                       python3 python3-pkg-resources libglib2.0-dev ninja-build libnspr4 libnss3 \
                       libatk1.0-0 libatk-bridge2.0-0 libcups2 libcairo2 libgtk-3-0 libasound2t64 xvfb ccache \
                       git-restore-mtime
-                  sudo curl https://apt.llvm.org/llvm.sh >/tmp/llvm.sh
-                  sudo chmod +x /tmp/llvm.sh
-                  sudo /tmp/llvm.sh 23
-                  sudo ln -s `which python3` /usr/local/bin/python
-                  sudo ln -s `which clang-23` /usr/local/bin/clang
-                  sudo ln -s `which clang++-23` /usr/local/bin/clang++
+                  SUDO curl https://apt.llvm.org/llvm.sh >/tmp/llvm.sh
+                  SUDO chmod +x /tmp/llvm.sh
+                  SUDO /tmp/llvm.sh 23
+                  SUDO ln -s `which python3` /usr/local/bin/python
+                  SUDO ln -s `which clang-23` /usr/local/bin/clang
+                  SUDO ln -s `which clang++-23` /usr/local/bin/clang++
             - run:
                 name: Toolchain versions
                 command: |
