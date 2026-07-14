@@ -164,7 +164,7 @@ jobs:
           build-type: << parameters.build-type >>
   test:
     parameters:
-      node-version: { type: string }
+      node-version: { type: string, default: << pipeline.parameters.main_node_version >> }
       os:           { type: string }
       arch:         { type: string }
       build-type:   { type: string }
