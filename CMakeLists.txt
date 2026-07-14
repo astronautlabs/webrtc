@@ -341,6 +341,7 @@ endif()
 
 set(byproducts
     ${libc++_objects}
+    ${libc++abi_objects}
     ${libwebrtc_binary_dir}/obj/${CMAKE_STATIC_LIBRARY_PREFIX}webrtc${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/api/video_codecs/${CMAKE_STATIC_LIBRARY_PREFIX}builtin_video_encoder_factory${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/api/video_codecs/${CMAKE_STATIC_LIBRARY_PREFIX}builtin_video_decoder_factory${CMAKE_STATIC_LIBRARY_SUFFIX}
