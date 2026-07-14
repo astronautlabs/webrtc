@@ -40,14 +40,7 @@ namespace node_webrtc {
     }
 
     void RTCVideoSource::Finalize(Napi::Env env) {
-        // These are the tracks created via CreateTrack().
-        // We will unref them so that they are collectable,
-        // but note that if they were added to one or more PeerConnections
-        // via addTrack(), that they will still be referenced by those
-        // PeerConnections and thus will continue to remain uncollectable.
-
-        for (auto* track : _tracks)
-            track->Unref();
+        _tracks.clear();
     }
 
     Napi::Value RTCVideoSource::New(const Napi::CallbackInfo& info) {

@@ -79,7 +79,7 @@ namespace node_webrtc {
         Napi::Value OnFrame(const Napi::CallbackInfo&);
 
         webrtc::scoped_refptr<RTCVideoTrackSource> _source;
-        std::set<MediaStreamTrack*> _tracks;
+        std::set<napi_ref_ptr<MediaStreamTrack>> _tracks;
     };
 
 } // namespace node_webrtc
