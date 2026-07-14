@@ -415,7 +415,10 @@ commands:
                 value: darwin
             - run:
                 name: Install build tools
-                command: brew install cmake kamilturek/python2/python@2 ccache
+                command: |
+                  brew install cmake kamilturek/python2/python@2 ccache
+                  sudo curl -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o /usr/local/bin/git-restore-mtime
+                  chmod +x /usr/local/bin/git-restore-mtime
       ###
       # WINDOWS SPECIFIC SETUP
       ###
@@ -427,21 +430,26 @@ commands:
                 var: TARGET_PLATFORM
                 value: windows
             - run:
-                name: Enable Windows Long Paths
+                name: Windows Setup
                 shell: powershell.exe
                 command: |
+                    # Add C:\scripts to the PATH for local utility scripts
+                    New-Item $Profile.CurrentUserAllHosts -Force
+                    Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\scripts;$env:PATH"'
+                    $env:PATH = "C:\scripts;$env:PATH"
+                    mkdir C:\scripts
+
                     # Enable long file paths
                     New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
                     git config --global core.longpaths true
-            - run:
-                name: Install CMake, Visual Studio 2026, Python, Windows 10 SDK
-                command: |
-                  choco install -y visualstudio2026community cmake python windows-sdk-10-version-2004-all sccache --no-progress
-                  cp /c/tools/miniconda3/python.exe /c/tools/miniconda3/python3.exe # gn depends on python3 alias
-            - run:
-                name: Install ClangCL toolset
-                shell: powershell.exe
-                command: |
+
+                    # Install CMake, Visual Studio 2026, Python, Windows 10 SDK
+                    choco install -y visualstudio2026community cmake python windows-sdk-10-version-2004-all sccache --no-progress
+                    cp /c/tools/miniconda3/python.exe /c/tools/miniconda3/python3.exe # gn depends on python3 alias
+                    curl -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o c:\scripts\git-restore-mtime.py
+                    'python3 c:\scripts\git-restore-mtime.py' | Out-File -FilePath 'C:\scripts\git-restore-mtime.ps1'
+
+                    # Install ClangCL toolset
                     $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
                     & $vsInstaller modify `
                         --installPath "C:\Program Files\Microsoft Visual Studio\2026\Community" `
@@ -476,14 +484,16 @@ commands:
                   $sudo apt install -y \
                       $sudo lsb-release software-properties-common gnupg wget cmake build-essential curl git \
                       python3 python3-pkg-resources libglib2.0-dev ninja-build libnspr4 libnss3 \
-                      libatk1.0-0 libatk-bridge2.0-0 libcups2 libcairo2 libgtk-3-0 libasound2t64 xvfb ccache \
-                      git-restore-mtime
+                      libatk1.0-0 libatk-bridge2.0-0 libcups2 libcairo2 libgtk-3-0 libasound2t64 xvfb ccache
                   $sudo curl https://apt.llvm.org/llvm.sh >/tmp/llvm.sh
                   $sudo chmod +x /tmp/llvm.sh
                   $sudo /tmp/llvm.sh 23
                   $sudo ln -s `which python3` /usr/local/bin/python
                   $sudo ln -s `which clang-23` /usr/local/bin/clang
                   $sudo ln -s `which clang++-23` /usr/local/bin/clang++
+                  
+                  sudo curl -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o /usr/local/bin/git-restore-mtime
+                  chmod +x /usr/local/bin/git-restore-mtime
             - run:
                 name: Toolchain versions
                 command: |
@@ -491,7 +501,6 @@ commands:
                   clang --version
                   cmake --version
                   ninja --version
-  ###
   # UTILITY: SET ENVIRONMENT VARIABLE
   # - Ensures the environment variable will be available for subsequent steps
   ###
