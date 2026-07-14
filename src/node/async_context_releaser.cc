@@ -1,21 +1,33 @@
 #include "src/node/async_context_releaser.h"
 #include "src/utilities/log.h"
+#include <node-addon-api/napi.h>
 
 namespace node_webrtc {
 
     AsyncContextReleaser* AsyncContextReleaser::_default = nullptr;
     bool AsyncContextReleaser::_teardown = false;
 
+    AsyncContextReleaser::AsyncContextReleaser(const Napi::CallbackInfo& info):
+        Napi::ObjectWrap<AsyncContextReleaser>(info) 
+    {
+
+        // Initialize the ThreadSafeFunction
+        _tsfn = Napi::ThreadSafeFunction::New(
+            info.Env(),
+            Napi::Function::New(info.Env(), [](const Napi::CallbackInfo&) { }), // Dummy JS Callback
+            "AsyncContextReleaser",
+            0, // Unlimited queue size
+            1 // Initial thread count
+        );
+    }
+
     AsyncContextReleaser::~AsyncContextReleaser() {
         if (_default == this) {
             _default = nullptr;
             _teardown = true;
 
-            // We intentionally leak _deferrer here!
-            // Node's environment teardown flushes pending libuv callbacks.
-            // By leaving this on the heap, the callback executes on a valid
-            // object, sees _parent is null, and safely does nothing.
-            _deferrer->Detach();
+            // Tell the OS we are done using this thread-safe function
+            _tsfn.Release();
         }
     }
 
@@ -28,7 +40,16 @@ namespace node_webrtc {
         _contexts_mutex.lock();
         _contexts.push(context);
         _contexts_mutex.unlock();
-        _deferrer->Queue();
+
+        // Signal the TSFN to wake up the main event loop
+        if (!_teardown) {
+            auto callback = [](Napi::Env env, Napi::Function /*jsCb*/, AsyncContextReleaser* self) {
+                if (self && !AsyncContextReleaser::_teardown) {
+                    self->Execute(env);
+                }
+            };
+            _tsfn.NonBlockingCall(this, callback);
+        }
     }
 
     void AsyncContextReleaser::Execute(Napi::Env env) {
@@ -56,9 +77,9 @@ namespace node_webrtc {
 
     void AsyncContextReleaser::Init(Napi::Env env, Napi::Object) {
         auto func = DefineClass(env,
-            "AsyncContextReleaser",
+            "AsyncContextReleaser", 
             {
-
+                
             });
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();
@@ -69,8 +90,12 @@ namespace node_webrtc {
         env.AddCleanupHook([]() {
             Log<AsyncContextReleaser>("Detected Node.js cleanup started.");
             AsyncContextReleaser::_teardown = true;
-            if (_default)
+            if (_default) {
+                // Sever the TSFN so background threads can't queue more events and
+                // flush the queue manually one last time before the process dies
+                _default->_tsfn.Abort();
                 _default->Execute(_default->Env());
+            }
         });
     }
 
