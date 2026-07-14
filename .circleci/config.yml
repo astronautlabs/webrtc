@@ -44,22 +44,20 @@ workflows:
           requires: [canary_test]
           filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
           matrix:
-            alias: build_release
+            alias: build_binaries_debug
             parameters:
               os: [linux, windows, darwin]
               arch: [x64, arm64]
-              build-type: ["Debug", "Release"]
+              build-type: ["Debug"]
             exclude:
               - { os: linux, arch: x64, build-type: Debug } # already done by the canary build
               - { os: darwin, arch: x64, build-type: Debug }
-              - { os: darwin, arch: x64, build-type: Release }
               - { os: windows, arch: arm64, build-type: Debug }
-              - { os: windows, arch: arm64, build-type: Release }
       - test:
           filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
-          requires: [build_release]
+          requires: [build_binaries_debug]
           matrix:
-            alias: test_release
+            alias: test_binaries
             parameters:
               os: [linux, windows, darwin]
               arch: [x64, arm64]
@@ -67,13 +65,23 @@ workflows:
             exclude:
               - { os: linux, arch: x64, build-type: Debug } # already done by the canary test
               - { os: darwin, arch: x64, build-type: Debug }
-              - { os: darwin, arch: x64, build-type: Release }
               - { os: windows, arch: arm64, build-type: Debug }
+      - build:
+          requires: [test_binaries]
+          filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
+          matrix:
+            alias: build_binaries_release
+            parameters:
+              os: [linux, windows, darwin]
+              arch: [x64, arm64]
+              build-type: ["Release"]
+            exclude:
+              - { os: darwin, arch: x64, build-type: Release }
               - { os: windows, arch: arm64, build-type: Release }
       - approve_publishing:
           filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
           type: approval
-          requires: [test_release]
+          requires: [build_binaries_release]
       - publish_binary_release:
           filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
           matrix:
