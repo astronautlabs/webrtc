@@ -19,6 +19,8 @@ namespace node_webrtc {
             0, // Unlimited queue size
             1 // Initial thread count
         );
+        // Don't keep the process running waiting for this TSFN to abort.
+        _tsfn.Unref(info.Env());
     }
 
     AsyncContextReleaser::~AsyncContextReleaser() {
@@ -79,7 +81,7 @@ namespace node_webrtc {
         auto func = DefineClass(env,
             "AsyncContextReleaser", 
             {
-                
+
             });
         constructor() = Napi::Persistent(func);
         constructor().SuppressDestruct();
