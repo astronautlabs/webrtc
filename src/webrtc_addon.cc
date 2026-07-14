@@ -24,6 +24,7 @@
 #include "src/methods/i420_helpers.h"
 #include "src/node/async_context_releaser.h"
 #include "src/node/error_factory.h"
+#include "src/utilities/napi_ref_ptr.h"
 
 #ifdef DEBUG
 #include "src/test.h"
@@ -33,6 +34,7 @@ namespace node_webrtc {
     NODE_API_ADDON(Addon);
 
     Addon::Addon(Napi::Env env, Napi::Object exports):
+        NapiRefTeardownIndicator(env),
         _env(env)
     {
         env.SetInstanceData(this);

@@ -165,7 +165,7 @@ that turned on. None of this applies if your Node is installed at the system lev
 
 Make sure to check the platform-specific sections below for important information.
 
-## Linux/Mac
+### Linux/Mac
 
 Pre-steps
 - Install `python3`, C/C++ toolchain (ie `build-essential`), `cmake`
@@ -181,7 +181,7 @@ export PARALLELISM=24       # Set to number of logical cores on your machine
 npm install
 ```
 
-## Windows
+### Windows
 
 Pre-steps:
 - Install python3
@@ -212,6 +212,31 @@ $env:PARALLELISM = '24'       # set to number of logical cores
 
 npm install
 ```
+
+## Debugging CI Core Dumps
+
+In the event of test failure, the `test` job will collect any core dumps and deposit them as CircleCI Artifacts. You can 
+then download the core dumps and debug them using `gdb`.
+
+You can download the Debug binary from the `build` job that spawned the corresponding `test` job. Place it in your 
+workspace as `build/Debug/wrtc.node`.
+
+You'll also need to be running the exact same version of Node.js in order for the symbols to line up. 
+
+```bash
+nvm install <node-version-that-crashed>
+nvm use <node-version-that-crashed>
+```
+
+To load a dump and get its backtrace:
+```bash
+$ gdb $(which node) core-dump-filename
+(gdb) set solib-search-path build/Debug/
+(gdb) bt
+```
+
+If you have the wrong Node.js version (or if the build of that version is incompatible with the one from CI), or if you
+forget to set the solib-search-path to look in build/Debug, all but the Node.js symbols will be unknown (`??` in GDB).
 
 # Required Reading
 
