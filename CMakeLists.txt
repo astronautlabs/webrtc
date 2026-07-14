@@ -345,6 +345,7 @@ set(byproducts
     ${libwebrtc_binary_dir}/obj/${CMAKE_STATIC_LIBRARY_PREFIX}webrtc${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/api/video_codecs/${CMAKE_STATIC_LIBRARY_PREFIX}builtin_video_encoder_factory${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/api/video_codecs/${CMAKE_STATIC_LIBRARY_PREFIX}builtin_video_decoder_factory${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${libwebrtc_binary_dir}/obj/api/video_codecs/${CMAKE_STATIC_LIBRARY_PREFIX}rtc_software_fallback_wrappers${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/media/${CMAKE_STATIC_LIBRARY_PREFIX}rtc_internal_video_codecs${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/media/${CMAKE_STATIC_LIBRARY_PREFIX}media_engine${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/media/${CMAKE_STATIC_LIBRARY_PREFIX}rtc_simulcast_encoder_adapter${CMAKE_STATIC_LIBRARY_SUFFIX}
