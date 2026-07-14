@@ -461,9 +461,11 @@ commands:
                 name: Install platform dependencies
                 command: |
                   if ! which sudo &>/dev/null; then
+                    apt update
                     apt install sudo -y
+                  else
+                    sudo apt update
                   fi
-                  sudo apt update
                   sudo ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
                   DEBIAN_FRONTEND=noninteractive sudo apt install -y tzdata
                   sudo dpkg-reconfigure --frontend noninteractive tzdata
