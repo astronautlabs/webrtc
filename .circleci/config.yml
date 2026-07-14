@@ -117,13 +117,13 @@ executors:
   windows-x64:
     machine:
       image: windows-server-2025-gui
-    resource_class: medium
+    resource_class: windows.medium
     environment:
       PLATFORM: windows
   windows-arm64:
     machine:
       image: windows-server-2025-gui
-    resource_class: arm.medium
+    resource_class: arm.medium # probably wrong, not sure circle supports windows/arm
     environment:
       PLATFORM: windows
   darwin-arm64:
