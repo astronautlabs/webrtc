@@ -22,7 +22,6 @@ workflows:
               os: [linux]
               arch: [x64]
               build-type: ["Debug"]
-              node-version: [<< pipeline.parameters.main_node_version >>]
           filters: { tags: { only: /^v.*|^ci-test-.*/ } }
       - test:
           requires: [canary_build]
@@ -49,13 +48,13 @@ workflows:
             parameters:
               os: [linux, windows, darwin]
               arch: [x64, arm64]
-              node-version: [<< pipeline.parameters.main_node_version >>]
               build-type: ["Debug", "Release"]
-              #build-type: ["Debug", "Release"]
             exclude:
               - { os: linux, arch: x64, build-type: Debug } # already done by the canary build
-              - { os: darwin, arch: x64 }
-              - { os: windows, arch: arm64 }
+              - { os: darwin, arch: x64, build-type: Debug }
+              - { os: darwin, arch: x64, build-type: Release }
+              - { os: windows, arch: arm64, build-type: Debug }
+              - { os: windows, arch: arm64, build-type: Release }
       - test:
           filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
           requires: [build_release]
@@ -82,7 +81,6 @@ workflows:
             parameters:
               os: [linux, windows, darwin]
               arch: [x64, arm64]
-              node-version: ["18.20.8"]
               build-type: ["Debug", "Release"]
             exclude:
               - { os: darwin, arch: x64 }
@@ -138,7 +136,7 @@ executors:
 jobs:
   build:
     parameters:
-      node-version: { type: string }
+      node-version: { type: string, default: << pipeline.parameters.main_node_version >> }
       os:           { type: string }
       arch:         { type: string }
       build-type:   { type: string }
@@ -189,7 +187,7 @@ jobs:
 
   publish_binary_release:
     parameters:
-      node-version: { type: string }
+      node-version: { type: string, default: << pipeline.parameters.main_node_version >> }
       os:           { type: string }
       arch:         { type: string }
       build-type:   { type: string }
