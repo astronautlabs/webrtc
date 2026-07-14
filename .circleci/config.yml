@@ -116,31 +116,29 @@ executors:
       PLATFORM: linux
   windows-x64:
     machine:
-      image: windows-default
+      image: windows-server-2025-gui
     resource_class: medium
     environment:
       PLATFORM: windows
   windows-arm64:
     machine:
-      image: windows-default
+      image: windows-server-2025-gui
     resource_class: arm.medium
     environment:
       PLATFORM: windows
   darwin-arm64:
     macos:
-      xcode: "14.0.0"
+      xcode: "27.0"
     resource_class: m4pro.medium
     environment:
-      TARGET_ARCH: x64
-      CMAKE_BUILD_TYPE: Release
+      TARGET_ARCH: arm64
       PLATFORM: darwin
   darwin-x64:
     macos:
-      xcode: "14.0.0"
+      xcode: "27.0"
     resource_class: m4pro.medium
     environment:
       TARGET_ARCH: x64
-      CMAKE_BUILD_TYPE: Release
       PLATFORM: darwin
 jobs:
   build:
