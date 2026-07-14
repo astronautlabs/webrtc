@@ -465,25 +465,25 @@ commands:
                   # Just use sudo if it exists, otherwise don't. We'll install sudo so we don't have to do this 
                   # for other incidental package installations though.
                   if ! which sudo &>/dev/null; then
-                    alias sudo=
+                    sudo=
                   fi
 
-                  sudo apt update
-                  sudo ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+                  $sudo apt update
+                  $sudo ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
                   DEBIAN_FRONTEND=noninteractive sudo apt install -y tzdata
-                  sudo dpkg-reconfigure --frontend noninteractive tzdata
+                  $sudo dpkg-reconfigure --frontend noninteractive tzdata
                   
-                  sudo apt install -y \
-                      sudo lsb-release software-properties-common gnupg wget cmake build-essential curl git \
+                  $sudo apt install -y \
+                      $sudo lsb-release software-properties-common gnupg wget cmake build-essential curl git \
                       python3 python3-pkg-resources libglib2.0-dev ninja-build libnspr4 libnss3 \
                       libatk1.0-0 libatk-bridge2.0-0 libcups2 libcairo2 libgtk-3-0 libasound2t64 xvfb ccache \
                       git-restore-mtime
-                  sudo curl https://apt.llvm.org/llvm.sh >/tmp/llvm.sh
-                  sudo chmod +x /tmp/llvm.sh
-                  sudo /tmp/llvm.sh 23
-                  sudo ln -s `which python3` /usr/local/bin/python
-                  sudo ln -s `which clang-23` /usr/local/bin/clang
-                  sudo ln -s `which clang++-23` /usr/local/bin/clang++
+                  $sudo curl https://apt.llvm.org/llvm.sh >/tmp/llvm.sh
+                  $sudo chmod +x /tmp/llvm.sh
+                  $sudo /tmp/llvm.sh 23
+                  $sudo ln -s `which python3` /usr/local/bin/python
+                  $sudo ln -s `which clang-23` /usr/local/bin/clang
+                  $sudo ln -s `which clang++-23` /usr/local/bin/clang++
             - run:
                 name: Toolchain versions
                 command: |
