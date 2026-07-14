@@ -24,7 +24,6 @@ namespace node_webrtc {
 
     void Deferrer::Queue() {
         if (_work_mutex.try_lock()) {
-            Napi::HandleScope scope(_env);
             napi_queue_async_work(_env, _work);
         }
     }
