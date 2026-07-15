@@ -214,7 +214,6 @@ if(WIN32)
     locale_win32${obj_ext}
     support${obj_ext}
     thread_win32${obj_ext}
-    verbose_abort${obj_ext}
   )
 else()
   list(APPEND libc++_objects
@@ -289,6 +288,10 @@ list(APPEND GN_GEN_ARGS
   use_lld=true
 )
 
+if (NOT DEFINED ENV{TARGET_ARCH})
+  set(ENV{TARGET_ARCH} "x64")
+endif()
+
 if (WIN32)
   # The escaping is very strange here
   list(APPEND GN_GEN_ARGS
@@ -344,6 +347,7 @@ set(byproducts
     ${libwebrtc_binary_dir}/obj/${CMAKE_STATIC_LIBRARY_PREFIX}webrtc${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/api/video_codecs/${CMAKE_STATIC_LIBRARY_PREFIX}builtin_video_encoder_factory${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/api/video_codecs/${CMAKE_STATIC_LIBRARY_PREFIX}builtin_video_decoder_factory${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${libwebrtc_binary_dir}/obj/api/video_codecs/${CMAKE_STATIC_LIBRARY_PREFIX}rtc_software_fallback_wrappers${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/media/${CMAKE_STATIC_LIBRARY_PREFIX}rtc_internal_video_codecs${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/media/${CMAKE_STATIC_LIBRARY_PREFIX}media_engine${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${libwebrtc_binary_dir}/obj/media/${CMAKE_STATIC_LIBRARY_PREFIX}rtc_simulcast_encoder_adapter${CMAKE_STATIC_LIBRARY_SUFFIX}
