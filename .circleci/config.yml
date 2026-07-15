@@ -264,7 +264,7 @@ commands:
       - when:
           condition: { not: { equal: [ windows, << parameters.os >> ] } }
           steps:
-            - choco install nodejs --version=<< parameters.version>>
+            - run: choco install nodejs --version=<< parameters.version>>
   ###
   # NPM INSTALL
   ###
