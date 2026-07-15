@@ -214,7 +214,6 @@ if(WIN32)
     locale_win32${obj_ext}
     support${obj_ext}
     thread_win32${obj_ext}
-    verbose_abort${obj_ext}
   )
 else()
   list(APPEND libc++_objects
@@ -288,6 +287,10 @@ list(APPEND GN_GEN_ARGS
   rtc_include_tests=false
   use_lld=true
 )
+
+if (NOT DEFINED ENV{TARGET_ARCH})
+  set(ENV{TARGET_ARCH} "x64")
+endif()
 
 if (WIN32)
   # The escaping is very strange here
