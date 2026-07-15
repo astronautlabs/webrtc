@@ -19,70 +19,81 @@ workflows:
           matrix:
             alias: canary_build
             parameters:
-              os: [linux]
+              os: [linux, windows]
               arch: [x64]
               build-type: ["Debug"]
-              node-version: [<< pipeline.parameters.main_node_version >>]
+          filters: { tags: { only: /^v.*|^ci-test-.*/ } }
       - test:
           requires: [canary_build]
           matrix:
             alias: canary_test
             parameters:
-              os: [linux]
+              os: [linux, windows]
               arch: [x64]
               build-type: ["Debug"]
               node-version:
                 - << pipeline.parameters.main_node_version >>
                 - "22.23.1"
                 - "26.5.0"
+          filters: { tags: { only: /^v.*|^ci-test-.*/ } }
       #################################
       # RELEASE BUILD/TEST
       # - For normal commits, run a single build with no binary publishing
       #################################
       - build:
           requires: [canary_test]
-          filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-*/ } }
-          matrix:
-            alias: build_release
-            parameters:
-              os: [linux, windows, darwin]
-              arch: [x64, arm64]
-              node-version: [<< pipeline.parameters.main_node_version >>]
-              build-type: ["Debug", "Release"]
-              #build-type: ["Debug", "Release"]
-            exclude:
-              - { os: linux, arch: x64, build-type: Debug } # already done by the canary build
-              - { os: darwin, arch: x64 }
-              - { os: windows, arch: arm64 }
-      - test:
           filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
-          requires: [build_release]
           matrix:
-            alias: test_release
+            alias: build_binaries_debug
             parameters:
               os: [linux, windows, darwin]
               arch: [x64, arm64]
-              node-version:
-                - << pipeline.parameters.main_node_version >>
-                - "22.23.1"
-                - "26.5.0"
               build-type: ["Debug"]
             exclude:
-              - { os: darwin, arch: x64 }
-              - { os: windows, arch: arm64 }
+              - { os: linux, arch: x64, build-type: Debug } # already done by the canary build
+              - { os: darwin, arch: x64, build-type: Debug }
+              - { os: windows, arch: arm64, build-type: Debug }
+      - test:
+          filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
+          requires: [build_binaries_debug]
+          matrix:
+            alias: test_binaries
+            parameters:
+              os: [linux, windows, darwin]
+              arch: [x64, arm64]
+              build-type: ["Debug"]
+            exclude:
+              - { os: linux, arch: x64, build-type: Debug } # already done by the canary test
+              - { os: darwin, arch: x64, build-type: Debug }
+              - { os: windows, arch: arm64, build-type: Debug }
+      - build:
+          requires: [test_binaries]
+          filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
+          matrix:
+            alias: build_binaries_release
+            parameters:
+              os: [linux, windows, darwin]
+              arch: [x64, arm64]
+              build-type: ["Release"]
+            exclude:
+              - { os: darwin, arch: x64, build-type: Release }
+              - { os: windows, arch: arm64, build-type: Release }
       - approve_publishing:
+          filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
           type: approval
-          requires: [test_release]
+          requires: [build_binaries_release]
       - publish_binary_release:
+          filters: { branches: { ignore: /.*/ }, tags: { only: /^v.*|^ci-test-.*/ } }
           matrix:
             parameters:
               os: [linux, windows, darwin]
               arch: [x64, arm64]
-              node-version: ["18.20.8"]
               build-type: ["Debug", "Release"]
             exclude:
-              - { os: darwin, arch: x64 }
-              - { os: windows, arch: arm64 }
+              - { os: darwin, arch: x64, build-type: Debug }
+              - { os: darwin, arch: x64, build-type: Release }
+              - { os: windows, arch: arm64, build-type: Debug }
+              - { os: windows, arch: arm64, build-type: Release }
           context: "@/webrtc/binaries"
           requires: [approve_publishing]
 
@@ -105,36 +116,36 @@ executors:
       PLATFORM: linux
   windows-x64:
     machine:
-      image: windows-default
-    resource_class: medium
+      image: windows-server-2025-gui:current
+      shell: powershell.exe -ExecutionPolicy Bypass
+    resource_class: windows.medium
     environment:
       PLATFORM: windows
   windows-arm64:
     machine:
-      image: windows-default
-    resource_class: arm.medium
+      image: windows-server-2025-gui:current
+      shell: powershell.exe -ExecutionPolicy Bypass
+    resource_class: arm.medium # probably wrong, not sure circle supports windows/arm
     environment:
       PLATFORM: windows
   darwin-arm64:
     macos:
-      xcode: "14.0.0"
+      xcode: "27.0"
     resource_class: m4pro.medium
     environment:
-      TARGET_ARCH: x64
-      CMAKE_BUILD_TYPE: Release
+      TARGET_ARCH: arm64
       PLATFORM: darwin
   darwin-x64:
     macos:
-      xcode: "14.0.0"
+      xcode: "27.0"
     resource_class: m4pro.medium
     environment:
       TARGET_ARCH: x64
-      CMAKE_BUILD_TYPE: Release
       PLATFORM: darwin
 jobs:
   build:
     parameters:
-      node-version: { type: string }
+      node-version: { type: string, default: << pipeline.parameters.main_node_version >> }
       os:           { type: string }
       arch:         { type: string }
       build-type:   { type: string }
@@ -161,7 +172,7 @@ jobs:
           build-type: << parameters.build-type >>
   test:
     parameters:
-      node-version: { type: string }
+      node-version: { type: string, default: << pipeline.parameters.main_node_version >> }
       os:           { type: string }
       arch:         { type: string }
       build-type:   { type: string }
@@ -185,7 +196,7 @@ jobs:
 
   publish_binary_release:
     parameters:
-      node-version: { type: string }
+      node-version: { type: string, default: << pipeline.parameters.main_node_version >> }
       os:           { type: string }
       arch:         { type: string }
       build-type:   { type: string }
@@ -406,7 +417,10 @@ commands:
                 value: darwin
             - run:
                 name: Install build tools
-                command: brew install cmake kamilturek/python2/python@2 ccache
+                command: |
+                  brew install cmake kamilturek/python2/python@2 ccache
+                  sudo curl -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o /usr/local/bin/git-restore-mtime
+                  chmod +x /usr/local/bin/git-restore-mtime
       ###
       # WINDOWS SPECIFIC SETUP
       ###
@@ -418,21 +432,26 @@ commands:
                 var: TARGET_PLATFORM
                 value: windows
             - run:
-                name: Enable Windows Long Paths
+                name: Windows Setup
                 shell: powershell.exe
                 command: |
+                    # Add C:\scripts to the PATH for local utility scripts
+                    New-Item $Profile.CurrentUserAllHosts -Force
+                    Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\scripts;$env:PATH"'
+                    $env:PATH = "C:\scripts;$env:PATH"
+                    mkdir C:\scripts
+
                     # Enable long file paths
                     New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
                     git config --global core.longpaths true
-            - run:
-                name: Install CMake, Visual Studio 2026, Python, Windows 10 SDK
-                command: |
-                  choco install -y visualstudio2026community cmake python windows-sdk-10-version-2004-all sccache --no-progress
-                  cp /c/tools/miniconda3/python.exe /c/tools/miniconda3/python3.exe # gn depends on python3 alias
-            - run:
-                name: Install ClangCL toolset
-                shell: powershell.exe
-                command: |
+
+                    # Install CMake, Visual Studio 2026, Python, Windows 10 SDK
+                    choco install -y visualstudio2026community cmake python windows-sdk-10-version-2004-all sccache --no-progress
+                    cp /c/tools/miniconda3/python.exe /c/tools/miniconda3/python3.exe # gn depends on python3 alias
+                    curl -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o c:\scripts\git-restore-mtime.py
+                    'python3 c:\scripts\git-restore-mtime.py' | Out-File -FilePath 'C:\scripts\git-restore-mtime.ps1'
+
+                    # Install ClangCL toolset
                     $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
                     & $vsInstaller modify `
                         --installPath "C:\Program Files\Microsoft Visual Studio\2026\Community" `
@@ -451,21 +470,32 @@ commands:
             - run:
                 name: Install platform dependencies
                 command: |
-                  apt update
-                  ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
-                  DEBIAN_FRONTEND=noninteractive apt install -y tzdata
-                  dpkg-reconfigure --frontend noninteractive tzdata
-                  apt install -y \
+                  # Ubuntu on arm64 doesn't run as root, but ubuntu on x64 does.
+                  # Ubuntu on x64 doesn't have sudo installed by default, but, naturally, ubuntu on arm64 does
+                  # Just use sudo if it exists, otherwise don't. We'll install sudo so we don't have to do this 
+                  # for other incidental package installations though.
+                  if ! which sudo &>/dev/null; then
+                    sudo=
+                  fi
+
+                  $sudo apt update
+                  $sudo ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+                  DEBIAN_FRONTEND=noninteractive $sudo apt install -y tzdata
+                  $sudo dpkg-reconfigure --frontend noninteractive tzdata
+                  
+                  $sudo apt install -y \
                       sudo lsb-release software-properties-common gnupg wget cmake build-essential curl git \
                       python3 python3-pkg-resources libglib2.0-dev ninja-build libnspr4 libnss3 \
-                      libatk1.0-0 libatk-bridge2.0-0 libcups2 libcairo2 libgtk-3-0 libasound2t64 xvfb ccache \
-                      git-restore-mtime
-                  curl https://apt.llvm.org/llvm.sh >/tmp/llvm.sh
-                  chmod +x /tmp/llvm.sh
-                  sudo /tmp/llvm.sh 23
-                  sudo ln -s `which python3` /usr/local/bin/python
-                  sudo ln -s `which clang-23` /usr/local/bin/clang
-                  sudo ln -s `which clang++-23` /usr/local/bin/clang++
+                      libatk1.0-0 libatk-bridge2.0-0 libcups2 libcairo2 libgtk-3-0 libasound2t64 xvfb ccache
+                  $sudo curl https://apt.llvm.org/llvm.sh >/tmp/llvm.sh
+                  $sudo chmod +x /tmp/llvm.sh
+                  $sudo /tmp/llvm.sh 23
+                  $sudo ln -s `which python3` /usr/local/bin/python
+                  $sudo ln -s `which clang-23` /usr/local/bin/clang
+                  $sudo ln -s `which clang++-23` /usr/local/bin/clang++
+                  
+                  sudo curl -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o /usr/local/bin/git-restore-mtime
+                  chmod +x /usr/local/bin/git-restore-mtime
             - run:
                 name: Toolchain versions
                 command: |
@@ -473,7 +503,6 @@ commands:
                   clang --version
                   cmake --version
                   ninja --version
-  ###
   # UTILITY: SET ENVIRONMENT VARIABLE
   # - Ensures the environment variable will be available for subsequent steps
   ###
