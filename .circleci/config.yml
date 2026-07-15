@@ -437,8 +437,8 @@ commands:
                 command: |
                     # Add C:\scripts to the PATH for local utility scripts
                     New-Item $Profile.CurrentUserAllHosts -Force
-                    Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\scripts;$env:PATH"'
-                    $env:PATH = "C:\scripts;$env:PATH"
+                    Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\scripts;C:\Program Files\LLVM\bin;$env:PATH"'
+                    $env:PATH = "C:\scripts;C:\Program Files\LLVM\bin;$env:PATH"
                     mkdir C:\scripts
 
                     # Enable long file paths
@@ -446,10 +446,13 @@ commands:
                     git config --global core.longpaths true
 
                     # Install CMake, Visual Studio 2026, Python, Windows 10 SDK
-                    choco install -y visualstudio2026community cmake python windows-sdk-10-version-2004-all sccache --no-progress
+                    choco install -y cmake python windows-sdk-10-version-2004-all sccache --no-progress
                     cp /c/tools/miniconda3/python.exe /c/tools/miniconda3/python3.exe # gn depends on python3 alias
                     curl -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o c:\scripts\git-restore-mtime.py
                     'python3 c:\scripts\git-restore-mtime.py' | Out-File -FilePath 'C:\scripts\git-restore-mtime.ps1'
+
+                    curl https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe c:\llvm-setup.exe
+                    llvm-setup.exe /S
 
                     # Install ClangCL toolset
                     $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
