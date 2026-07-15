@@ -445,13 +445,17 @@ commands:
                     New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
                     git config --global core.longpaths true
 
-                    # Install CMake, Visual Studio 2026, Python, Windows 10 SDK
-                    choco install -y cmake python windows-sdk-10-version-2004-all sccache --no-progress
-                    cp /c/tools/miniconda3/python.exe /c/tools/miniconda3/python3.exe # gn depends on python3 alias
-                    curl -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o c:\scripts\git-restore-mtime.py
+                    # Install tools
+                    choco install -y python curl cmake python windows-sdk-10-version-2004-all sccache --no-progress
+                    
+                    # Alias python -> python3 (gn depends on it)
+                    $py = (Get-Command python.exe).Source; 
+                    Copy-Item -Path $py -Destination (Join-Path (Split-Path $py) "python3.exe") -Force
+
+                    curl.exe -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o c:\scripts\git-restore-mtime.py
                     'python3 c:\scripts\git-restore-mtime.py' | Out-File -FilePath 'C:\scripts\git-restore-mtime.ps1'
 
-                    curl https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe c:\llvm-setup.exe
+                    curl.exe https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe c:\llvm-setup.exe
                     llvm-setup.exe /S
 
                     # Install ClangCL toolset
