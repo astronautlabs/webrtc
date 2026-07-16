@@ -475,7 +475,7 @@ commands:
                     curl.exe -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o c:\scripts\git-restore-mtime.py
                     'python3 c:\scripts\git-restore-mtime.py' | Out-File -FilePath 'C:\scripts\git-restore-mtime.ps1'
 
-                    curl.exe https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe c:\llvm-setup.exe
+                    curl.exe -sSL https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe -o c:\llvm-setup.exe
                     llvm-setup.exe /S
 
                     # Install ClangCL toolset
