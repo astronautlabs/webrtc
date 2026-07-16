@@ -167,7 +167,8 @@ jobs:
           name: Restore file modification timestamps for faster build
           command: git-restore-mtime
       - setup_cache_key
-      - npm_install
+      - npm_install:
+          os: << parameters.os >>
       - configure_parallelism: { os: <<parameters.os>>, value: "8" }
       - build_addon:
           os: << parameters.os >>
@@ -192,7 +193,8 @@ jobs:
           os: << parameters.os >>
       - checkout
       - setup_cache_key
-      - npm_install
+      - npm_install:
+          os: << parameters.os >>
       - run:
           name: Build Typescript
           command: npm run build:tsc
@@ -219,7 +221,8 @@ jobs:
           os: << parameters.os >>
       - checkout
       - setup_cache_key
-      - npm_install
+      - npm_install:
+          os: << parameters.os >>
       - run:
           name: Build Typescript
           command: npm run build:tsc
@@ -263,6 +266,8 @@ commands:
             - run:
                 name: Build libwebrtc + Node.js bindings
                 command: |
+                    # Make sure LLVM is in the path
+                    # TODO(liam): It is already in the path, but I'd like to get it out and only add it for this step.
                     $env:PATH = "C:\Program Files\LLVM\bin;$env:PATH"
                     npm run build:native
       - when:
@@ -302,11 +307,27 @@ commands:
   ###
   npm_install:
     description: npm install
+    parameters:
+        os: { type: string }
     steps:
       - restore_cache:
           name: Restore cached NPM modules
           key: modules-cache-v2-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "package.json" }}
-      - run: npm install
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: npm install
+                command: |
+                    # Remove LLVM from the PATH before running npm install so it doesn't interfere with native modules
+                    # that just want Visual Studio.
+                    $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -notmatch 'LLVM' }) -join ';'
+                    npm install
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run: npm install
+
       - save_cache:
           name: Cache NPM modules
           key: modules-cache-v2-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "package.json" }}
