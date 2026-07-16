@@ -153,20 +153,22 @@ jobs:
     working_directory: ~/node-webrtc
     steps:
       - configure_builds:
+          os: <<parameters.os>>
           build-type: <<parameters.build-type>>
       - platform_setup:
           os: <<parameters.os>>
       - node_install:
           os: << parameters.os >>
           version: "<< parameters.node-version >>"
-      - setup_workspace
+      - setup_workspace:
+          os: << parameters.os >>
       - checkout
       - run:
           name: Restore file modification timestamps for faster build
           command: git restore-mtime
       - setup_cache_key
       - npm_install
-      - configure_parallelism: { value: "8" }
+      - configure_parallelism: { os: <<parameters.os>>, value: "8" }
       - build_addon
       - store_binary:
           os: << parameters.os >>
@@ -185,7 +187,8 @@ jobs:
       - node_install:
           os: << parameters.os >>
           version: "<< parameters.node-version >>"
-      - setup_workspace
+      - setup_workspace:
+          os: << parameters.os >>
       - checkout
       - setup_cache_key
       - npm_install
@@ -211,7 +214,8 @@ jobs:
       - node_install:
           os: << parameters.os >>
           version: "<< parameters.node-version >>"
-      - setup_workspace
+      - setup_workspace:
+          os: << parameters.os >>
       - checkout
       - setup_cache_key
       - npm_install
@@ -230,6 +234,8 @@ commands:
   ###
   setup_workspace:
     description: Setup Workspace
+    parameters:
+      os: { type: string }
     steps:
       - when:
           condition: { equal: [ windows, << parameters.os >> ] }
@@ -474,6 +480,7 @@ commands:
           steps:
             - macos/install-rosetta
             - set_env_var:
+                os: << parameters.os >>
                 label: Set target platform
                 var: TARGET_PLATFORM
                 value: darwin
@@ -490,6 +497,7 @@ commands:
           condition: { equal: [ windows, << parameters.os >> ] }
           steps:
             - set_env_var:
+                os: << parameters.os >>
                 label: Set target platform
                 var: TARGET_PLATFORM
                 value: windows
@@ -539,6 +547,7 @@ commands:
           condition: { equal: [ linux, << parameters.os >> ] }
           steps:
             - set_env_var:
+                os: << parameters.os >>
                 label: Set target platform
                 var: TARGET_PLATFORM
                 value: linux
@@ -585,6 +594,8 @@ commands:
     parameters:
       label:
         type: string
+      os:
+        type: string
       var:
         type: string
       value:
@@ -608,25 +619,28 @@ commands:
   configure_builds:
     parameters:
       build-type: { type: string }
+      os: { type: string }
     steps:
       - when:
           condition:
             equal: [ "Debug", << parameters.build-type >> ]
           steps:
             - set_env_var:
+                os: << parameters.os >>
                 label: Set CMake build type (Debug)
                 var: CMAKE_BUILD_TYPE
                 value: Debug
             - set_env_var:
+                os: << parameters.os >>
                 label: Set DEBUG=true
                 var: DEBUG
                 value: "true"
   configure_parallelism:
     parameters:
-      value:
-        type: string
+      value: { type: string }
+      os: { type: string }
     steps:
-      - set_env_var: { label: "Configure parallelism", var: PARALLELISM, value: "<< parameters.value >>" }
+      - set_env_var: { os: << parameters.os >>, label: "Configure parallelism", var: PARALLELISM, value: "<< parameters.value >>" }
   run_tests:
     steps:
       - run:
