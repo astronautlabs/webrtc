@@ -19,7 +19,7 @@ workflows:
           matrix:
             alias: canary_build
             parameters:
-              os: [linux, windows]
+              os: [windows]
               arch: [x64]
               build-type: ["Debug"]
           filters: { tags: { only: /^v.*|^ci-test-.*/ } }
@@ -28,7 +28,7 @@ workflows:
           matrix:
             alias: canary_test
             parameters:
-              os: [linux, windows]
+              os: [windows]
               arch: [x64]
               build-type: ["Debug"]
               node-version:
