@@ -165,7 +165,7 @@ jobs:
       - checkout
       - run:
           name: Restore file modification timestamps for faster build
-          command: git restore-mtime
+          command: git-restore-mtime
       - setup_cache_key
       - npm_install
       - configure_parallelism: { os: <<parameters.os>>, value: "8" }
