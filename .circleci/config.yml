@@ -231,8 +231,16 @@ commands:
   setup_workspace:
     description: Setup Workspace
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - attach_workspace:
+                at: c:\workspace
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - attach_workspace:
+                at: /tmp/workspace
   build_addon:
     description: Build @/webrtc
     steps:
@@ -390,19 +398,40 @@ commands:
       arch: { type: string }
       build-type: { type: string }
     steps:
-      - run:
-          name: Store binary (.../<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node)
-          command: |
-            mkdir -p /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
-            cd /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
-            cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.node wrtc.node
-      - store_artifacts:
-          path: /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node
-          destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - "*"
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Acquire Binary (<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>)
+                command: |
+                  Remove-Item -Path "build\Release" -Recurse
+                  Remove-Item -Path "build\Debug" -Recurse
+                  mkdir build
+                  mkdir build\<<parameters.build-type>>
+                  cp c:\workspace\<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>\wrtc.node build\<<parameters.build-type>>\
+            - store_artifacts:
+                path: c:\workspace\<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>\wrtc.node
+                destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
+            - persist_to_workspace:
+                root: c:\workspace
+                paths:
+                  - "*"
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: Acquire Binary (<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>)
+                command: |
+                  mkdir -p /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
+                  cd /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
+                  cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.node wrtc.node
+            - store_artifacts:
+                path: /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node
+                destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
+            - persist_to_workspace:
+                root: /tmp/workspace
+                paths:
+                  - "*"
   acquire_binary:
     description: Acquire Binary
     parameters:
@@ -410,12 +439,26 @@ commands:
       arch: { type: string }
       build-type: { type: string }
     steps:
-      - run:
-          name: Acquire Binary (<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>)
-          command: |
-            rm -Rf build/Release build/Debug
-            mkdir -p build/<<parameters.build-type>>
-            cp /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node build/<<parameters.build-type>>/
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Acquire Binary (<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>)
+                command: |
+                  Remove-Item -Path "build\Release" -Recurse
+                  Remove-Item -Path "build\Debug" -Recurse
+                  mkdir build
+                  mkdir build\<<parameters.build-type>>
+                  cp c:\workspace\<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>\wrtc.node build\<<parameters.build-type>>\
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: Acquire Binary (<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>)
+                command: |
+                  rm -Rf build/Release build/Debug
+                  mkdir -p build/<<parameters.build-type>>
+                  cp /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node build/<<parameters.build-type>>/
   ###
   # PLATFORM-SPECIFIC INSTALLATIONS
   ###
@@ -455,7 +498,6 @@ commands:
                 shell: powershell.exe
                 command: |
                     # Add C:\scripts to the PATH for local utility scripts
-                    New-Item $Profile.CurrentUserAllHosts -Force
                     Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\scripts;C:\Program Files\LLVM\bin;$env:PATH"'
                     $env:PATH = "C:\scripts;C:\Program Files\LLVM\bin;$env:PATH"
                     mkdir C:\scripts
@@ -469,26 +511,27 @@ commands:
                     Update-SessionEnvironment
 
                     # Alias python -> python3 (gn depends on it)
-                    echo Aliasing python to python3
+                    echo "Aliasing python to python3"
                     $py = (Get-Command python.exe).Source; 
                     Copy-Item -Path $py -Destination (Join-Path (Split-Path $py) "python3.exe") -Force
 
-                    echo Installing git-restore-mtime...
+                    echo "Installing git-restore-mtime..."
                     curl.exe -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o c:\scripts\git-restore-mtime.py
                     'python3 c:\scripts\git-restore-mtime.py' | Out-File -FilePath 'C:\scripts\git-restore-mtime.ps1'
 
-                    echo Downloading LLVM 22...
+                    echo "Downloading LLVM 22..."
                     curl.exe -sSL https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe -o c:\llvm-setup.exe
                     c:\llvm-setup.exe /S
 
-                    # Install ClangCL toolset
-                    $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
-                    & $vsInstaller modify `
-                        --installPath "C:\Program Files\Microsoft Visual Studio\2026\Community" `
-                        --add Microsoft.VisualStudio.Component.VC.ClangCL `
-                        --quiet --norestart --nocache
+                    echo "Information about working directory"
 
+                    echo "Directory:"
+                    pwd
+
+                    echo "Listing:"
                     ls
+
+                    echo "Done."
       ###
       # LINUX SPECIFIC SETUP
       ###
@@ -547,9 +590,18 @@ commands:
       value:
         type: string
     steps:
-      - run:
-          name: << parameters.label >>
-          command: echo 'export << parameters.var >>="<< parameters.value >>"' >> $BASH_ENV
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: << parameters.label >>
+                command: Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:<< parameters.var >> = "<< parameters.value >>"'
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: << parameters.label >>
+                command: echo 'export << parameters.var >>="<< parameters.value >>"' >> $BASH_ENV
   ###
   # CONFIGURE DEBUG BUILDS
   ###
