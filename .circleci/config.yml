@@ -484,6 +484,8 @@ commands:
                         --installPath "C:\Program Files\Microsoft Visual Studio\2026\Community" `
                         --add Microsoft.VisualStudio.Component.VC.ClangCL `
                         --quiet --norestart --nocache
+
+                    ls
       ###
       # LINUX SPECIFIC SETUP
       ###
