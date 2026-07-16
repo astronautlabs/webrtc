@@ -169,7 +169,8 @@ jobs:
       - setup_cache_key
       - npm_install
       - configure_parallelism: { os: <<parameters.os>>, value: "8" }
-      - build_addon
+      - build_addon:
+          os: << parameters.os >>
       - store_binary:
           os: << parameters.os >>
           arch: << parameters.arch >>
@@ -249,10 +250,27 @@ commands:
                 at: /tmp/workspace
   build_addon:
     description: Build @/webrtc
+    parameters:
+        os: { type: string }
     steps:
       - restore_cache:
           name: Restore cached libwebrtc build
           key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Build libwebrtc + Node.js bindings
+                command: |
+                    $env:PATH = "C:\Program Files\LLVM\bin;$env:PATH"
+                    npm run build:native
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: Build libwebrtc + Node.js bindings
+                command: npm run build:native
       - run:
           name: Build libwebrtc + Node.js bindings
           command: npm run build:native
@@ -506,8 +524,8 @@ commands:
                 shell: powershell.exe
                 command: |
                     # Add C:\scripts to the PATH for local utility scripts
-                    Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\scripts;C:\Program Files\LLVM\bin;$env:PATH"'
-                    $env:PATH = "C:\scripts;C:\Program Files\LLVM\bin;$env:PATH"
+                    Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\scripts;$env:PATH"'
+                    $env:PATH = "C:\scripts;$env:PATH"
                     mkdir C:\scripts
 
                     # Enable long file paths
@@ -520,7 +538,7 @@ commands:
 
                     # Alias python -> python3 (gn depends on it)
                     echo "Aliasing python to python3"
-                    $py = (Get-Command python.exe).Source; 
+                    $py = (Get-Command python.exe).Source;
                     Copy-Item -Path $py -Destination (Join-Path (Split-Path $py) "python3.exe") -Force
 
                     echo "Installing git-restore-mtime..."
@@ -556,7 +574,7 @@ commands:
                 command: |
                   # Ubuntu on arm64 doesn't run as root, but ubuntu on x64 does.
                   # Ubuntu on x64 doesn't have sudo installed by default, but, naturally, ubuntu on arm64 does
-                  # Just use sudo if it exists, otherwise don't. We'll install sudo so we don't have to do this 
+                  # Just use sudo if it exists, otherwise don't. We'll install sudo so we don't have to do this
                   # for other incidental package installations though.
                   if ! which sudo &>/dev/null; then
                     sudo=
@@ -566,7 +584,7 @@ commands:
                   $sudo ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
                   DEBIAN_FRONTEND=noninteractive $sudo apt install -y tzdata
                   $sudo dpkg-reconfigure --frontend noninteractive tzdata
-                  
+
                   $sudo apt install -y \
                       sudo lsb-release software-properties-common gnupg wget cmake build-essential curl git \
                       python3 python3-pkg-resources libglib2.0-dev ninja-build libnspr4 libnss3 \
@@ -577,7 +595,7 @@ commands:
                   $sudo ln -s `which python3` /usr/local/bin/python
                   $sudo ln -s `which clang-23` /usr/local/bin/clang
                   $sudo ln -s `which clang++-23` /usr/local/bin/clang++
-                  
+
                   sudo curl -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o /usr/local/bin/git-restore-mtime
                   chmod +x /usr/local/bin/git-restore-mtime
             - run:
