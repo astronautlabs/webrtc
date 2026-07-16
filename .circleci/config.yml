@@ -469,14 +469,17 @@ commands:
                     Update-SessionEnvironment
 
                     # Alias python -> python3 (gn depends on it)
+                    echo Aliasing python to python3
                     $py = (Get-Command python.exe).Source; 
                     Copy-Item -Path $py -Destination (Join-Path (Split-Path $py) "python3.exe") -Force
 
+                    echo Installing git-restore-mtime...
                     curl.exe -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o c:\scripts\git-restore-mtime.py
                     'python3 c:\scripts\git-restore-mtime.py' | Out-File -FilePath 'C:\scripts\git-restore-mtime.ps1'
 
+                    echo Downloading LLVM 22...
                     curl.exe -sSL https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe -o c:\llvm-setup.exe
-                    llvm-setup.exe /S
+                    c:\llvm-setup.exe /S
 
                     # Install ClangCL toolset
                     $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
