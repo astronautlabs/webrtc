@@ -136,6 +136,19 @@ You also need to install `libnspr4` and `libnss3` for the browser tests.
 sudo apt install libnspr4 libnss3
 ```
 
+# Troubleshooting
+
+## Node.js `>= 26.0.0 && < 26.3.0` on Windows
+
+Node.js has started building with ClangCL, which triggers the bundled node-gyp to try to build normal `.gyp` addons like 
+`libyuv` (which is a dependency of `@/webrtc`) using ClangCL, but simultaneously passes MSVC specific arguments such as 
+`/ltcg:incremental` which causes the `libyuv` build to fail on `npm install`. 
+
+Solution: Either upgrade Node.js to 26.3 or later, or install a `node-gyp@10.3` or later. 
+
+It is not in our interest to produce a workaround on our end for this short series of Node.js builds which are not in 
+the LTS branch, especially when there are easy workarounds by upgrading Node.js or `node-gyp`.
+
 # Developers
 
 This section has notes about how to be productive working with this codebase.

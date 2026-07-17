@@ -297,7 +297,11 @@ commands:
       - when:
           condition: { equal: [ windows, << parameters.os >> ] }
           steps:
-            - run: choco install nodejs --version=<< parameters.version>>
+            - run: 
+                name: Install Node.js << parameters.version >>
+                command: |
+                  nvm install << parameters.version>>
+                  nvm use << parameters.version >>
       - when:
           condition: { not: { equal: [ windows, << parameters.os >> ] } }
           steps:
@@ -322,13 +326,6 @@ commands:
                     # Remove LLVM from the PATH before running npm install so it doesn't interfere with native modules
                     # that just want Visual Studio.
                     $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -notmatch 'LLVM' }) -join ';'
-                    
-                    # Force node-gyp to use standard Visual Studio 2022 (v143) for all third-party 
-                    # dependencies (like node-addon-api's nothing.vcxproj). This prevents node-gyp 
-                    # from crashing on llvm-lib.exe due to legacy /LTCG flags on Node 26, because Node 26
-                    # would prefer to use VS' ClangCL toolset, but there are bugs with doing that.
-                    $env:npm_config_msvs_toolset = "v143"
-                    $env:GYP_MSVS_TOOLSET = "v143"
 
                     npm install
       - when:
