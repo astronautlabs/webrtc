@@ -3,14 +3,11 @@
 
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { spawnSync, execSync } from "node:child_process";
 
-const __dirname = import.meta.dirname ? import.meta.dirname
-    : import.meta.filename ? path.dirname(import.meta.filename)
-    : path.dirname(new URL(import.meta.url).pathname)
-;
-
-const CMAKE_JS = path.resolve(__dirname, "..", "node_modules", ".bin", "cmake-js");
+const __dirname = import.meta.dirname ?? path.dirname(fileURLToPath(import.meta.url));
+const CMAKE_JS = path.resolve(path.resolve(__dirname), "..", "node_modules", "cmake-js", "bin", "cmake-js");
 
 function main(args) {
     if (args[0] === '--help') {
@@ -40,9 +37,9 @@ function main(args) {
         // will compile using Clang 23.
         cmakeJsArgs.push(...[
             '-G', 'Ninja',
-            '--CDCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe"',
-            '--CDCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe"',
-            '--CDCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe"',
+            '--CDCMAKE_C_COMPILER=C:/Program Files/LLVM/bin/clang-cl.exe',
+            '--CDCMAKE_CXX_COMPILER=C:/Program Files/LLVM/bin/clang-cl.exe',
+            '--CDCMAKE_LINKER=C:/Program Files/LLVM/bin/lld-link.exe',
             '--CDCMAKE_SYSTEM_NAME=Windows'
         ]);
 
@@ -50,7 +47,7 @@ function main(args) {
         // CMake, since cmake-js may still find the npm "rc" package otherwise.
         const { stdout } = spawnSync("where", ["rc.exe"], { encoding: "utf-8" });
         if (stdout) {
-            cmakeJsArgs.push(`--CDCMAKE_RC_COMPILER="${stdout.replace(/\\/g, "/")}"`);
+            cmakeJsArgs.push(`--CDCMAKE_RC_COMPILER=${stdout.replace(/\\/g, "/").trim()}`);
         }
     }
 
@@ -64,8 +61,7 @@ function main(args) {
     console.log();
     console.log(`------------------------------------------------`);
     console.log("Running: cmake-js configure " + cmakeJsArgs.join(" "));
-    let { status } = spawnSync(CMAKE_JS, ["configure", ...cmakeJsArgs], {
-        shell: true,
+    let { status } = spawnSync(process.execPath, [CMAKE_JS, "configure", ...cmakeJsArgs], {
         stdio: "inherit",
     });
     if (status)
@@ -74,8 +70,7 @@ function main(args) {
     console.log();
     console.log(`------------------------------------------------`);
     console.log("Running: cmake-js build " + cmakeJsArgs.join(" "));
-    status = spawnSync(CMAKE_JS, ["build", ...cmakeJsArgs], {
-        shell: true,
+    status = spawnSync(process.execPath, [CMAKE_JS, "build", ...cmakeJsArgs], {
         stdio: "inherit",
     }).status;
     if (status)
