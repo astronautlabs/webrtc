@@ -11,6 +11,16 @@ set TARGETS=libjingle_peerconnection builtin_video_encoder_factory builtin_video
 : TODO: ARM specific targets (see build-webrtc.sh)
 
 @ECHO ON
+
+:: CircleCI's tar truncates NTFS 100-ns timestamps during cache restore, and we frequently have issues 
+:: with timestamps not lining up. Normally the libwebrtc sources are not changing as they are pinned to a specific 
+:: branch head, so if there are built versions of the objects, we will assume they are correct and can be used as-is.
+:: This does mean changing the branch head will require you to start from a fresh build, but *you should be doing that 
+:: anyway*.
+:: Force Ninja to update its internal database to match the truncated disk timestamps.
+call ninja -t restat
+
+:: Build libwebrtc
 call ninja webrtc %TARGETS% -j 24 -d explain || goto :error
 
 :: CircleCI's `tar` breaks NTFS Directory Junctions when saving/restoring cache.
