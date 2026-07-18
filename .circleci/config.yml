@@ -668,26 +668,11 @@ commands:
     parameters:
       os: { type: string }
     steps:
-      - when:
-          condition: { equal: [ windows, << parameters.os >> ] }
-          steps:
-            - run:
-                name: "Save build cache"
-                command: |
-                  7z a -t7z -mx=1 -mmt=on webrtc_build_cache.7z build
-            - save_cache:
-                name: "Save Cache Archive to CircleCI"
-                key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
-                paths:
-                  - webrtc_build_cache.7z
-      - when:
-          condition: { not: { equal: [ windows, << parameters.os >> ] } }
-          steps:
-            - save_cache:
-                name: "Save build cache"
-                key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
-                paths:
-                  - build
+      - save_cache:
+          name: "Save build cache"
+          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+          paths:
+            - build
   restore_build_cache:
     parameters:
       os: { type: string }
@@ -695,19 +680,6 @@ commands:
       - restore_cache:
           name: Restore cache
           key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
-      - when:
-          condition: { equal: [ windows, << parameters.os >> ] }
-          steps:
-            - run:
-                name: "Restore build cache"
-                command: |
-                  if (Test-Path "webrtc_build_cache.7z") {
-                      Write-Host "Extracting cache..."
-                      7z x webrtc_build_cache.7z -y -mmt=on
-                      Remove-Item -Path webrtc_build_cache.7z
-                  } else {
-                    Write-Host "No fast-cache archive found. Assuming cache is not fast-cache and proceeding."
-                  }
   ###
   # CONFIGURE DEBUG BUILDS
   ###
