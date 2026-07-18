@@ -14,22 +14,8 @@ CALL python src\build\util\lastchange.py -o src\build\util\LASTCHANGE || goto :e
 CALL python src\build\vs_toolchain.py update --force || goto :error
 CALL python src\tools\clang\scripts\update.py || goto :error
 
-where git-restore-mtime >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    echo Restoring mtimes for all WebRTC git repositories...
-    :: Loop through every directory recursively looking for ".git" folders
-    for /d /r . %%G in (.git) do (
-        :: %%G is the path to the .git folder. We append \.. to target the parent repo.
-        echo  -^> Fixing mtimes in %%G\..
-        pushd "%%G\.."
-        git-restore-mtime
-        popd
-    )
-) else (
-    echo [WARNING] git-restore-mtime is not installed.
-    echo Skipping mtime restoration. Ninja may trigger unnecessary rebuilds.
-    echo ^(To fix this, install git-restore-mtime and ensure it is in your PATH^)
-)
+:: Fix Git timestamps across the Chromium tree to ensure zero-action Ninja builds
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0restore-mtimes.ps1"
 
 rmdir webrtc
 mklink /j webrtc src || goto :error
