@@ -9,7 +9,7 @@ set DEPOT_TOOLS_WIN_TOOLCHAIN=0
 
 @ECHO ON
 CALL gclient config --unmanaged --spec solutions=[{\"name\":\"src\",\"url\":\"https://webrtc.googlesource.com/src.git\"}] || goto :error
-CALL gclient sync --shallow --no-history --nohooks --with_branch_heads -r %WEBRTC_REVISION% -R || goto :error
+CALL gclient sync --verbose --shallow --no-history --nohooks --with_branch_heads -r %WEBRTC_REVISION% -R || goto :error
 CALL python src\build\util\lastchange.py -o src\build\util\LASTCHANGE || goto :error
 CALL python src\build\vs_toolchain.py update --force || goto :error
 CALL python src\tools\clang\scripts\update.py || goto :error
