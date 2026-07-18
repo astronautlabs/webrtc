@@ -269,6 +269,12 @@ commands:
                     # Make sure LLVM is in the path
                     # TODO(liam): It is already in the path, but I'd like to get it out and only add it for this step.
                     $env:PATH = "C:\Program Files\LLVM\bin;$env:PATH"
+
+                    echo "Clang version:"
+                    clang --version
+
+                    echo
+                    echo "Building @/webrtc..."
                     npm run build:native
       - when:
           condition: { not: { equal: [ windows, << parameters.os >> ] } }
