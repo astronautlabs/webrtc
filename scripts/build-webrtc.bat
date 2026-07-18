@@ -9,7 +9,7 @@ set TARGETS=libjingle_peerconnection builtin_video_encoder_factory builtin_video
 : TODO: ARM specific targets (see build-webrtc.sh)
 
 @ECHO ON
-call ninja webrtc %TARGETS% -j 24 || goto :error
+call ninja webrtc %TARGETS% -j 24 -d explain || goto :error
 
 : ------------------------------------------------------------------------------------
 goto :EOF
