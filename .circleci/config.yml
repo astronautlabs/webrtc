@@ -3,6 +3,8 @@ orbs:
   node: circleci/node@7.2.1
   win: circleci/windows@5.1.1
   macos: circleci/macos@2.4.1
+  windows-defender: circleci/windows-defender@0.0.2
+
 parameters:
   main_node_version:
     type: string
@@ -549,6 +551,7 @@ commands:
                 label: Set target platform
                 var: TARGET_PLATFORM
                 value: windows
+            - windows-defender/disable
             - run:
                 name: Windows Setup
                 shell: powershell.exe
