@@ -118,7 +118,7 @@ executors:
     machine:
       image: windows-server-2025-gui:current
       shell: powershell.exe -ExecutionPolicy Bypass
-    resource_class: windows.medium
+    resource_class: windows.large
     environment:
       PLATFORM: windows
   windows-arm64:
@@ -269,6 +269,12 @@ commands:
                     # Make sure LLVM is in the path
                     # TODO(liam): It is already in the path, but I'd like to get it out and only add it for this step.
                     $env:PATH = "C:\Program Files\LLVM\bin;$env:PATH"
+
+                    echo "Clang version:"
+                    clang --version
+
+                    echo
+                    echo "Building @/webrtc..."
                     npm run build:native
       - when:
           condition: { not: { equal: [ windows, << parameters.os >> ] } }
@@ -297,7 +303,7 @@ commands:
       - when:
           condition: { equal: [ windows, << parameters.os >> ] }
           steps:
-            - run: 
+            - run:
                 name: Install Node.js << parameters.version >>
                 command: |
                   nvm install << parameters.version>>
@@ -458,10 +464,10 @@ commands:
                   cd c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
                   cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.node wrtc.node
             - store_artifacts:
-                path: c:\workspace\<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>\wrtc.node
+                path: c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node
                 destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
             - persist_to_workspace:
-                root: c:\workspace
+                root: c:/workspace
                 paths:
                   - "*"
       - when:
@@ -493,11 +499,11 @@ commands:
             - run:
                 name: Acquire Binary (<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>)
                 command: |
-                  Remove-Item -Path "build\Release" -Recurse
-                  Remove-Item -Path "build\Debug" -Recurse
+                  Remove-Item -Path "build/Release" -Recurse
+                  Remove-Item -Path "build/Debug" -Recurse
                   mkdir build
-                  mkdir build\<<parameters.build-type>>
-                  cp c:\workspace\<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>\wrtc.node build\<<parameters.build-type>>\
+                  mkdir build/<<parameters.build-type>>
+                  cp c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node build/<<parameters.build-type>>/
       - when:
           condition: { not: { equal: [ windows, << parameters.os >> ] } }
           steps:
@@ -547,10 +553,10 @@ commands:
                 name: Windows Setup
                 shell: powershell.exe
                 command: |
-                    # Add C:\scripts to the PATH for local utility scripts
+                    # Add C:/scripts to the PATH for local utility scripts
                     Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\scripts;$env:PATH"'
                     $env:PATH = "C:\scripts;$env:PATH"
-                    mkdir C:\scripts
+                    mkdir C:/scripts
 
                     # Enable long file paths
                     New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
@@ -566,12 +572,12 @@ commands:
                     Copy-Item -Path $py -Destination (Join-Path (Split-Path $py) "python3.exe") -Force
 
                     echo "Installing git-restore-mtime..."
-                    curl.exe -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o c:\scripts\git-restore-mtime.py
-                    'python3 c:\scripts\git-restore-mtime.py' | Out-File -FilePath 'C:\scripts\git-restore-mtime.ps1'
+                    curl.exe -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o c:/scripts/git-restore-mtime.py
+                    'python3 c:/scripts/git-restore-mtime.py' | Out-File -FilePath 'C:/scripts/git-restore-mtime.ps1'
 
                     echo "Downloading LLVM 22..."
-                    curl.exe -sSL https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe -o c:\llvm-setup.exe
-                    c:\llvm-setup.exe /S
+                    curl.exe -sSL https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe -o c:/llvm-setup.exe
+                    c:/llvm-setup.exe /S
 
                     echo "Information about working directory"
 

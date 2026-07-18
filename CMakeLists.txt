@@ -73,8 +73,12 @@ if (APPLE AND ${is_arm64})
 endif()
 
 if (WIN32 AND ${use_custom_libcxx})
-  set(CMAKE_C_COMPILER "clang-cl" CACHE STRING "" FORCE)
-  set(CMAKE_CXX_COMPILER "clang-cl" CACHE STRING "" FORCE)
+  if(NOT CMAKE_C_COMPILER)
+    set(CMAKE_C_COMPILER "clang-cl" CACHE STRING "")
+  endif()
+  if(NOT CMAKE_CXX_COMPILER)
+    set(CMAKE_CXX_COMPILER "clang-cl" CACHE STRING "")
+  endif()
 elseif(NOT WIN32)
   # Do not override if the user explicitly passed CC/CXX via environment variables
   if(NOT DEFINED ENV{CC} AND NOT DEFINED ENV{CXX})
@@ -664,3 +668,16 @@ set(INCLUDE_DIRECTORIES
   ${libwebrtc_source_dir}/webrtc/third_party/abseil-cpp
   ${libwebrtc_source_dir}/webrtc/third_party/libyuv/include
 )
+
+if(WIN32)
+  # CircleCI's `tar` breaks NTFS Directory Junctions when saving/restoring cache.
+  # Because ExternalProject_Add skips the download step on cached builds, the junction is lost.
+  # We use Node to safely delete the broken cache artifact (bypassing PowerShell's junction deletion bug),
+  # and cmd.exe to recreate the junction immediately before the addon compiles.
+  add_custom_command(TARGET ${MODULE} PRE_BUILD
+    COMMAND ${NODE_EXECUTABLE} -e "const fs=require('node:fs'); fs.rmSync('webrtc', {recursive:true, force:true});"
+    COMMAND cmd.exe /c "mklink /J webrtc src"
+    WORKING_DIRECTORY ${libwebrtc_source_dir}
+    COMMENT "Repairing WebRTC directory junction for Windows CI Cache..."
+  )
+endif()
