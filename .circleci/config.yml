@@ -452,13 +452,11 @@ commands:
           condition: { equal: [ windows, << parameters.os >> ] }
           steps:
             - run:
-                name: Acquire Binary (<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>)
+                name: Storing Binary (<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>)
                 command: |
-                  Remove-Item -Path "build\Release" -Recurse
-                  Remove-Item -Path "build\Debug" -Recurse
-                  mkdir build
-                  mkdir build\<<parameters.build-type>>
-                  cp c:\workspace\<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>\wrtc.node build\<<parameters.build-type>>\
+                  mkdir -force c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
+                  cd c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
+                  cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.node wrtc.node
             - store_artifacts:
                 path: c:\workspace\<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>\wrtc.node
                 destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
@@ -470,7 +468,7 @@ commands:
           condition: { not: { equal: [ windows, << parameters.os >> ] } }
           steps:
             - run:
-                name: Acquire Binary (<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>)
+                name: Storing Binary (<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>)
                 command: |
                   mkdir -p /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
                   cd /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
