@@ -14,11 +14,13 @@ export function runJS(script: string, args: string[]) {
 
 export function run(executable: string, args: string[]) {
     let executablePath = findProgram(executable);
-    if (!executablePath)
-        throw new Error(`Could not find '${executable}' on the PATH. PATH was: ${(process.env.PATH ?? '').split(path.delimiter).map(x => ` - ${x}`).join(`\n`)}`);
     let cmdLine = `${executable} ${args.map(x => x.includes(' ') ? `"${x}"` : x).join(' ')}`;
     console.log(`\n> ${cmdLine}`);
-    let code = spawnSync(executable, [...args], { stdio: "inherit" }).status;
+
+    if (!executablePath)
+        throw new Error(`Could not find '${executable}' on the PATH. PATH was: ${(process.env.PATH ?? '').split(path.delimiter).map(x => ` - ${x}`).join(`\n`)}`);
+
+    let code = spawnSync(executablePath, [...args], { stdio: "inherit" }).status;
     if (code !== 0)
         throw new Error(`Command failed (exit code ${code}): ${cmdLine}`);
     return code;
@@ -56,9 +58,11 @@ export function withDir<T>(dir: string, func: () => T): T {
 export function withEnv<T>(env: Record<string, string>, func: () => T): T {
     let previousEnv = structuredClone(process.env);
     try {
+        Object.assign(process.env, env);
         return func();
     } finally {
-        process.env = previousEnv;
+        Object.keys(process.env).forEach(key => delete process.env[key]);
+        Object.assign(process.env, previousEnv);
     }
 }
 
@@ -71,13 +75,13 @@ export function findProgram(names: string[] | string): string | undefined {
     for (let name of names) {
         let dirs = process.env.PATH?.split(path.delimiter) ?? [];
         for (let dir of dirs) {
-            let pathExt = os.platform() === 'win32' 
-                ? (process.env.PATHEXT || '').split(path.delimiter) 
+            let pathExt = os.platform() === 'win32'
+                ? (process.env.PATHEXT || '').split(path.delimiter)
                 : [''];
 
             for (let ext of pathExt) {
                 if (fs.existsSync(path.join(dir, `${name}${ext}`))) {
-                    return path.join(dir, name);
+                    return path.join(dir, `${name}${ext}`);
                 }
             }
         }

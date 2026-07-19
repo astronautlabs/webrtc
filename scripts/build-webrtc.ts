@@ -62,8 +62,11 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
     const ccachePath = findProgram(['sccache', 'ccache']);
     const targets = ['libjingle_peerconnection', ...options.targets ?? []];
 
+    if (os.platform() === 'win32')
+        process.env.DEPOT_TOOLS_WIN_TOOLCHAIN = '0';
+
     await acquireDepotTools(path.join(webrtcRoot, 'depot_tools'));
-    
+
     // Download
 
     if (!await dirExists(path.join(webrtcRoot, 'src')))
@@ -72,8 +75,7 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
     let env: Record<string, string> = {};
 
     if (os.platform() === 'win32') {
-        env.DEPOT_TOOLS_WIN_TOOLCHAIN = '0';
-        env.PATH = `${env.DEPOT_TOOLS};${env.__VSCMD_PREINIT_PATH}`;
+        env.PATH = `${process.env.DEPOT_TOOLS};${process.env.__VSCMD_PREINIT_PATH}`;
         env.INCLUDE = '';
         env.LIB = '';
         env.LIBPATH = '';
@@ -89,7 +91,7 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
         if (arch === 'x64')
             arch = 'amd64';
         run('python', [
-            path.join(srcDir, 'build/linux/sysroot_scripts/install-sysroot.py'), 
+            path.join(srcDir, 'build/linux/sysroot_scripts/install-sysroot.py'),
             `--arch=${process.env.TARGET_ARCH ?? os.arch()}`
         ]);
     }
@@ -107,7 +109,6 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
                     'rtc_include_pulse_audio=false',
                     'rtc_include_tests=false',
                     'use_lld=true',
-                    'use_thin_archive=false',
                     'use_custom_libcxx=true',
                     `rtc_build_tools=${['arm64', 'arm'].includes(os.arch()) ? 'true' : 'false'}`,
                     `target_cpu="${process.env.TARGET_ARCH ?? os.arch()}"`,
@@ -129,7 +130,7 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
     let libPattern = os.platform() === 'win32' ? `*.lib` : `lib*.a`;
     let libraries = [
         ...globSync(`${intermediateDir}/**/${libPattern}`)
-    ]; 
+    ];
     let libDir = path.join(outDir, 'lib');
     let includeDir = path.join(outDir, 'include');
     mkdirpSync(libDir);
@@ -144,37 +145,37 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
     console.log(`\n> collecting headers...`);
     await collectHeaders(srcDir, path.join(outDir, 'include', 'webrtc'), ['*.h', '*.inc'], [/third_party/, /-sysroot/]);
     await collectHeaders(
-        path.join(srcDir, 'third_party', 'libc++', 'src', 'include'), 
-        path.join(outDir, 'include', 'webrtc', 'third_party', 'libc++', 'src', 'include'), 
+        path.join(srcDir, 'third_party', 'libc++', 'src', 'include'),
+        path.join(outDir, 'include', 'webrtc', 'third_party', 'libc++', 'src', 'include'),
         ['*'],
         []
     );
     await collectHeaders(
-        path.join(srcDir, 'third_party', 'abseil-cpp', 'absl'), 
-        path.join(outDir, 'include', 'webrtc', 'third_party', 'abseil-cpp', 'absl'), 
+        path.join(srcDir, 'third_party', 'abseil-cpp', 'absl'),
+        path.join(outDir, 'include', 'webrtc', 'third_party', 'abseil-cpp', 'absl'),
         ['*'],
         []
     );
     await collectHeaders(
-        path.join(srcDir, 'third_party', 'libyuv', 'include'), 
-        path.join(outDir, 'include', 'webrtc', 'third_party', 'libyuv', 'include'), 
+        path.join(srcDir, 'third_party', 'libyuv', 'include'),
+        path.join(outDir, 'include', 'webrtc', 'third_party', 'libyuv', 'include'),
         ['*'],
         []
     );
     await collectHeaders(
-        path.join(srcDir, 'third_party', 'libc++', 'src', 'include'), 
-        path.join(outDir, 'include', 'webrtc', 'third_party', 'libc++', 'src', 'include'), 
+        path.join(srcDir, 'third_party', 'libc++', 'src', 'include'),
+        path.join(outDir, 'include', 'webrtc', 'third_party', 'libc++', 'src', 'include'),
         ['*'],
         []
     );
     await collectHeaders(
-        path.join(srcDir, 'buildtools', 'third_party', 'libc++'), 
-        path.join(outDir, 'include', 'webrtc', 'buildtools', 'third_party', 'libc++'), 
+        path.join(srcDir, 'buildtools', 'third_party', 'libc++'),
+        path.join(outDir, 'include', 'webrtc', 'buildtools', 'third_party', 'libc++'),
         ['*'],
         []
     );
     await collectHeaders(
-        path.join(srcDir, 'third_party', 'libc++abi', 'src', 'include'), 
+        path.join(srcDir, 'third_party', 'libc++abi', 'src', 'include'),
         path.join(outDir, 'include', 'webrtc', 'third_party', 'libc++abi', 'src', 'include'),
         ['*'],
         []
@@ -207,7 +208,7 @@ async function collectHeaders(fromDir: string, toDir: string, patterns: string[]
 
 export function flattenThinArchive(
     webrtcRoot: string,
-    inputFile: string, 
+    inputFile: string,
     outputFile: string
 ) {
     const llvmArExe = os.platform() === 'win32' ? 'llvm-ar.exe' : 'llvm-ar';
