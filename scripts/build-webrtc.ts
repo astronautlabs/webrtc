@@ -136,7 +136,7 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
     mkdirpSync(libDir);
     mkdirpSync(includeDir);
     await Promise.all(libraries.map(async lib => {
-        await flattenThinArchive(webrtcRoot, lib, path.join(libDir, path.basename(lib)));
+        await flattenThinArchive(lib, path.join(libDir, path.basename(lib)));
         console.log(`- flattened ${path.basename(lib)}`);
     }));
 
@@ -207,16 +207,16 @@ async function collectHeaders(fromDir: string, toDir: string, patterns: string[]
 }
 
 export function flattenThinArchive(
-    webrtcRoot: string,
     inputFile: string,
     outputFile: string
 ) {
-    const llvmArExe = os.platform() === 'win32' ? 'llvm-ar.exe' : 'llvm-ar';
-    const llvmArPath = path.join(webrtcRoot, 'src', 'third_party', 'llvm-build', 'Release+Asserts', 'bin', llvmArExe);
+    const llvmAr = findProgram('llvm-ar');
+    if (!llvmAr)
+        throw new Error(`Cannot find 'llvm-ar', please make sure Clang 22 or later is installed and that llvm-ar is available on the PATH`);
 
     return new Promise<void>((resolve, reject) => {
         let proc = child_process.spawn(
-            llvmArPath, ['-M'], {
+            llvmAr, ['-M'], {
                 stdio: ['pipe', 'inherit', 'inherit']
             }
         );

@@ -118,16 +118,21 @@ The table below maps our support intentions to which configurations have been va
 
 ### Linux
 
-Compiling this addon requires Clang 23+. Ubuntu is often behind on the Clang version it ships. You can install the 
+Compiling this addon requires Clang 22+. Ubuntu is often behind on the Clang version it ships. You can install the 
 newest Clang directly from the LLVM Project by following the instructions at https://apt.llvm.org/.
 
-At the time of writing, Clang 22 is installed when using LLVM's automatic apt installation script. To ensure you get 
-Clang 23, use:
+At the time of writing, Clang 22 is installed when using LLVM's automatic apt installation script without arguments,
+that should be sufficient but our testing on Linux is done exclusively with LLVM/Clang 23.
 
 ```bash
 wget https://apt.llvm.org/llvm.sh
 chmod +x llvm.sh
 sudo ./llvm.sh 23
+
+# Ensure that clang, clang++, and llvm-ar are available unprefixed in your environment
+sudo ln -s `which clang-23` /usr/local/bin/clang
+sudo ln -s `which clang++-23` /usr/local/bin/clang++
+sudo ln -s `which llvm-ar-23` /usr/local/bin/llvm-ar
 ```
 
 You also need to install `libnspr4` and `libnss3` for the browser tests. 

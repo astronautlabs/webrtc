@@ -628,6 +628,7 @@ commands:
                   $sudo ln -s `which python3` /usr/local/bin/python
                   $sudo ln -s `which clang-23` /usr/local/bin/clang
                   $sudo ln -s `which clang++-23` /usr/local/bin/clang++
+                  $sudo ln -s `which llvm-ar-23` /usr/local/bin/llvm-ar
 
                   sudo curl -sSL https://raw.githubusercontent.com/MestreLion/git-tools/refs/tags/v2025.08/git-restore-mtime -o /usr/local/bin/git-restore-mtime
                   chmod +x /usr/local/bin/git-restore-mtime
