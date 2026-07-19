@@ -1,21 +1,45 @@
 #!/usr/bin/env node
-"use strict";
 
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { spawnSync, execSync } from "node:child_process";
 
-const __dirname = import.meta.dirname ?? path.dirname(fileURLToPath(import.meta.url));
+import { spawnSync } from "node:child_process";
+import { buildWebRTC } from "./build-webrtc";
+import { dirExists, injectVSEnvironment, prependToPath, runJS } from "./utils";
+
+/**
+ * For available branches, see https://chromiumdash.appspot.com/branches
+ * - M87:   branch-heads/4280
+ * - M91:   branch-heads/4472
+ * - M92:   branch-heads/4515
+ * - M94:   branch-heads/4606
+ * - M98:   branch-heads/4758
+ * - M102:  branch-heads/5005
+ * - M106:  branch-heads/5249
+ * - M110:  branch-heads/5481
+ * - M114:  branch-heads/5735
+ * - M150:  branch-heads/7871
+ */
+const WEBRTC_REVISION = 'branch-heads/7871';
+
 const CMAKE_JS = path.resolve(path.resolve(__dirname), "..", "node_modules", "cmake-js", "bin", "cmake-js");
+const WEBRTC_DEPENDENCIES = [
+    'webrtc',
+    'builtin_video_encoder_factory',
+    'builtin_video_decoder_factory',
+    'rtc_software_fallback_wrappers',
+    'rtc_internal_video_codecs',
+    'media_engine',
+    'rtc_simulcast_encoder_adapter'
+];
 
-function main(args) {
+async function main(args: string[]) {
     if (args[0] === '--help') {
         console.log(`@astronautlabs/webrtc: build script`);
         process.exit(0);
     }
     const isDevWorkspace = args[0] === 'workspace';
-    const debugMode = ['1', 'true'].includes(process.env.DEBUG);
+    const debugMode = ['1', 'true'].includes(process.env.DEBUG ?? '');
     const platform = os.platform();
     const arch = process.env.TARGET_ARCH ?? os.arch();
     const buildFolder = isDevWorkspace ? `build` : `build/${platform}-${arch}`;
@@ -29,6 +53,22 @@ function main(args) {
         cmakeJsArgs.push("--debug");
 
     prependToPath(path.resolve(__dirname, 'ninja', os.platform()));
+
+    const libwebrtcDir = path.resolve(__dirname, '..', buildFolder, 'external', 'webrtc');
+
+    // Build libwebrtc
+
+    if (!await dirExists(libwebrtcDir)) {
+        await buildWebRTC(libwebrtcDir, { 
+            buildType: debugMode ? 'Debug' : 'Release',
+            targets: WEBRTC_DEPENDENCIES,
+            revision: WEBRTC_REVISION
+        });
+    } else {
+        console.log(`libwebrtc is already built at ${libwebrtcDir}`);
+    }
+
+    // Prepare to build the addon
 
     if (platform === "win32") {
         injectVSEnvironment();
@@ -61,66 +101,17 @@ function main(args) {
     console.log();
     console.log(`------------------------------------------------`);
     console.log("Running: cmake-js configure " + cmakeJsArgs.join(" "));
-    let { status } = spawnSync(process.execPath, [CMAKE_JS, "configure", ...cmakeJsArgs], {
-        stdio: "inherit",
-    });
+
+    let status = runJS(CMAKE_JS, ["configure", ...cmakeJsArgs]);
     if (status)
         throw new Error("cmake-js configure failed for wrtc");
 
     console.log();
     console.log(`------------------------------------------------`);
     console.log("Running: cmake-js build " + cmakeJsArgs.join(" "));
-    status = spawnSync(process.execPath, [CMAKE_JS, "build", ...cmakeJsArgs], {
-        stdio: "inherit",
-    }).status;
+    status = runJS(CMAKE_JS, ["build", ...cmakeJsArgs]);
     if (status)
         throw new Error("cmake-js build failed for wrtc");
-}
-
-function prependToPath(dir) {
-    process.env.PATH = [
-        ...(process.env.PATH ? process.env.PATH.split(path.delimiter) : []),
-        dir
-    ].join(path.delimiter);
-}
-
-function injectVSEnvironment() {
-    const vswhere = '"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe"';
-    const vsQuery = `${vswhere} -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`;
-
-    let vsPath;
-    try {
-        vsPath = execSync(vsQuery, { encoding: 'utf8' }).trim();
-    } catch (e) {
-        throw new Error("Failed to locate Visual Studio with C++ tools via vswhere.");
-    }
-
-    if (!vsPath)
-        throw new Error("Visual Studio path resolved to empty.");
-
-    const vcvarsPath = `${vsPath}\\VC\\Auxiliary\\Build\\vcvars64.bat`;
-
-    // 2. Execute vcvars64.bat and chain the `set` command to dump the loaded environment
-    // Note: We route stdout to NUL for vcvars to prevent noise, but let `set` print to stdout.
-    const envCommand = `"${vcvarsPath}" >nul 2>&1 && set`;
-    const envOutput = execSync(envCommand, { shell: 'cmd.exe', encoding: 'utf8' });
-
-    // 3. Parse the output and inject it into the current Node process environment
-    const lines = envOutput.split('\n');
-    for (const line of lines) {
-        const match = line.trim().match(/^([^=]+)=(.*)$/);
-        if (match) {
-            const key = match[1];
-            const value = match[2];
-
-            // We optionally merge PATH so we don't lose Node's existing paths
-            if (key.toUpperCase() === 'PATH') {
-                process.env[key] = `${value};${process.env[key]}`;
-            } else {
-                process.env[key] = value;
-            }
-        }
-    }
 }
 
 main(process.argv.slice(2))

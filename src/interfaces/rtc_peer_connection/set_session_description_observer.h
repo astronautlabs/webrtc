@@ -11,8 +11,8 @@
 
 #include <memory>
 
-#include <src/api/set_local_description_observer_interface.h>
-#include <src/api/set_remote_description_observer_interface.h>
+#include <webrtc/api/set_local_description_observer_interface.h>
+#include <webrtc/api/set_remote_description_observer_interface.h>
 #include <webrtc/api/jsep.h>
 
 #include "src/interfaces/rtc_peer_connection.h"

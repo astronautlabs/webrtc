@@ -9,7 +9,7 @@
  */
 #include "src/methods/get_user_media.h"
 
-#include <src/api/scoped_refptr.h>
+#include <webrtc/api/scoped_refptr.h>
 #include <webrtc/api/audio_options.h>
 #include <webrtc/api/peer_connection_interface.h>
 #include <webrtc/rtc_base/crypto_random.h>

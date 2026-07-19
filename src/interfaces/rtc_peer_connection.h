@@ -9,8 +9,8 @@
  */
 #pragma once
 
-#include <src/api/rtp_sender_interface.h>
-#include <src/api/rtp_transceiver_interface.h>
+#include <webrtc/api/rtp_sender_interface.h>
+#include <webrtc/api/rtp_transceiver_interface.h>
 #include <vector>
 
 #include <node-addon-api/napi.h>

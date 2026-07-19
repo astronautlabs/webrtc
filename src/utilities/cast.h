@@ -1,6 +1,6 @@
 #include "src/utilities/napi_ref_ptr.h"
 #include <concepts>
-#include <src/api/scoped_refptr.h>
+#include <webrtc/api/scoped_refptr.h>
 
 /**
  * Unified Cast<T>(U u) utilities for smart pointers.

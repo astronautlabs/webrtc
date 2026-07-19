@@ -16,7 +16,7 @@
 #include "src/webrtc/test_audio_device_module.h"
 #include "src/webrtc/zero_capturer.h"
 #include "src/webrtc_addon.h"
-#include <src/rtc_base/network.h>
+#include <webrtc/rtc_base/network.h>
 #include <webrtc/api/audio/create_audio_device_module.h>
 #include <webrtc/api/audio_codecs/builtin_audio_decoder_factory.h>
 #include <webrtc/api/audio_codecs/builtin_audio_encoder_factory.h>

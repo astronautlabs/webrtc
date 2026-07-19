@@ -1,5 +1,5 @@
 #include "webrtc_addon.h"
-#include <src/rtc_base/ssl_adapter.h>
+#include <webrtc/rtc_base/ssl_adapter.h>
 #include <uv.h>
 
 #include "src/interfaces/media_stream.h"

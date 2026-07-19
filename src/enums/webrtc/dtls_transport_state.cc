@@ -1,5 +1,5 @@
 #include "src/enums/webrtc/dtls_transport_state.h"
-#include <src/api/peer_connection_interface.h>
+#include <webrtc/api/peer_connection_interface.h>
 
 namespace node_webrtc {
     static const bidirectional_map<webrtc::DtlsTransportState, std::string> DtlsTransportStateMap {

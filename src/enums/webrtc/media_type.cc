@@ -1,5 +1,5 @@
 #include "src/enums/webrtc/media_type.h"
-#include <src/api/media_types.h>
+#include <webrtc/api/media_types.h>
 
 namespace node_webrtc {
     static const bidirectional_map<webrtc::MediaType, std::string> MediaTypeMap {

@@ -1,5 +1,5 @@
 #include "src/enums/node_webrtc/rtc_ice_candidate_type.h"
-#include <src/api/candidate.h>
+#include <webrtc/api/candidate.h>
  
 namespace node_webrtc {
     static const bidirectional_map<webrtc::IceCandidateType, std::string> IceCandidateTypeMap {

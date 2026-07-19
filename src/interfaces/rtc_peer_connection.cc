@@ -12,12 +12,12 @@
 #include <cassert>
 #include <memory>
 #include <node-addon-api/napi.h>
-#include <src/api/rtp_transceiver_direction.h>
-#include <src/api/units/data_size.h>
+#include <webrtc/api/rtp_transceiver_direction.h>
+#include <webrtc/api/units/data_size.h>
 #include <string>
 
-#include <src/api/jsep.h>
-#include <src/api/make_ref_counted.h>
+#include <webrtc/api/jsep.h>
+#include <webrtc/api/make_ref_counted.h>
 #include <webrtc/api/environment/environment_factory.h>
 #include <webrtc/api/media_types.h>
 #include <webrtc/api/peer_connection_interface.h>

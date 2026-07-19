@@ -9,7 +9,7 @@
  */
 #include "src/interfaces/rtc_peer_connection/create_session_description_observer.h"
 
-#include <src/api/jsep.h>
+#include <webrtc/api/jsep.h>
 #include <type_traits>
 
 #include <webrtc/api/rtc_error.h>

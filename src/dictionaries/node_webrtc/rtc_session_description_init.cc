@@ -1,6 +1,6 @@
 #include "src/dictionaries/node_webrtc/rtc_session_description_init.h"
 
-#include <src/api/scoped_refptr.h>
+#include <webrtc/api/scoped_refptr.h>
 #include <utility>
 #include <memory>
 

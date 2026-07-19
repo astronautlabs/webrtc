@@ -1,5 +1,5 @@
 #include "src/enums/webrtc/data_state.h"
-#include <src/api/data_channel_interface.h>
+#include <webrtc/api/data_channel_interface.h>
 
 namespace node_webrtc {
     static const bidirectional_map<webrtc::DataChannelInterface::DataState, std::string> DataStateMap {

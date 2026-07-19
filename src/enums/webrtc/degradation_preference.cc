@@ -1,6 +1,6 @@
 #include "src/enums/webrtc/degradation_preference.h"
-#include <src/api/peer_connection_interface.h>
-#include <src/api/rtp_parameters.h>
+#include <webrtc/api/peer_connection_interface.h>
+#include <webrtc/api/rtp_parameters.h>
 
 namespace node_webrtc {
     static const bidirectional_map<webrtc::DegradationPreference, std::string> DegradationPreferenceMap {

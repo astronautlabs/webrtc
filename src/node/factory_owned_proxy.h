@@ -2,8 +2,8 @@
 
 #include "src/node/proxy.h"
 #include "src/interfaces/rtc_peer_connection/peer_connection_factory_reference.h"
-#include <src/api/peer_connection_interface.h>
-#include <src/api/scoped_refptr.h>
+#include <webrtc/api/peer_connection_interface.h>
+#include <webrtc/api/scoped_refptr.h>
 
 #define Super Proxy<ProxyT, NativeT>
 

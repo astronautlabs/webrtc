@@ -23,7 +23,7 @@
 #include <js_native_api_types.h>
 #include <node-addon-api/napi.h>
 #include <random>
-#include <src/api/scoped_refptr.h>
+#include <webrtc/api/scoped_refptr.h>
 
 namespace node_webrtc {
     /**
