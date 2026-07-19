@@ -16,3 +16,4 @@ coverage/
 *.tsbuildinfo
 publish-test.sh
 webrtc-buildroot/
+newbuild/

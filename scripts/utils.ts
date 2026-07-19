@@ -190,3 +190,9 @@ export class ConcurrentWorkQueue {
         await Promise.all(this.pending);
     }
 }
+
+export async function writeTextFile(filename: string, content: string) {
+    await new Promise<void>((resolve, reject) => {
+        fs.writeFile(filename, content, err => err ? reject(err) : resolve());
+    });
+}
