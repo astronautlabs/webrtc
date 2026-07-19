@@ -188,18 +188,31 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
 }
 
 async function collectHeaders(fromDir: string, toDir: string, patterns: string[] = ['*.h'], skipPatterns: RegExp[] = []) {
+    fromDir = path.resolve(fromDir);
+    toDir = path.resolve(toDir);
+
     let headers = globSync(patterns.map(pattern => `${fromDir}/**/${pattern}`)).filter(x => !skipPatterns.some(p => p.test(x)));
     let queue = new ConcurrentWorkQueue(5000);
 
     await Promise.all(headers.map(async headerFile => {
+        headerFile = path.resolve(headerFile);
+
         if (await dirExists(headerFile))
             return;
         let relativePath = headerFile.slice(fromDir.length);
         let finalPath = path.join(toDir, relativePath);
 
         await queue.run(async () => {
+            try {
             await mkdirp(path.dirname(finalPath));
             await fs.copyFile(headerFile, finalPath);
+            } catch (e) {
+                throw new Error(
+                    `Failed to copy header '${headerFile}' to '${finalPath}' (relative path '${relativePath}') while collecting headers from '${fromDir}' -> '${toDir}' `
+                        + `[patterns: ${patterns.join(', ')}]`,
+                    { cause: e }
+                );
+            }
         });
     }));
 
