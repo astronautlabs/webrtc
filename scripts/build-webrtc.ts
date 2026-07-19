@@ -10,7 +10,7 @@ import { rimraf } from 'rimraf';
 import { globSync } from 'glob';
 import { mkdirp, mkdirpSync } from 'mkdirp';
 import { acquireDepotTools, gclient, gn } from "./depot-tools";
-import { ConcurrentWorkQueue, dirExists, fileExists, findProgram, run, withDir, withEnv } from "./utils";
+import { ConcurrentWorkQueue, dirExists, fileExists, findProgram, run, withDir, withEnv, writeTextFile } from "./utils";
 import { randomUUID } from "node:crypto";
 
 export interface WebRTCBuildOptions {
@@ -57,10 +57,14 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
 
     console.log(`\n> building libwebrtc in ${webrtcRoot}`);
 
+    const buildCompleteMarker = path.join(outDir, 'build-complete');
     const srcDir = path.resolve(webrtcRoot, 'src');
     const intermediateDir = path.resolve(webrtcRoot, 'intermediate');
     const ccachePath = findProgram(['sccache', 'ccache']);
     const targets = ['libjingle_peerconnection', ...options.targets ?? []];
+
+    if (await fileExists(buildCompleteMarker))
+        return;
 
     await acquireDepotTools(path.join(webrtcRoot, 'depot_tools'));
     
@@ -183,6 +187,7 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
     console.log(`\n> cleaning up build directory ${webrtcRoot}...`);
     await rimraf(webrtcRoot);
 
+    await writeTextFile(buildCompleteMarker, '');
     console.log(`\n> done. output is at ${outDir}`);
 }
 

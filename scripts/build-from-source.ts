@@ -58,15 +58,11 @@ async function main(args: string[]) {
 
     // Build libwebrtc
 
-    if (!await dirExists(libwebrtcDir)) {
-        await buildWebRTC(libwebrtcDir, { 
-            buildType: debugMode ? 'Debug' : 'Release',
-            targets: WEBRTC_DEPENDENCIES,
-            revision: WEBRTC_REVISION
-        });
-    } else {
-        console.log(`libwebrtc is already built at ${libwebrtcDir}`);
-    }
+    await buildWebRTC(libwebrtcDir, { 
+        buildType: debugMode ? 'Debug' : 'Release',
+        targets: WEBRTC_DEPENDENCIES,
+        revision: WEBRTC_REVISION
+    });
 
     // Prepare to build the addon
 
