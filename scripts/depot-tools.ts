@@ -50,7 +50,7 @@ export class gclient {
             args.push('--unmanaged');
         if (options?.spec)
             args.push('--spec', options.spec);
-        run("gclient.py", [ "config", ...args]);
+        run("gclient", [ "config", ...args]);
     }
 
     static sync(options?: GClientSyncOptions) {
@@ -69,13 +69,13 @@ export class gclient {
         if (options?.reset)
             args.push('-R');
 
-        run("gclient.py", [ "sync", ...args]);
+        run("gclient", [ "sync", ...args]);
     }
 }
 
 export class gn {
     static gen(outDir: string, args: string[]) {
-        run('gn.py', [
+        run('gn', [
             'gen',
             outDir,
             `--args=${args.join(' ')}`

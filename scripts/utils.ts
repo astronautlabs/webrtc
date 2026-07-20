@@ -17,9 +17,17 @@ export function run(executable: string, args: string[]) {
     let cmdLine = `${executable} ${args.map(x => x.includes(' ') ? `"${x}"` : x).join(' ')}`;
     console.log(`\n> ${cmdLine}`);
 
-    if (executablePath && executablePath.toLowerCase().endsWith('.py')) {
-        args.unshift(executablePath);
-        executablePath = findProgram(`python`);
+    if (executablePath) {
+        if (executablePath.toLowerCase().endsWith('.py')) {
+            args.unshift(executablePath);
+            executablePath = findProgram(`python`);
+        } else if (executablePath.toLowerCase().endsWith('.bat') || executablePath.toLowerCase().endsWith('.cmd')) {
+            args.unshift(executablePath);
+            executablePath = findProgram(`cmd.exe`);
+        } else if (executablePath.toLowerCase().endsWith('.ps1')) {
+            args.unshift(executablePath);
+            executablePath = findProgram(`powershell.exe`);
+        }
     }
 
     if (!executablePath)
