@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 "use strict";
 
+import child_process from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
-import child_process from "node:child_process";
 import path from "node:path";
 
-import { rimraf } from 'rimraf';
 import { globSync } from 'glob';
 import { mkdirp, mkdirpSync } from 'mkdirp';
-import { acquireDepotTools, gclient, gn } from "./depot-tools";
-import { ConcurrentWorkQueue, dirExists, fileExists, findProgram, run, withDir, withEnv, writeTextFile } from "./utils";
 import { randomUUID } from "node:crypto";
+import { acquireDepotTools, gclient, gn } from "./depot-tools";
+import { ConcurrentWorkQueue, dirExists, fileExists, findProgram, run, runWithInput, withDir, withEnv, writeTextFile } from "./utils";
 
 export interface WebRTCBuildOptions {
     /**
@@ -128,21 +127,21 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
         run('ninja', [...targets, '-j', process.env.PARALLELISM ?? '24']);
     });
 
-    // Collect libraries
+    const libDir = path.join(outDir, 'lib');
+    let outCppLib = path.resolve(libDir, 'c++.lib');
 
-    console.log(`\n> collecting libraries...`);
-    let libPattern = os.platform() === 'win32' ? `*.lib` : `lib*.a`;
-    let libraries = [
-        ...globSync(`${intermediateDir}/**/${libPattern}`)
-    ];
-    let libDir = path.join(outDir, 'lib');
-    let includeDir = path.join(outDir, 'include');
-    mkdirpSync(libDir);
-    mkdirpSync(includeDir);
-    await Promise.all(libraries.map(async lib => {
-        await flattenThinArchive(lib, path.join(libDir, path.basename(lib)));
-        console.log(`- flattened ${path.basename(lib)}`);
-    }));
+    if (os.platform() === 'win32' && !await fileExists(outCppLib)) {
+        console.log(`\n> linking libc++`);
+        let objectFiles = globSync(`${path.join(intermediateDir, 'obj', 'buildtools', 'third_party', 'libc++', 'libc++')}/*.obj`);
+        await mkdirp(libDir);
+        run('lld-link', [
+            '/lib',
+            `/out:${libDir}/c++.lib`,
+            ...objectFiles
+        ]);
+    }
+
+    await linkMonolithicLibrary(intermediateDir, libDir);
 
     // Collect headers
 
@@ -247,4 +246,40 @@ export function flattenThinArchive(
         ].join(`\n`));
         proc.stdin.end();
     });
+}
+
+async function linkMonolithicLibrary(intermediateDir: string, outDir: string) {
+    console.log(`\n> linking libwebrtc...`);
+    let libPattern = os.platform() === 'win32' ? `*.lib` : `lib*.a`;
+    let libraries = [
+        ...globSync(`${intermediateDir}/**/${libPattern}`)
+    ].map(x => path.resolve(x));
+    mkdirpSync(outDir);
+
+    if (os.platform() === 'win32') {
+        // RSP
+        let rspFile = path.join(os.tmpdir(), `webrtc-link-${randomUUID()}.rsp`);
+        try {
+            await writeTextFile(rspFile, libraries.join(`\r\n`));
+            run('llvm-lib', [`/OUT:${outDir}\webrtc.lib`, `@${rspFile}`]);
+        } finally {
+            await fs.unlink(rspFile);
+        }
+    } else {
+        // MRI script
+        await runWithInput(
+            'llvm-ar', ['-M'],
+            [
+                `create ${path.resolve(outDir)}/libwebrtc.a`,
+                ...libraries.map(lib => `addlib ${path.resolve(lib)}`),
+                `save`,
+                `end`
+            ].join(`\n`)
+        );
+    }
+
+    // await Promise.all(libraries.map(async lib => {
+    //     await flattenThinArchive(lib, path.join(outDir, path.basename(lib)));
+    //     console.log(`- flattened .../lib/${path.basename(lib)} [from ${lib}]`);
+    // }));
 }
