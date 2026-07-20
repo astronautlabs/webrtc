@@ -103,24 +103,30 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
     // configure
 
     if (!await dirExists(intermediateDir)) {
+        let gnGenArgs: string[] = [
+            // NOTE: These are python expressions, and thus string values must be quoted
+            'rtc_build_examples=false',
+            'rtc_use_x11=false',
+            'rtc_enable_protobuf=false',
+            'rtc_include_pulse_audio=false',
+            'rtc_include_tests=false',
+            'use_lld=true',
+            'use_custom_libcxx=true',
+            `rtc_build_tools=${['arm64', 'arm'].includes(os.arch()) ? 'true' : 'false'}`,
+            `target_cpu="${process.env.TARGET_ARCH ?? os.arch()}"`,
+            `is_debug=${options.buildType === 'Debug' ? 'true' : 'false'}`,
+            ...(options?.useCCache && ccachePath ? [`cc_wrapper="${ccachePath}"`] : [])
+        ];
+
         withEnv(env, () => {
             withDir(srcDir, () => {
-                gn.gen(intermediateDir, [
-                    // NOTE: These are python expressions, and thus string values must be quoted
-                    'rtc_build_examples=false',
-                    'rtc_use_x11=false',
-                    'rtc_enable_protobuf=false',
-                    'rtc_include_pulse_audio=false',
-                    'rtc_include_tests=false',
-                    'use_lld=true',
-                    'use_custom_libcxx=true',
-                    `rtc_build_tools=${['arm64', 'arm'].includes(os.arch()) ? 'true' : 'false'}`,
-                    `target_cpu="${process.env.TARGET_ARCH ?? os.arch()}"`,
-                    `is_debug=${options.buildType === 'Debug' ? 'true' : 'false'}`,
-                    ...(options?.useCCache && ccachePath ? [`cc_wrapper="${ccachePath}"`] : [])
-                ]);
+                gn.gen(intermediateDir, gnGenArgs);
             });
         });
+        
+        await writeTextFile(path.join(intermediateDir, 'gn-gen-args.json'), JSON.stringify(gnGenArgs, undefined, 2));
+        await mkdirp(path.join(outDir, 'etc'));
+        await writeTextFile(path.join(outDir, 'etc', 'gn-gen-args.json'), JSON.stringify(gnGenArgs, undefined, 2));
     }
     // Build
 
