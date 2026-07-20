@@ -290,13 +290,6 @@ commands:
           command: npm run build:tsc
       - save_build_cache:
           os: << parameters.os>>
-      - save_cache:
-          name: Saving build cache
-          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
-          paths:
-            - build
-            - ~/.cache/ccache
-            - ~/.ccache
   node_install:
     parameters:
       os: { type: string }
