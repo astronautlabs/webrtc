@@ -106,8 +106,8 @@ export function findProgram(names: string[] | string): string | undefined {
         names = [ names ];
 
     const WIN_PATHEXT = [
-        '',
-        ...(process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD;.PS1').split(path.delimiter)
+        ...(process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD;.PS1').split(path.delimiter),
+        ''
     ];
 
     for (let name of names) {
