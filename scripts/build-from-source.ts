@@ -39,7 +39,7 @@ async function main(args: string[]) {
         process.exit(0);
     }
     const isDevWorkspace = args[0] === 'workspace';
-    const debugMode = ['1', 'true'].includes(process.env.DEBUG ?? '');
+    const debugMode = isDevWorkspace || ['1', 'true'].includes(process.env.DEBUG ?? '');
     const platform = os.platform();
     const arch = process.env.TARGET_ARCH ?? os.arch();
     const buildFolder = isDevWorkspace ? `build` : `build/${platform}-${arch}`;
@@ -49,7 +49,7 @@ async function main(args: string[]) {
         "--CDCMAKE_EXPORT_COMPILE_COMMANDS=1"
     ];
 
-    if (isDevWorkspace || debugMode)
+    if (debugMode)
         cmakeJsArgs.push("--debug");
 
     prependToPath(path.resolve(__dirname, 'ninja', os.platform()));
