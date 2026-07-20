@@ -1,4 +1,3 @@
-// 'use strict';
 // /* eslint-disable no-console, global-require */
 // import path from 'path';
 // import dns from 'dns';

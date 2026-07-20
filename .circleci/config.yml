@@ -172,8 +172,12 @@ jobs:
       - npm_install:
           os: << parameters.os >>
       - configure_parallelism: { os: <<parameters.os>>, value: "8" }
+      - build_libwebrtc:
+          os: << parameters.os >>
+          build-type: << parameters.build-type >>
       - build_addon:
           os: << parameters.os >>
+          build-type: << parameters.build-type >>
       - store_binary:
           os: << parameters.os >>
           arch: << parameters.arch >>
@@ -253,40 +257,31 @@ commands:
           steps:
             - attach_workspace:
                 at: /tmp/workspace
-  build_addon:
-    description: Build @/webrtc
+  build_libwebrtc:
+    description: Build libwebrtc
     parameters:
         os: { type: string }
+        build-type: { type: string }
     steps:
       - restore_build_cache:
           os: << parameters.os>>
-      - when:
-          condition: { equal: [ windows, << parameters.os >> ] }
-          steps:
-            - run:
-                name: Build libwebrtc + Node.js bindings
-                command: |
-                    # Make sure LLVM is in the path
-                    # TODO(liam): It is already in the path, but I'd like to get it out and only add it for this step.
-                    $env:PATH = "C:\Program Files\LLVM\bin;$env:PATH"
-
-                    echo "Clang version:"
-                    clang --version
-
-                    echo ""
-                    echo "Building @/webrtc..."
-                    npm run build:native
-      - when:
-          condition: { not: { equal: [ windows, << parameters.os >> ] } }
-          steps:
-            - run:
-                name: Build libwebrtc + Node.js bindings
-                command: npm run build:native
+      - run:
+          name: Build libwebrtc
+          command: npm run build:native:libwebrtc << parameters.build-type >>
+      - save_build_cache:
+          os: << parameters.os>>
+  build_addon:
+    description: Build addon
+    parameters:
+        os: { type: string }
+        build-type: { type: string }
+    steps:
+      - run:
+          name: Build addon
+          command: npm run build:native:addon << parameters.build-type >>
       - run:
           name: Build Typescript
           command: npm run build:tsc
-      - save_build_cache:
-          os: << parameters.os>>
   node_install:
     parameters:
       os: { type: string }
@@ -454,8 +449,9 @@ commands:
                 command: |
                   mkdir -force c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
                   cd c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
-                  cp ~/node-webrtc/build/<<parameters.os>>-<<parameters.arch>>/<<parameters.build-type>>/wrtc.node wrtc.node
-                  cp ~/node-webrtc/build/<<parameters.os>>-<<parameters.arch>>/<<parameters.build-type>>/wrtc.pdb wrtc.pdb
+                  cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.node wrtc.node
+                  cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.pdb wrtc.pdb
+                  cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.lib wrtc.lib
             - store_artifacts:
                 path: c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node
                 destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
@@ -471,7 +467,7 @@ commands:
                 command: |
                   mkdir -p /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
                   cd /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
-                  cp ~/node-webrtc/build/<<parameters.os>>-<<parameters.arch>>/<<parameters.build-type>>/wrtc.node wrtc.node
+                  cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.node wrtc.node
             - store_artifacts:
                 path: /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node
                 destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
@@ -557,7 +553,7 @@ commands:
                     git config --global core.longpaths true
 
                     # Install tools
-                    choco install -y python curl cmake python windows-sdk-10-version-2004-all sccache --no-progress
+                    choco install -y python curl cmake python windows-sdk-10-version-2004-all sccache ninja --no-progress
                     Update-SessionEnvironment
 
                     # Alias python -> python3 (gn depends on it)
