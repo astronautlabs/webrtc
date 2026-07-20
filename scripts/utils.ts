@@ -1,4 +1,4 @@
-import { spawnSync, execSync } from "node:child_process";
+import { spawn, spawnSync, execSync } from "node:child_process";
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
@@ -24,6 +24,26 @@ export function run(executable: string, args: string[]) {
     if (code !== 0)
         throw new Error(`Command failed (exit code ${code}): ${cmdLine}`);
     return code;
+}
+
+export function runWithInput(executable: string, args: string[], input: string) {
+    let executablePath = findProgram(executable);
+    let cmdLine = `${executable} ${args.map(x => x.includes(' ') ? `"${x}"` : x).join(' ')}`;
+    console.log(`\n> ${cmdLine}`);
+
+    if (!executablePath)
+        throw new Error(`Could not find '${executable}' on the PATH. PATH was: ${(process.env.PATH ?? '').split(path.delimiter).map(x => ` - ${x}`).join(`\n`)}`);
+
+    return new Promise<void>((resolve, reject) => {
+        let proc = spawn(
+            executable, args, {
+                stdio: ['pipe', 'inherit', 'inherit']
+            }
+        );
+        proc.on('exit', code => code ? reject(new Error(`Command failed (exit code ${code}): ${cmdLine}`)) : resolve());
+        proc.stdin.write(input);
+        proc.stdin.end();
+    });
 }
 
 export function addToPath(dir: string) {
