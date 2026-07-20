@@ -256,6 +256,10 @@ export function flattenThinArchive(
 }
 
 async function linkMonolithicLibrary(intermediateDir: string, outDir: string) {
+    const monolithicLibFile = path.resolve(outDir, os.platform() === 'win32' ? 'webrtc.lib' : 'libwebrtc.a');
+    if (await fileExists(monolithicLibFile))
+        return;
+
     console.log(`\n> linking libwebrtc...`);
     let libPattern = os.platform() === 'win32' ? `*.lib` : `lib*.a`;
     let libraries = [
@@ -263,28 +267,16 @@ async function linkMonolithicLibrary(intermediateDir: string, outDir: string) {
     ].map(x => path.resolve(x));
     mkdirpSync(outDir);
 
-    if (os.platform() === 'win32') {
-        await mergeLibs(path.join(outDir, 'webrtc.lib'), [
-            path.resolve(intermediateDir, 'obj', 'webrtc.lib'),
-            path.resolve(outDir, 'c++.lib')
-        ]);
-    } else {
-        // MRI script
-        await runWithInput(
-            'llvm-ar', ['-M'],
-            [
-                `create ${path.resolve(outDir)}/libwebrtc.a`,
-                ...libraries.map(lib => `addlib ${path.resolve(lib)}`),
-                `save`,
-                `end`
-            ].join(`\n`)
-        );
-    }
-
-    // await Promise.all(libraries.map(async lib => {
-    //     await flattenThinArchive(lib, path.join(outDir, path.basename(lib)));
-    //     console.log(`- flattened .../lib/${path.basename(lib)} [from ${lib}]`);
-    // }));
+    // MRI script
+    await runWithInput(
+        'llvm-ar', ['-M'],
+        [
+            `create ${monolithicLibFile}`,
+            ...libraries.map(lib => `addlib ${path.resolve(lib)}`),
+            `save`,
+            `end`
+        ].join(`\n`)
+    );
 }
 
 async function mergeLibs(outLib: string, libs: string[], depth = 0) {
