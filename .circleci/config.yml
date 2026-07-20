@@ -273,7 +273,7 @@ commands:
                     echo "Clang version:"
                     clang --version
 
-                    echo
+                    echo ""
                     echo "Building @/webrtc..."
                     npm run build:native
       - when:
