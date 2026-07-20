@@ -78,7 +78,9 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
 
     let env: Record<string, string> = {};
 
-    if (os.platform() === 'win32') {
+    // If VS vars were injected into this environment, clear them out because gn will pull them in again,
+    // and if the variables become too long it will crash and fail.
+    if (os.platform() === 'win32' && process.env.__VSCMD_PREINIT_PATH) {
         env.PATH = `${process.env.DEPOT_TOOLS};${process.env.__VSCMD_PREINIT_PATH}`;
         env.INCLUDE = '';
         env.LIB = '';
