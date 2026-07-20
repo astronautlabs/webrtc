@@ -7,6 +7,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { globSync } from 'glob';
+import { rimraf } from 'rimraf';
 import { mkdirp, mkdirpSync } from 'mkdirp';
 import { randomUUID } from "node:crypto";
 import { acquireDepotTools, gclient, gn } from "./depot-tools";
