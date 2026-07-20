@@ -258,14 +258,10 @@ async function linkMonolithicLibrary(intermediateDir: string, outDir: string) {
     mkdirpSync(outDir);
 
     if (os.platform() === 'win32') {
-        // RSP
-        let rspFile = path.join(os.tmpdir(), `webrtc-link-${randomUUID()}.rsp`);
-        try {
-            await writeTextFile(rspFile, libraries.join(`\r\n`));
-            run('llvm-lib', [`/OUT:${outDir}\webrtc.lib`, `@${rspFile}`]);
-        } finally {
-            await fs.unlink(rspFile);
-        }
+        await mergeLibs(path.join(outDir, 'webrtc.lib'), [
+            path.resolve(intermediateDir, 'obj', 'webrtc.lib'),
+            path.resolve(outDir, 'c++.lib')
+        ]);
     } else {
         // MRI script
         await runWithInput(
@@ -283,4 +279,26 @@ async function linkMonolithicLibrary(intermediateDir: string, outDir: string) {
     //     await flattenThinArchive(lib, path.join(outDir, path.basename(lib)));
     //     console.log(`- flattened .../lib/${path.basename(lib)} [from ${lib}]`);
     // }));
+}
+
+async function mergeLibs(outLib: string, libs: string[], depth = 0) {
+    let limit = 10;
+    let prefix = Array(depth + 1).join('  ');
+    if (libs.length > limit) {
+        console.log(`${prefix} - mergeLibs: chunking ${libs.length} libs into ${Math.ceil(libs.length / limit)} chunks`);
+        let intermediateLibs: string[] = [];
+        for (let i = 0, max = Math.ceil(libs.length / limit); i < max; ++i) {
+            let tmpLib = path.join(os.tmpdir(), `intermediate.${randomUUID()}.lib`);
+            await mergeLibs(tmpLib, libs.slice(i * limit, (i + 1) * limit));
+            intermediateLibs.push(tmpLib);
+        }
+
+        return mergeLibs(outLib, intermediateLibs, depth + 1);
+    }
+
+    let rspFile = path.join(os.tmpdir(), `merge-libs.${randomUUID()}.rsp`);
+    await writeTextFile(rspFile, libs.join(`\r\n`));
+    console.log(`> merging ${libs.length} libs into ${outLib}`);
+    run('llvm-lib', [`/MACHINE:X64`, `/IGNORE:4221`, `/OUT:${outLib}`, `@${rspFile}`]);
+    await fs.unlink(rspFile);
 }
