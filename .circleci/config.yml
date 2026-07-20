@@ -283,9 +283,6 @@ commands:
                 name: Build libwebrtc + Node.js bindings
                 command: npm run build:native
       - run:
-          name: Build libwebrtc + Node.js bindings
-          command: npm run build:native
-      - run:
           name: Build Typescript
           command: npm run build:tsc
       - save_build_cache:
