@@ -58,7 +58,7 @@ async function main(args: string[]) {
 
     // Build libwebrtc
 
-    await buildWebRTC(libwebrtcDir, { 
+    await buildWebRTC(libwebrtcDir, {
         buildType: debugMode ? 'Debug' : 'Release',
         targets: WEBRTC_DEPENDENCIES,
         revision: WEBRTC_REVISION
