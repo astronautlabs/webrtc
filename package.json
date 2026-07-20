@@ -107,7 +107,7 @@
     "publish:binary": "twine publish",
     "prepublishOnly": "npm run test",
     "test": "node --expose-gc node_modules/jest/bin/jest.js --showSeed",
-    "test:gdb": "gdb -ex run --args node --expose-gc node_modules/jest/bin/jest.js --showSeed",
+    "test:gdb": "gdb -ex run --args node --expose-gc node_modules/jest/bin/jest.js --showSeed --runInBand",
     "test:gdb:verbose": "LOG=1 DEBUG=simple-peer,webrtc NODE_WEBRTC_LOGGING=1 gdb -ex run --args node --expose-gc node_modules/jest/bin/jest.js --showSeed",
     "test:wtf": "wtfnode --expose-gc node_modules/jest/bin/jest.js --showSeed",
     "test:cpp": "node --expose-gc --enable-source-maps dist/nodejs/test/cpp-test.js",

@@ -156,20 +156,10 @@ set(catch2_install_dir ${SOURCE_DIR})
 # libwebrtc
 # -----------------------------------------------------------------------------
 
-function(declare_webrtc_lib base_name)
-  add_library(${base_name} STATIC IMPORTED)
-  set_target_properties(${base_name} PROPERTIES
-    IMPORTED_LOCATION "${webrtc_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${base_name}${CMAKE_STATIC_LIBRARY_SUFFIX}"
-  )
-endfunction()
-
-declare_webrtc_lib(webrtc)
-declare_webrtc_lib(builtin_video_encoder_factory)
-declare_webrtc_lib(builtin_video_decoder_factory)
-declare_webrtc_lib(rtc_internal_video_codecs)
-declare_webrtc_lib(media_engine)
-declare_webrtc_lib(rtc_simulcast_encoder_adapter)
-declare_webrtc_lib(rtc_software_fallback_wrappers)
+add_library(webrtc STATIC IMPORTED)
+set_target_properties(webrtc PROPERTIES
+    IMPORTED_LOCATION "${webrtc_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}webrtc${CMAKE_STATIC_LIBRARY_SUFFIX}"
+)
 
 # node-webrtc
 # -----------------------------------------------------------------------------
@@ -201,12 +191,6 @@ target_include_directories(${MODULE} PRIVATE
 target_link_libraries(${MODULE} PRIVATE
   ${CMAKE_THREAD_LIBS_INIT}
   webrtc
-  builtin_video_encoder_factory
-  builtin_video_decoder_factory
-  rtc_internal_video_codecs
-  media_engine
-  rtc_simulcast_encoder_adapter
-  rtc_software_fallback_wrappers
   ${CMAKE_JS_LIB}
 )
 
@@ -218,6 +202,11 @@ target_compile_definitions(${MODULE} PRIVATE
   -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE
 )
 
+target_compile_options(${MODULE} PRIVATE
+    # ignore MSVC's C++ standard library headers
+    "SHELL:-Xclang -nostdinc++"
+)
+
 if(WIN32)
     target_link_libraries(${MODULE} PRIVATE
         libc++
@@ -225,24 +214,18 @@ if(WIN32)
     target_link_options(${MODULE} PRIVATE
         "/WHOLEARCHIVE:$<TARGET_FILE:libc++>"
     )
-  set_property(TARGET ${MODULE}
-    PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
-  )
-
-  target_link_libraries(${MODULE} PRIVATE
-    dmoguids.lib
-    msdmo.lib
-    secur32.lib
-    winmm.lib
-    wmcodecdspuuid.lib
-    ws2_32.lib
-    Iphlpapi.lib
-    delayimp.lib
-  )
-
-    # ignore MSVC's C++ standard library headers
-    target_compile_options(${MODULE} PRIVATE
-        "SHELL:-Xclang -nostdinc++"
+    set_property(TARGET ${MODULE}
+        PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    target_link_libraries(${MODULE} PRIVATE
+        dmoguids.lib
+        msdmo.lib
+        secur32.lib
+        winmm.lib
+        wmcodecdspuuid.lib
+        ws2_32.lib
+        Iphlpapi.lib
+        delayimp.lib
     )
 
     # inject libc++ as system headers before clang's builtins
@@ -266,27 +249,21 @@ if(WIN32)
       -D_LIBCPP_HAS_NO_VENDOR_AVAILABILITY_ANNOTATIONS
     )
 
-  target_compile_definitions(${MODULE} PRIVATE
-    -D_WINSOCKAPI_
-    -DINCL_EXTRA_HTON_FUNCTIONS
-    -DNOGDI
-    -DNOMINMAX
-    -DWEBRTC_WIN
-    "$<$<CONFIG:Debug>:_HAS_ITERATOR_DEBUGGING=0>"
-  )
-elseif(UNIX AND NOT APPLE)
-    target_link_libraries(${MODULE} PRIVATE
-        "-Wl,--whole-archive"
-        libc++
-        libc++abi
-        "-Wl,--no-whole-archive"
-    )
     target_compile_definitions(${MODULE} PRIVATE
-      -DWEBRTC_LINUX
+        -D_WINSOCKAPI_
+        -DINCL_EXTRA_HTON_FUNCTIONS
+        -DNOGDI
+        -DNOMINMAX
+        -DWEBRTC_WIN
+        "$<$<CONFIG:Debug>:_HAS_ITERATOR_DEBUGGING=0>"
+    )
+elseif(UNIX AND NOT APPLE)
+    target_compile_definitions(${MODULE} PRIVATE
+        -DWEBRTC_LINUX
     )
 
     target_compile_options(${MODULE} PRIVATE
-      -fpermissive
+        -fpermissive
     )
 elseif(APPLE)
     target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -294,64 +271,64 @@ elseif(APPLE)
         "-Wl,-force_load,$<TARGET_FILE:libc++abi>"
     )
     target_link_libraries(${MODULE} PRIVATE
-      "-framework AppKit"
-      "-framework AVFoundation"
+        "-framework AppKit"
+        "-framework AVFoundation"
     )
     target_compile_options(${MODULE} PRIVATE
-      -Weverything
-      -Wno-c++98-compat
-      -Wno-c++98-compat-pedantic
-      -Wno-covered-switch-default
-      -Wno-documentation
-      -Wno-exit-time-destructors
-      -Wno-float-conversion
-      -Wno-unused-parameter
-      -Wno-global-constructors
-      -Wno-padded
-      -Wno-shadow
-      -Wno-shadow-field-in-constructor
-      -Wno-shorten-64-to-32
-      -Wno-sign-conversion
-      -Wno-thread-safety-negative
-      -Wno-unused-template
-      -Wno-weak-vtables
+        -Weverything
+        -Wno-c++98-compat
+        -Wno-c++98-compat-pedantic
+        -Wno-covered-switch-default
+        -Wno-documentation
+        -Wno-exit-time-destructors
+        -Wno-float-conversion
+        -Wno-unused-parameter
+        -Wno-global-constructors
+        -Wno-padded
+        -Wno-shadow
+        -Wno-shadow-field-in-constructor
+        -Wno-shorten-64-to-32
+        -Wno-sign-conversion
+        -Wno-thread-safety-negative
+        -Wno-unused-template
+        -Wno-weak-vtables
     )
 
     target_compile_definitions(${MODULE} PRIVATE
-      -DWEBRTC_MAC
-      -DWEBRTC_IOS
+        -DWEBRTC_MAC
+        -DWEBRTC_IOS
     )
 endif()
 
 if(NOT WIN32)
-  target_link_libraries(${MODULE} PRIVATE
-    -lc
-    -lm
-  )
-  target_link_options(${MODULE} PRIVATE
-    "-B${libwebrtc_source_dir}/webrtc/third_party/llvm-build/Release+Asserts/bin" # prefer the lld built by webrtc
-    "-fuse-ld=lld" # force LLVM linker, required because libwebrtc is using Compact Relocation and GNU LD does not support it
-  )
-  target_compile_options(${MODULE} PRIVATE
-    -fno-rtti
-    -fvisibility=hidden
-    -fsafe-buffer-usage-suggestions
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wno-missing-field-initializers
-    -Wno-uninitialized
-    -Wno-unused-local-typedefs
-    -Wno-unused-parameter
-    -Wno-deprecated-declarations
-    -Wno-unused-variable
-    "$<$<CONFIG:Debug>:-g>"
-  )
+    target_link_libraries(${MODULE} PRIVATE
+        -lc
+        -lm
+    )
+    target_link_options(${MODULE} PRIVATE
+        "-B${libwebrtc_source_dir}/webrtc/third_party/llvm-build/Release+Asserts/bin" # prefer the lld built by webrtc
+        "-fuse-ld=lld" # force LLVM linker, required because libwebrtc is using Compact Relocation and GNU LD does not support it
+    )
+    target_compile_options(${MODULE} PRIVATE
+        -fno-rtti
+        -fvisibility=hidden
+        -fsafe-buffer-usage-suggestions
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Wno-missing-field-initializers
+        -Wno-uninitialized
+        -Wno-unused-local-typedefs
+        -Wno-unused-parameter
+        -Wno-deprecated-declarations
+        -Wno-unused-variable
+        "$<$<CONFIG:Debug>:-g>"
+    )
 
-  target_compile_definitions(${MODULE} PRIVATE
-    -DWEBRTC_POSIX=1
-    "$<$<CONFIG:Debug>:DEBUG>"
-  )
+    target_compile_definitions(${MODULE} PRIVATE
+        -DWEBRTC_POSIX=1
+        "$<$<CONFIG:Debug>:DEBUG>"
+    )
 
     target_include_directories(${MODULE} SYSTEM PRIVATE
       ${libc++_include_dir}
@@ -360,8 +337,8 @@ if(NOT WIN32)
 
     # We statically link the same libc++ and libc++abi libraries that libwebrtc builds against.
     target_link_libraries(${MODULE} PRIVATE
-      libc++
-      libc++abi
+    #   libc++
+    #   libc++abi
       -nostdlib++ # (clang specific)
     )
 
