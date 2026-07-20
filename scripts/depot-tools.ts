@@ -9,18 +9,18 @@ export interface DepotToolsOptions {
 }
 export async function acquireDepotTools(dir: string, options?: DepotToolsOptions) {
 
-    // The ninja wrapper (and possibly other parts of depot_tools) rely on it being in a directory called 
+    // The ninja wrapper (and possibly other parts of depot_tools) rely on it being in a directory called
     // `depot_tools` or else it will infinitely call itself. Ensure this is always the case.
     if (path.basename(dir) != 'depot_tools')
         throw new Error(`Final path segment must be 'depot_tools'`);
 
     if (!await dirExists(dir)) {
         mkdirpSync(path.dirname(dir));
-        run("git", [ 
-            "clone", 
-            "--filter=blob:none", 
-            options?.repository ?? DEFAULT_GIT_REPOSITORY, 
-            dir 
+        run("git", [
+            "clone",
+            "--filter=blob:none",
+            options?.repository ?? DEFAULT_GIT_REPOSITORY,
+            dir
         ]);
     }
 
@@ -48,14 +48,14 @@ export class gclient {
         let args: string[] = [];
         if (options?.unmanaged)
             args.push('--unmanaged');
-        if (options?.spec) 
+        if (options?.spec)
             args.push('--spec', options.spec);
-        run("gclient", [ "config", ...args]);
+        run("gclient.py", [ "config", ...args]);
     }
 
     static sync(options?: GClientSyncOptions) {
         let args: string[] = [];
-        
+
         if (options?.shallow)
             args.push('--shallow');
         if (options?.noHistory)
@@ -69,13 +69,13 @@ export class gclient {
         if (options?.reset)
             args.push('-R');
 
-        run("gclient", [ "sync", ...args]);
+        run("gclient.py", [ "sync", ...args]);
     }
 }
 
 export class gn {
     static gen(outDir: string, args: string[]) {
-        run('gn', [
+        run('gn.py', [
             'gen',
             outDir,
             `--args=${args.join(' ')}`
