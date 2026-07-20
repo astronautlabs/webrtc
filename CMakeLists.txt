@@ -66,7 +66,6 @@ macro(assign_bool var)
   endif()
 endmacro()
 
-assign_bool(use_custom_libcxx "TRUE")
 assign_bool(is_arm64 "y$ENV{TARGET_ARCH}" STREQUAL "yarm64")
 
 if (APPLE AND ${is_arm64})
@@ -111,18 +110,18 @@ find_package(Threads REQUIRED)
 # libc++/libc++abi
 # -----------------------------------------------------------------------------
 add_library(libc++ STATIC IMPORTED)
-set_target_properties(libc++ PROPERTIES 
+set_target_properties(libc++ PROPERTIES
     IMPORTED_LOCATION "${webrtc_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}c++${CMAKE_STATIC_LIBRARY_SUFFIX}"
 )
 add_library(libc++abi STATIC IMPORTED)
-set_target_properties(libc++abi PROPERTIES 
+set_target_properties(libc++abi PROPERTIES
     IMPORTED_LOCATION "${webrtc_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}c++abi${CMAKE_STATIC_LIBRARY_SUFFIX}"
 )
 set(libc++_include_dir
   "${webrtc_dir}/include/webrtc/third_party/libc++/src/include"
   "${webrtc_dir}/include/webrtc/buildtools/third_party/libc++"
 )
-set(libc++abi_include_dir 
+set(libc++abi_include_dir
   "${webrtc_dir}/include/webrtc/third_party/libc++abi/src/include"
 )
 
@@ -211,25 +210,6 @@ target_link_libraries(${MODULE} PRIVATE
   ${CMAKE_JS_LIB}
 )
 
-if (WIN32)
-    target_link_libraries(${MODULE} PRIVATE
-        "/WHOLEARCHIVE:$<TARGET_FILE:libc++>"
-        "/WHOLEARCHIVE:$<TARGET_FILE:libc++abi>"
-    )
-elseif(UNIX AND NOT APPLE)
-    target_link_libraries(${MODULE} PRIVATE
-        "-Wl,--whole-archive"
-        libc++
-        libc++abi
-        "-Wl,--no-whole-archive"
-    )
-elseif(APPLE)
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-        "-Wl,-force_load,$<TARGET_FILE:libc++>"
-        "-Wl,-force_load,$<TARGET_FILE:libc++abi>"
-    )
-endif()
-
 target_compile_definitions(${MODULE} PRIVATE
   -DNAPI_VERSION=9
   -DNODE_ADDON_API_CPP_EXCEPTIONS=1
@@ -239,6 +219,12 @@ target_compile_definitions(${MODULE} PRIVATE
 )
 
 if(WIN32)
+    target_link_libraries(${MODULE} PRIVATE
+        libc++
+    )
+    target_link_options(${MODULE} PRIVATE
+        "/WHOLEARCHIVE:$<TARGET_FILE:libc++>"
+    )
   set_property(TARGET ${MODULE}
     PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
   )
@@ -254,7 +240,6 @@ if(WIN32)
     delayimp.lib
   )
 
-  if (${use_custom_libcxx})
     # ignore MSVC's C++ standard library headers
     target_compile_options(${MODULE} PRIVATE
         "SHELL:-Xclang -nostdinc++"
@@ -266,10 +251,6 @@ if(WIN32)
         "SHELL:-Xclang -isystem -Xclang \"${DIR}\""
       )
     endforeach()
-
-    target_link_libraries(${MODULE} PRIVATE
-      libc++
-    )
 
     target_link_options(${MODULE} PRIVATE
       /defaultlib:libcmt
@@ -284,7 +265,6 @@ if(WIN32)
       -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
       -D_LIBCPP_HAS_NO_VENDOR_AVAILABILITY_ANNOTATIONS
     )
-  endif()
 
   target_compile_definitions(${MODULE} PRIVATE
     -D_WINSOCKAPI_
@@ -294,7 +274,56 @@ if(WIN32)
     -DWEBRTC_WIN
     "$<$<CONFIG:Debug>:_HAS_ITERATOR_DEBUGGING=0>"
   )
-else()
+elseif(UNIX AND NOT APPLE)
+    target_link_libraries(${MODULE} PRIVATE
+        "-Wl,--whole-archive"
+        libc++
+        libc++abi
+        "-Wl,--no-whole-archive"
+    )
+    target_compile_definitions(${MODULE} PRIVATE
+      -DWEBRTC_LINUX
+    )
+
+    target_compile_options(${MODULE} PRIVATE
+      -fpermissive
+    )
+elseif(APPLE)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        "-Wl,-force_load,$<TARGET_FILE:libc++>"
+        "-Wl,-force_load,$<TARGET_FILE:libc++abi>"
+    )
+    target_link_libraries(${MODULE} PRIVATE
+      "-framework AppKit"
+      "-framework AVFoundation"
+    )
+    target_compile_options(${MODULE} PRIVATE
+      -Weverything
+      -Wno-c++98-compat
+      -Wno-c++98-compat-pedantic
+      -Wno-covered-switch-default
+      -Wno-documentation
+      -Wno-exit-time-destructors
+      -Wno-float-conversion
+      -Wno-unused-parameter
+      -Wno-global-constructors
+      -Wno-padded
+      -Wno-shadow
+      -Wno-shadow-field-in-constructor
+      -Wno-shorten-64-to-32
+      -Wno-sign-conversion
+      -Wno-thread-safety-negative
+      -Wno-unused-template
+      -Wno-weak-vtables
+    )
+
+    target_compile_definitions(${MODULE} PRIVATE
+      -DWEBRTC_MAC
+      -DWEBRTC_IOS
+    )
+endif()
+
+if(NOT WIN32)
   target_link_libraries(${MODULE} PRIVATE
     -lc
     -lm
@@ -324,7 +353,6 @@ else()
     "$<$<CONFIG:Debug>:DEBUG>"
   )
 
-  if (${use_custom_libcxx})
     target_include_directories(${MODULE} SYSTEM PRIVATE
       ${libc++_include_dir}
       ${libc++abi_include_dir}
@@ -347,45 +375,4 @@ else()
       -D_LIBCPP_ABI_NAMESPACE=Cr
       -D_LIBCPP_ABI_VERSION=2
     )
-  endif()
-
-  if (APPLE)
-    target_link_libraries(${MODULE} PRIVATE
-      "-framework AppKit"
-      "-framework AVFoundation"
-    )
-
-    target_compile_options(${MODULE} PRIVATE
-      -Weverything
-      -Wno-c++98-compat
-      -Wno-c++98-compat-pedantic
-      -Wno-covered-switch-default
-      -Wno-documentation
-      -Wno-exit-time-destructors
-      -Wno-float-conversion
-      -Wno-unused-parameter
-      -Wno-global-constructors
-      -Wno-padded
-      -Wno-shadow
-      -Wno-shadow-field-in-constructor
-      -Wno-shorten-64-to-32
-      -Wno-sign-conversion
-      -Wno-thread-safety-negative
-      -Wno-unused-template
-      -Wno-weak-vtables
-    )
-
-    target_compile_definitions(${MODULE} PRIVATE
-      -DWEBRTC_MAC
-      -DWEBRTC_IOS
-    )
-  else()
-    target_compile_definitions(${MODULE} PRIVATE
-      -DWEBRTC_LINUX
-    )
-
-    target_compile_options(${MODULE} PRIVATE
-      -fpermissive
-    )
-  endif()
 endif()
