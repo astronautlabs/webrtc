@@ -22,7 +22,7 @@ export function run(executable: string, args: string[]) {
             args.unshift(executablePath);
             executablePath = findProgram(`python`);
         } else if (executablePath.toLowerCase().endsWith('.bat') || executablePath.toLowerCase().endsWith('.cmd')) {
-            args.unshift(executablePath);
+            args.unshift('/c', executablePath);
             executablePath = findProgram(`cmd.exe`);
         } else if (executablePath.toLowerCase().endsWith('.ps1')) {
             args.unshift(executablePath);
