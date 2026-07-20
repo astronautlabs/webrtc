@@ -104,7 +104,7 @@ be the case if you are using NVM and have added its shell integration in .bashrc
 Also CLion has an option (default enabled in newer versions) to use the shell when executing commands, you would need 
 that turned on. None of this applies if your Node is installed at the system level.
 
-While CLion should more or less work, you are likely to have a better dev experience with VSC snd clangd. 
+While CLion should more or less work, you are likely to have a better dev experience with VSC and clangd. 
 
 ## Debugging CI Core Dumps
 
