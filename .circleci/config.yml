@@ -664,7 +664,7 @@ commands:
     steps:
       - save_cache:
           name: "Save build cache"
-          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}
+          key: asset-cache-v6-{{ arch }}-{{ checksum "CACHE_KEY" }}
           paths:
             - build/external/webrtc
   restore_build_cache:
@@ -673,7 +673,7 @@ commands:
     steps:
       - restore_cache:
           name: Restore cache
-          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}
+          key: asset-cache-v6-{{ arch }}-{{ checksum "CACHE_KEY" }}
   ###
   # CONFIGURE DEBUG BUILDS
   ###
