@@ -123,7 +123,7 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
                 gn.gen(intermediateDir, gnGenArgs);
             });
         });
-        
+
         await writeTextFile(path.join(intermediateDir, 'gn-gen-args.json'), JSON.stringify(gnGenArgs, undefined, 2));
         await mkdirp(path.join(outDir, 'etc'));
         await writeTextFile(path.join(outDir, 'etc', 'gn-gen-args.json'), JSON.stringify(gnGenArgs, undefined, 2));
