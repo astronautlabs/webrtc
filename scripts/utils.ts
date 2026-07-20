@@ -17,12 +17,17 @@ export function run(executable: string, args: string[]) {
     let cmdLine = `${executable} ${args.map(x => x.includes(' ') ? `"${x}"` : x).join(' ')}`;
     console.log(`\n> ${cmdLine}`);
 
+    if (executablePath && executablePath.toLowerCase().endsWith('.py')) {
+        args.unshift(executablePath);
+        executablePath = findProgram(`python`);
+    }
+
     if (!executablePath)
         throw new Error(`Could not find '${executable}' on the PATH. PATH was: ${(process.env.PATH ?? '').split(path.delimiter).map(x => ` - ${x}`).join(`\n`)}`);
 
     let code = spawnSync(executablePath, [...args], { stdio: "inherit" }).status;
     if (code !== 0)
-        throw new Error(`Command failed (exit code ${code}): ${cmdLine}`);
+        throw new Error(`Command failed (executable '${executablePath}', exit code ${code}): ${cmdLine}`);
     return code;
 }
 
