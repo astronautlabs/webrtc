@@ -664,16 +664,16 @@ commands:
     steps:
       - save_cache:
           name: "Save build cache"
-          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}
           paths:
-            - build
+            - build/external/webrtc
   restore_build_cache:
     parameters:
       os: { type: string }
     steps:
       - restore_cache:
           name: Restore cache
-          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}
   ###
   # CONFIGURE DEBUG BUILDS
   ###
