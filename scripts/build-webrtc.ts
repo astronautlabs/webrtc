@@ -209,8 +209,8 @@ async function collectHeaders(fromDir: string, toDir: string, patterns: string[]
 
         await queue.run(async () => {
             try {
-            await mkdirp(path.dirname(finalPath));
-            await fs.copyFile(headerFile, finalPath);
+                await mkdirp(path.dirname(finalPath));
+                await fs.copyFile(headerFile, finalPath);
             } catch (e) {
                 throw new Error(
                     `Failed to copy header '${headerFile}' to '${finalPath}' (relative path '${relativePath}') while collecting headers from '${fromDir}' -> '${toDir}' `
