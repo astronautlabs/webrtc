@@ -114,33 +114,6 @@ The table below maps our support intentions to which configurations have been va
   </tbody>
 </table>
 
-## Platform-specific details
-
-### Linux
-
-Compiling this addon requires Clang 22+. Ubuntu is often behind on the Clang version it ships. You can install the 
-newest Clang directly from the LLVM Project by following the instructions at https://apt.llvm.org/.
-
-At the time of writing, Clang 22 is installed when using LLVM's automatic apt installation script without arguments,
-that should be sufficient but our testing on Linux is done exclusively with LLVM/Clang 23.
-
-```bash
-wget https://apt.llvm.org/llvm.sh
-chmod +x llvm.sh
-sudo ./llvm.sh 23
-
-# Ensure that clang, clang++, and llvm-ar are available unprefixed in your environment
-sudo ln -s `which clang-23` /usr/local/bin/clang
-sudo ln -s `which clang++-23` /usr/local/bin/clang++
-sudo ln -s `which llvm-ar-23` /usr/local/bin/llvm-ar
-```
-
-You also need to install `libnspr4` and `libnss3` for the browser tests. 
-
-```bash
-sudo apt install libnspr4 libnss3
-```
-
 # Troubleshooting
 
 ## Node.js `>= 26.0.0 && < 26.3.0` on Windows
@@ -156,7 +129,34 @@ the LTS branch, especially when there are easy workarounds by upgrading Node.js 
 
 # Developers
 
-This section has notes about how to be productive working with this codebase.
+This section has notes about how to be productive working with this codebase including building it from source.
+
+## Build Tools & Prerequisites
+
+Linux:
+- `python` 3.10.12+
+- `llvm`/`clang` 22+  
+  If you use LLVM's Apt repository, ensure you have unprefixed versions of at least `clang`, `clang++` and `llvm-ar`:
+  ```bash
+  sudo ln -s `which clang-22` /usr/local/bin/clang
+  sudo ln -s `which clang++-22` /usr/local/bin/clang++
+  sudo ln -s `which llvm-ar-22` /usr/local/bin/llvm-ar
+  ```
+- `cmake` 3.22.1+
+- `ninja` 1.10.1+
+- `libnspr4`/`libnss3` (if you want to run the browser tests)
+
+Windows:
+- Python3
+- Make sure long path support is enabled
+    - Set `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnable` to `1`
+    - `git config --global core.longpaths true`
+    - `git config core.longpaths true`
+- Install VS 2026 [Community edition is fine]
+- Install Windows 10 or 11 SDK
+- Install LLVM 22 or newer (from https://llvm.org/)
+- Install cmake 4.4 or later
+
 
 ## Build Commands
 
@@ -183,34 +183,9 @@ that turned on. None of this applies if your Node is installed at the system lev
 
 Make sure to check the platform-specific sections below for important information.
 
-### Linux/Mac
-
-Pre-steps
-- Install `python3`, C/C++ toolchain (ie `build-essential`), `cmake`
-
-```shell
-export SKIP_DOWNLOAD=true   # Important to skip fetching a prebuilt version from CDN
-export DEBUG=1
-export PARALLELISM=24       # Set to number of logical cores on your machine
-
-# Initial install will build libwebrtc
-# Get a coffee.
-
-npm install
-```
+## Platform-specific details
 
 ### Windows
-
-Pre-steps:
-- Install python3
-- Make sure long path support is enabled
-    - Set `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnable` to `1`
-    - `git config --global core.longpaths true`
-    - `git config core.longpaths true`
-- Install VS 2026 [Community edition is fine]
-- Install Windows 10 or 11 SDK
-- Install LLVM 22 or newer (from https://llvm.org/)
-- Install cmake 4.4 or later
 
 Initial build
 
