@@ -457,7 +457,8 @@ commands:
                 command: |
                   mkdir -force c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
                   cd c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
-                  cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.node wrtc.node
+                  cp ~/node-webrtc/build/<<parameters.os>>-<<parameters.arch>>/<<parameters.build-type>>/wrtc.node wrtc.node
+                  cp ~/node-webrtc/build/<<parameters.os>>-<<parameters.arch>>/<<parameters.build-type>>/wrtc.pdb wrtc.pdb
             - store_artifacts:
                 path: c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node
                 destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
@@ -473,7 +474,7 @@ commands:
                 command: |
                   mkdir -p /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
                   cd /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
-                  cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.node wrtc.node
+                  cp ~/node-webrtc/build/<<parameters.os>>-<<parameters.arch>>/<<parameters.build-type>>/wrtc.node wrtc.node
             - store_artifacts:
                 path: /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node
                 destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
