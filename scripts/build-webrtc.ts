@@ -21,6 +21,7 @@ export interface WebRTCBuildOptions {
     buildType?: 'Debug' | 'Release';
     targets?: string[];
     revision?: string;
+    cleanupBuildRoot?: boolean;
 }
 
 function downloadWebRTC(webrtcRoot: string, revision: string) {
@@ -193,8 +194,10 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
         []
     );
 
-    console.log(`\n> cleaning up build directory ${webrtcRoot}...`);
-    await rimraf(webrtcRoot);
+    if (options.cleanupBuildRoot) {
+        console.log(`\n> cleaning up build directory ${webrtcRoot}...`);
+        await rimraf(webrtcRoot);
+    }
 
     await writeTextFile(buildCompleteMarker, '');
     console.log(`\n> done. output is at ${outDir}`);
