@@ -3,6 +3,10 @@ import os from 'os';
 import path from 'path';
 import fs from 'fs';
 
+export const PROJECT_ROOT = path.resolve(__dirname, '..');
+export const CMAKE_JS = path.resolve(PROJECT_ROOT, "node_modules", "cmake-js", "bin", "cmake-js");
+
+
 export function runJS(script: string, args: string[]) {
     let cmdLine = `${script} ${args.map(x => x.includes(' ') ? `"${x}"` : x).join(' ')}`;
     console.log(`\n> ${cmdLine}`);
@@ -10,6 +14,10 @@ export function runJS(script: string, args: string[]) {
     if (code !== 0)
         throw new Error(`Script failed (exit code ${code}): ${cmdLine}`);
     return code;
+}
+
+export function main(fn: (args: string[]) => Promise<void>) {
+    fn(process.argv.slice(2));
 }
 
 export function run(executable: string, args: string[]) {
@@ -230,4 +238,24 @@ export async function writeTextFile(filename: string, content: string) {
     await new Promise<void>((resolve, reject) => {
         fs.writeFile(filename, content, err => err ? reject(err) : resolve());
     });
+}
+
+export interface BuildToolOptions {
+    buildType: 'Debug' | 'Release';
+}
+
+export function parseBuildToolArgs(args: string[] = process.argv.slice(2)) {
+    let buildType: 'Debug' | 'Release' = ['1', 'true'].includes(process.env.DEBUG ?? '') ? 'Debug' : 'Release';
+    let buildTypeArg = args[0];
+    if (buildTypeArg) {
+        if (buildTypeArg !== 'Debug' && buildTypeArg !== 'Release') {
+            console.log(`@astronautlabs/webrtc: usage: ${process.argv[1]} <Debug|Release>`);
+            process.exit(1);
+        }
+        buildType = buildTypeArg;
+    }
+
+    return { 
+        buildType
+    };
 }

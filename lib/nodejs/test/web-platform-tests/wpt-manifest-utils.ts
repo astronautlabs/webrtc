@@ -1,4 +1,3 @@
-'use strict';
 import fs from 'fs';
 
 type WptManifest = any;

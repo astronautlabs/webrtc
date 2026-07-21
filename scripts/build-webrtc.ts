@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-"use strict";
 
 import child_process from "node:child_process";
 import fs from "node:fs/promises";
@@ -12,8 +11,29 @@ import { mkdirp, mkdirpSync } from 'mkdirp';
 import { randomUUID } from "node:crypto";
 import { acquireDepotTools, gclient, gn } from "./depot-tools";
 import { ConcurrentWorkQueue, dirExists, fileExists, findProgram, run, runWithInput, withDir, withEnv, writeTextFile } from "./utils";
+import { main, parseBuildToolArgs, PROJECT_ROOT } from "./utils";
+
+main(async args => {
+    let { buildType } = parseBuildToolArgs(args);
+    await buildWebRTC({
+        outDir: path.resolve(PROJECT_ROOT, 'build', 'external', 'webrtc'), 
+        buildType: buildType,
+        revision: 'branch-heads/7871', // Chromium M150, see https://chromiumdash.appspot.com/branches
+        targets: [
+            'webrtc',
+            'builtin_video_encoder_factory',
+            'builtin_video_decoder_factory',
+            'rtc_software_fallback_wrappers',
+            'rtc_internal_video_codecs',
+            'media_engine',
+            'rtc_simulcast_encoder_adapter'
+        ],
+    });
+});
 
 export interface WebRTCBuildOptions {
+    outDir: string;
+
     /**
      * Whether to use ccache/sccache when available.
      */
@@ -21,6 +41,7 @@ export interface WebRTCBuildOptions {
     buildType?: 'Debug' | 'Release';
     targets?: string[];
     revision?: string;
+    cleanupBuildRoot?: boolean;
 }
 
 function downloadWebRTC(webrtcRoot: string, revision: string) {
@@ -47,34 +68,34 @@ function downloadWebRTC(webrtcRoot: string, revision: string) {
     });
 }
 
-export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) {
-    outDir = path.resolve(outDir);
-    options ??= {};
+export async function buildWebRTC(options: WebRTCBuildOptions) {
+    options.outDir = path.resolve(options.outDir);
     options.buildType ??= 'Release';
 
-    let webrtcRoot = path.resolve(__dirname, '..', `webrtc-buildroot`);
-    mkdirpSync(webrtcRoot);
-
-    console.log(`\n> building libwebrtc in ${webrtcRoot}`);
-
-    const buildCompleteMarker = path.join(outDir, 'build-complete');
-    const srcDir = path.resolve(webrtcRoot, 'src');
-    const intermediateDir = path.resolve(webrtcRoot, 'intermediate');
+    const buildRoot = path.resolve(__dirname, '..', `webrtc-buildroot`);
+    const buildCompleteMarker = path.join(options.outDir, 'build-complete');
+    const srcDir = path.resolve(buildRoot, 'src');
+    const intermediateDir = path.resolve(buildRoot, 'intermediate');
     const ccachePath = findProgram(['sccache', 'ccache']);
     const targets = ['libjingle_peerconnection', ...options.targets ?? []];
 
-    if (await fileExists(buildCompleteMarker))
+    if (await fileExists(buildCompleteMarker)) {
+        console.log(`> libwebrtc already built (${options.outDir})`);
         return;
+    }
+
+    console.log(`\n> building libwebrtc in ${buildRoot}`);
+    mkdirpSync(buildRoot);
 
     if (os.platform() === 'win32')
         process.env.DEPOT_TOOLS_WIN_TOOLCHAIN = '0';
 
-    await acquireDepotTools(path.join(webrtcRoot, 'depot_tools'));
+    await acquireDepotTools(path.join(buildRoot, 'depot_tools'));
 
     // Download
 
-    if (!await dirExists(path.join(webrtcRoot, 'src')))
-        downloadWebRTC(webrtcRoot, options?.revision ?? 'branch-heads/7871');
+    if (!await dirExists(path.join(buildRoot, 'src')))
+        downloadWebRTC(buildRoot, options?.revision ?? 'branch-heads/7871');
 
     let env: Record<string, string> = {};
 
@@ -127,8 +148,8 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
         });
 
         await writeTextFile(path.join(intermediateDir, 'gn-gen-args.json'), JSON.stringify(gnGenArgs, undefined, 2));
-        await mkdirp(path.join(outDir, 'etc'));
-        await writeTextFile(path.join(outDir, 'etc', 'gn-gen-args.json'), JSON.stringify(gnGenArgs, undefined, 2));
+        await mkdirp(path.join(options.outDir, 'etc'));
+        await writeTextFile(path.join(options.outDir, 'etc', 'gn-gen-args.json'), JSON.stringify(gnGenArgs, undefined, 2));
     }
     // Build
 
@@ -136,7 +157,7 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
         run('ninja', [...targets, '-j', process.env.PARALLELISM ?? '24']);
     });
 
-    const libDir = path.join(outDir, 'lib');
+    const libDir = path.join(options.outDir, 'lib');
     let outCppLib = path.resolve(libDir, 'c++.lib');
 
     if (os.platform() === 'win32' && !await fileExists(outCppLib)) {
@@ -155,49 +176,51 @@ export async function buildWebRTC(outDir: string, options?: WebRTCBuildOptions) 
     // Collect headers
 
     console.log(`\n> collecting headers...`);
-    await collectHeaders(srcDir, path.join(outDir, 'include', 'webrtc'), ['*.h', '*.inc'], [/third_party/, /-sysroot/]);
+    await collectHeaders(srcDir, path.join(options.outDir, 'include', 'webrtc'), ['*.h', '*.inc'], [/third_party/, /-sysroot/]);
     await collectHeaders(
         path.join(srcDir, 'third_party', 'libc++', 'src', 'include'),
-        path.join(outDir, 'include', 'webrtc', 'third_party', 'libc++', 'src', 'include'),
+        path.join(options.outDir, 'include', 'webrtc', 'third_party', 'libc++', 'src', 'include'),
         ['*'],
         []
     );
     await collectHeaders(
         path.join(srcDir, 'third_party', 'abseil-cpp', 'absl'),
-        path.join(outDir, 'include', 'webrtc', 'third_party', 'abseil-cpp', 'absl'),
+        path.join(options.outDir, 'include', 'webrtc', 'third_party', 'abseil-cpp', 'absl'),
         ['*'],
         []
     );
     await collectHeaders(
         path.join(srcDir, 'third_party', 'libyuv', 'include'),
-        path.join(outDir, 'include', 'webrtc', 'third_party', 'libyuv', 'include'),
+        path.join(options.outDir, 'include', 'webrtc', 'third_party', 'libyuv', 'include'),
         ['*'],
         []
     );
     await collectHeaders(
         path.join(srcDir, 'third_party', 'libc++', 'src', 'include'),
-        path.join(outDir, 'include', 'webrtc', 'third_party', 'libc++', 'src', 'include'),
+        path.join(options.outDir, 'include', 'webrtc', 'third_party', 'libc++', 'src', 'include'),
         ['*'],
         []
     );
     await collectHeaders(
         path.join(srcDir, 'buildtools', 'third_party', 'libc++'),
-        path.join(outDir, 'include', 'webrtc', 'buildtools', 'third_party', 'libc++'),
+        path.join(options.outDir, 'include', 'webrtc', 'buildtools', 'third_party', 'libc++'),
         ['*'],
         []
     );
     await collectHeaders(
         path.join(srcDir, 'third_party', 'libc++abi', 'src', 'include'),
-        path.join(outDir, 'include', 'webrtc', 'third_party', 'libc++abi', 'src', 'include'),
+        path.join(options.outDir, 'include', 'webrtc', 'third_party', 'libc++abi', 'src', 'include'),
         ['*'],
         []
     );
 
-    console.log(`\n> cleaning up build directory ${webrtcRoot}...`);
-    await rimraf(webrtcRoot);
+    if (options.cleanupBuildRoot) {
+        console.log(`\n> cleaning up build directory ${buildRoot}...`);
+        await rimraf(buildRoot);
+    }
 
     await writeTextFile(buildCompleteMarker, '');
-    console.log(`\n> done. output is at ${outDir}`);
+    console.log(`\n> done. output is at ${options.outDir}`);
 }
 
 async function collectHeaders(fromDir: string, toDir: string, patterns: string[] = ['*.h'], skipPatterns: RegExp[] = []) {
@@ -279,26 +302,4 @@ async function linkMonolithicLibrary(intermediateDir: string, outDir: string) {
             `end`
         ].join(`\n`)
     );
-}
-
-async function mergeLibs(outLib: string, libs: string[], depth = 0) {
-    let limit = 10;
-    let prefix = Array(depth + 1).join('  ');
-    if (libs.length > limit) {
-        console.log(`${prefix} - mergeLibs: chunking ${libs.length} libs into ${Math.ceil(libs.length / limit)} chunks`);
-        let intermediateLibs: string[] = [];
-        for (let i = 0, max = Math.ceil(libs.length / limit); i < max; ++i) {
-            let tmpLib = path.join(os.tmpdir(), `intermediate.${randomUUID()}.lib`);
-            await mergeLibs(tmpLib, libs.slice(i * limit, (i + 1) * limit));
-            intermediateLibs.push(tmpLib);
-        }
-
-        return mergeLibs(outLib, intermediateLibs, depth + 1);
-    }
-
-    let rspFile = path.join(os.tmpdir(), `merge-libs.${randomUUID()}.rsp`);
-    await writeTextFile(rspFile, libs.join(`\r\n`));
-    console.log(`> merging ${libs.length} libs into ${outLib}`);
-    run('llvm-lib', [`/MACHINE:X64`, `/IGNORE:4221`, `/OUT:${outLib}`, `@${rspFile}`]);
-    await fs.unlink(rspFile);
 }

@@ -21,7 +21,7 @@ workflows:
           matrix:
             alias: canary_build
             parameters:
-              os: [windows]
+              os: [linux, windows]
               arch: [x64]
               build-type: ["Debug"]
           filters: { tags: { only: /^v.*|^ci-test-.*/ } }
@@ -30,7 +30,7 @@ workflows:
           matrix:
             alias: canary_test
             parameters:
-              os: [windows]
+              os: [linux, windows]
               arch: [x64]
               build-type: ["Debug"]
               node-version:
@@ -172,8 +172,12 @@ jobs:
       - npm_install:
           os: << parameters.os >>
       - configure_parallelism: { os: <<parameters.os>>, value: "8" }
+      - build_libwebrtc:
+          os: << parameters.os >>
+          build-type: << parameters.build-type >>
       - build_addon:
           os: << parameters.os >>
+          build-type: << parameters.build-type >>
       - store_binary:
           os: << parameters.os >>
           arch: << parameters.arch >>
@@ -205,7 +209,8 @@ jobs:
           os: << parameters.os >>
           arch: << parameters.arch >>
           build-type: << parameters.build-type >>
-      - run_tests
+      - run_tests:
+          os: << parameters.os >>
 
   publish_binary_release:
     parameters:
@@ -255,50 +260,31 @@ commands:
           steps:
             - attach_workspace:
                 at: /tmp/workspace
-  build_addon:
-    description: Build @/webrtc
+  build_libwebrtc:
+    description: Build libwebrtc
     parameters:
         os: { type: string }
+        build-type: { type: string }
     steps:
       - restore_build_cache:
           os: << parameters.os>>
-      - when:
-          condition: { equal: [ windows, << parameters.os >> ] }
-          steps:
-            - run:
-                name: Build libwebrtc + Node.js bindings
-                command: |
-                    # Make sure LLVM is in the path
-                    # TODO(liam): It is already in the path, but I'd like to get it out and only add it for this step.
-                    $env:PATH = "C:\Program Files\LLVM\bin;$env:PATH"
-
-                    echo "Clang version:"
-                    clang --version
-
-                    echo ""
-                    echo "Building @/webrtc..."
-                    npm run build:native
-      - when:
-          condition: { not: { equal: [ windows, << parameters.os >> ] } }
-          steps:
-            - run:
-                name: Build libwebrtc + Node.js bindings
-                command: npm run build:native
       - run:
-          name: Build libwebrtc + Node.js bindings
-          command: npm run build:native
+          name: Build libwebrtc
+          command: npm run build:native:libwebrtc << parameters.build-type >>
+      - save_build_cache:
+          os: << parameters.os>>
+  build_addon:
+    description: Build addon
+    parameters:
+        os: { type: string }
+        build-type: { type: string }
+    steps:
+      - run:
+          name: Build addon
+          command: npm run build:native:addon << parameters.build-type >>
       - run:
           name: Build Typescript
           command: npm run build:tsc
-      - save_build_cache:
-          os: << parameters.os>>
-      - save_cache:
-          name: Saving build cache
-          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
-          paths:
-            - build
-            - ~/.cache/ccache
-            - ~/.ccache
   node_install:
     parameters:
       os: { type: string }
@@ -363,16 +349,41 @@ commands:
   ###
   test_electron:
     description: Test Electron
+    parameters:
+        os: { type: string }
     steps:
-      - run:
-          name: Test Electron
-          command: |
-            ulimit -c unlimited
-            if [[ "$(uname)" == Linux ]]; then
-              xvfb-run ./node_modules/.bin/electron dist/nodejs/test/electron/index.js --no-sandbox
-            else
-              npm run test:electron
-            fi
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Test Electron
+                command: |
+                  # Electron 42+ does not work on Node 18, but Electron <43 does not work
+                  # on Node 26. Downgrade Electron on Node 18 for the test.
+                  if ($(node --version) -like 'v18.*') {
+                    npm install electron@41.7.1
+                  }
+
+                  npm run test:electron
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: Test Electron
+                command: |
+                  ulimit -c unlimited
+
+                  # Electron 42+ does not work on Node 18, but Electron <43 does not work
+                  # on Node 26. Downgrade Electron on Node 18 for the test.
+                  if node --version | grep v18 &>/dev/null; then
+                    npm install electron@41.7.1
+                  fi
+
+                  if [[ "$(uname)" == Linux ]]; then
+                    xvfb-run ./node_modules/.bin/electron dist/nodejs/test/electron/index.js --no-sandbox
+                  else
+                    npm run test:electron
+                  fi
   setup_cache_key:
     description: Set up a cache key variable used to invalidate build caches
     steps:
@@ -384,24 +395,53 @@ commands:
             echo >>CACHE_KEY "TARGET_PLATFORM=$TARGET_PLATFORM"
             cat CACHE_KEY
   cpp_tests:
+    parameters: 
+      os: { type: string }
     steps:
-      - run:
-          name: Run C++ unit tests
-          command: |
-            ulimit -c unlimited
-            if [[ "$CMAKE_BUILD_TYPE" == Debug ]]; then
-              node dist/nodejs/test/cpp-test.js
-            else
-              echo "Skipping C++ unit tests (not available on a release build)"
-            fi
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Run C++ unit tests
+                command: |
+                  if ( "$env:CMAKE_BUILD_TYPE" -eq "Debug" ) {
+                    node dist/nodejs/test/cpp-test.js
+                  } else {
+                    echo "Skipping C++ unit tests (not available on a release build)"
+                  }
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: Run C++ unit tests
+                command: |
+                  ulimit -c unlimited
+                  if [[ "$CMAKE_BUILD_TYPE" == Debug ]]; then
+                    node dist/nodejs/test/cpp-test.js
+                  else
+                    echo "Skipping C++ unit tests (not available on a release build)"
+                  fi
   unit_tests:
+    parameters:
+      os: { type: string }
     steps:
-      - run:
-          name: Run Unit and Integration Tests
-          command: |
-            ulimit -c unlimited
-            export CHECK_REFLEXIVE=true
-            npm test -- --runInBand --verbose --ci
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Run Unit and Integration Tests
+                command: |
+                  $env:CHECK_REFLEXIVE = "true"
+                  npm test -- --runInBand --verbose --ci
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: Run Unit and Integration Tests
+                command: |
+                  ulimit -c unlimited
+                  export CHECK_REFLEXIVE=true
+                  npm test -- --runInBand --verbose --ci
   ###
   # ARM UNIT TESTS (in emulator)
   ###
@@ -443,12 +483,24 @@ commands:
   # RUN BROWSER TESTS
   ###
   browser_tests:
+    parameters:
+      os: { type: string }
     steps:
-      - run:
-          name: Browser Tests
-          command: |
-            ulimit -c unlimited
-            npm run test:browser
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Run Unit and Integration Tests
+                command: |
+                  npm run test:browser
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: Run Unit and Integration Tests
+                command: |
+                  ulimit -c unlimited
+                  npm run test:browser
   ###
   # STORE BUILD FOR LATER USE
   ###
@@ -467,6 +519,8 @@ commands:
                   mkdir -force c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
                   cd c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
                   cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.node wrtc.node
+                  cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.pdb wrtc.pdb
+                  cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.lib wrtc.lib
             - store_artifacts:
                 path: c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node
                 destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
@@ -568,7 +622,7 @@ commands:
                     git config --global core.longpaths true
 
                     # Install tools
-                    choco install -y python curl cmake python windows-sdk-10-version-2004-all sccache --no-progress
+                    choco install -y python curl cmake python windows-sdk-10-version-2004-all sccache ninja --no-progress
                     Update-SessionEnvironment
 
                     # Alias python -> python3 (gn depends on it)
@@ -593,6 +647,10 @@ commands:
                     ls
 
                     echo "Done."
+            - add_to_path:
+                os: << parameters.os >>
+                label: "Add LLVM to path"
+                path: "C:\\Program Files\\LLVM\\bin"
       ###
       # LINUX SPECIFIC SETUP
       ###
@@ -667,22 +725,40 @@ commands:
             - run:
                 name: << parameters.label >>
                 command: echo 'export << parameters.var >>="<< parameters.value >>"' >> $BASH_ENV
+  add_to_path:
+    parameters:
+      label: { type: string }
+      os: { type: string }
+      path: { type: string }
+    steps:
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: << parameters.label >>
+                command: Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "<< parameters.path >>;$env:PATH"'
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: << parameters.label >>
+                command: echo 'export PATH="<< parameters.path >>:$PATH"' >> $BASH_ENV
   save_build_cache:
     parameters:
       os: { type: string }
     steps:
       - save_cache:
           name: "Save build cache"
-          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+          key: asset-cache-v7-{{ arch }}-{{ checksum "CACHE_KEY" }}
           paths:
-            - build
+            - build/external/webrtc
   restore_build_cache:
     parameters:
       os: { type: string }
     steps:
       - restore_cache:
           name: Restore cache
-          key: asset-cache-v5-{{ arch }}-{{ checksum "CACHE_KEY" }}-{{ checksum "CMakeLists.txt" }}
+          key: asset-cache-v7-{{ arch }}-{{ checksum "CACHE_KEY" }}
   ###
   # CONFIGURE DEBUG BUILDS
   ###
@@ -712,23 +788,35 @@ commands:
     steps:
       - set_env_var: { os: << parameters.os >>, label: "Configure parallelism", var: PARALLELISM, value: "<< parameters.value >>" }
   run_tests:
+    parameters:
+      os: { type: string }
     steps:
-      - run:
-          name: Determine core dump location
-          command: cat /proc/sys/kernel/core_pattern
-      - cpp_tests
-      - unit_tests
+      - when: # TODO: windows/macos
+          condition: { equal: [ linux, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Determine core dump location
+                command: cat /proc/sys/kernel/core_pattern
+      - cpp_tests:
+          os: << parameters.os >>
+      - unit_tests:
+          os: << parameters.os >>
       # - wpt_tests
-      - browser_tests
-      - test_electron
-      - run:
-          command: |
-            mkdir -p /tmp/core_dumps
-            cp core* /tmp/core_dumps || true
-            cp report.*.json /tmp/core_dumps || true
-            cp /var/crash/* /tmp/core_dumps || true
-            cp /var/lib/apport/coredump/* /tmp/core_dumps || true
+      - browser_tests:
+          os: << parameters.os >>
+      - test_electron:
+          os: << parameters.os >>
+      - when: # TODO: windows/macos
           when: on_fail
+          condition: { equal: [ linux, << parameters.os >> ] }
+          steps:
+            - run:
+                command: |
+                  mkdir -p /tmp/core_dumps
+                  cp core* /tmp/core_dumps || true
+                  cp report.*.json /tmp/core_dumps || true
+                  cp /var/crash/* /tmp/core_dumps || true
+                  cp /var/lib/apport/coredump/* /tmp/core_dumps || true
       - store_artifacts:
           name: Uploading core dumps (current directory)
           path: /tmp/core_dumps

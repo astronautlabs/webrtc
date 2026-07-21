@@ -1,5 +1,3 @@
-'use strict';
-
 export const MediaStream = globalThis.MediaStream;
 export type MediaStream = typeof globalThis.MediaStream;
 export const MediaStreamTrack = globalThis.MediaStreamTrack;
