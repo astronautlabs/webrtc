@@ -578,6 +578,10 @@ commands:
                     ls
 
                     echo "Done."
+            - add_to_path:
+                os: << parameters.os >>
+                label: "Add LLVM to path"
+                path: "C:\\Program Files\\LLVM\\bin"
       ###
       # LINUX SPECIFIC SETUP
       ###
@@ -652,6 +656,24 @@ commands:
             - run:
                 name: << parameters.label >>
                 command: echo 'export << parameters.var >>="<< parameters.value >>"' >> $BASH_ENV
+  add_to_path:
+    parameters:
+      label: { type: string }
+      os: { type: string }
+      path: { type: string }
+    steps:
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: << parameters.label >>
+                command: Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "<< parameters.path >>;$env:PATH"'
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: << parameters.label >>
+                command: echo 'export PATH="<< parameters.path >>:$PATH"' >> $BASH_ENV
   save_build_cache:
     parameters:
       os: { type: string }
