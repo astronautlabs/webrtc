@@ -1,7 +1,7 @@
 # @/webrtc
 
-> 🚧 **Work In Progress**  
-> This library is in an alpha state. It is not yet ready for production use.
+> 🚧 **Beta**  
+> This library is in a beta state. It is not yet ready for production use.
 
 > 📺 Part of the [**Astronaut Labs Broadcast Suite**](https://github.com/astronautlabs/broadcast)
 
@@ -11,7 +11,7 @@
 
 [![NPM](https://img.shields.io/npm/v/@astronautlabs/webrtc.svg)](https://www.npmjs.com/package/@astronautlabs/webrtc) [![Build Status](https://circleci.com/gh/astronautlabs/webrtc/tree/main.svg?style=shield)](https://circleci.com/gh/astronautlabs/webrtc)
 
-Node.js bindings for `libwebrtc`, which implements [WebRTC M95](https://groups.google.com/g/discuss-webrtc/c/SfzpFc-dH-E/m/JHlMpLO1AAAJ). This project aims for spec-compliance and is tested using the W3C's [web-platform-tests](https://github.com/web-platform-tests/wpt) project. A number of [nonstandard APIs](docs/nonstandard-apis.md) for testing are also included.
+Node.js implementation of WebRTC API using [Chromium WebRTC M150](https://groups.google.com/g/discuss-webrtc/c/Uv73mZiOH6c/m/_gmJtzcIBAAJ). This project aims for spec-compliance and is tested using the W3C's [web-platform-tests](https://github.com/web-platform-tests/wpt) project. A number of [nonstandard APIs](docs/nonstandard-apis.md) for testing are also included.
 
 # Install
 
@@ -25,9 +25,7 @@ You can also [build from source](docs/build-from-source.md).
 
 # Supported Platforms
 
-We intend to officially support
-- the latest 3 stable versions of Node.js 
-- the latest 3 stable releases of Electron 
+Supports [Node API v9](https://nodejs.org/api/n-api.html#node-api-version-matrix) (Node.js 18+)
 
 For the following platforms:
 - Linux
@@ -36,83 +34,9 @@ For the following platforms:
 
 On the following architectures:
 - x64
-- arm64
-- armv7l 
+- arm64 
 
 Build validation is not yet in place for all of these platforms. 
-
-The following platforms are confirmed to work with `@astronautlabs/webrtc`. Some may have prebuilt binaries available. Since we target [N-API version 3](https://nodejs.org/api/n-api.html), there may be additional platforms supported that are not listed here. If your platform is not supported, you may still be able to [build from source](docs/build-from-source.md).
-
-The table below maps our support intentions to which configurations have been validated.
-<table>
-  <thead>
-    <tr>
-      <td style="text-align: center;" colspan="2" rowspan="2"></td>
-      <th style="text-align: center;" colspan="3">Linux</th>
-      <th style="text-align: center;">macOS</th>
-      <th style="text-align: center;">Windows</th>
-    </tr>
-    <tr>
-      <th style="text-align: center;">armv7l</th>
-      <th style="text-align: center;">arm64</th>
-      <th style="text-align: center;">x64</th>
-      <th style="text-align: center;">x64</th>
-      <th style="text-align: center;">x64</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th rowspan="3">Node.js</th>
-      <th>14</th>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center">✓</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center">✓</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center">✓</td>
-    </tr>
-    <tr>
-      <th rowspan="3">Electron</th>
-      <th>18</th>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-      <td align="center"></td>
-    </tr>
-  </tbody>
-</table>
 
 # Troubleshooting
 
@@ -160,10 +84,11 @@ Windows:
 
 ## Build Commands
 
+- `npm run build` - Compile everything
+- `npm run build:native` - Compile libwebrtc and the Node.js addon in release mode
+- `npm run build:native:debug` - Compile libwebrtc and Node.js addon in debug mode
+- `npm run build:native:webrtc` - Compile libwebrtc in release mode. Note this can take a long time without a strong system, and the results are aggressively cached. If you make changes to the libwebrtc revision (see `scripts/build-webrtc.ts`) or anything else, you should delete `build/external/webrtc` to start fresh. 
 - `npm run build:tsc` - Compiles the Typescript sources into Javascript
-- `npm run build:native` - Compiles libwebrtc and the wrtc.node Node.js addon in release mode
-- `npm run build:dev` - Compiles libwebrtc/wrtc.node in debug mode and outputs compile_commands.json for clangd support.
-  This is the one you want to use if you are working on the project, as opposed to building it for use in an application.
 
 ## IDEs
 
@@ -179,26 +104,7 @@ be the case if you are using NVM and have added its shell integration in .bashrc
 Also CLion has an option (default enabled in newer versions) to use the shell when executing commands, you would need 
 that turned on. None of this applies if your Node is installed at the system level.
 
-## Platforms
-
-Make sure to check the platform-specific sections below for important information.
-
-## Platform-specific details
-
-### Windows
-
-Initial build
-
-```powershell
-$env:SKIP_DOWNLOAD = 'true'   # Important to skip fetching a prebuilt version from CDN
-$env:DEBUG = '1'
-$env:PARALLELISM = '24'       # set to number of logical cores
-
-# Initial install will build libwebrtc
-# Get a coffee.
-
-npm install
-```
+While CLion should more or less work, you are likely to have a better dev experience with VSC and clangd. 
 
 ## Debugging CI Core Dumps
 
