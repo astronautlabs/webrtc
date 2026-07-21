@@ -208,7 +208,8 @@ jobs:
           os: << parameters.os >>
           arch: << parameters.arch >>
           build-type: << parameters.build-type >>
-      - run_tests
+      - run_tests:
+          os: << parameters.os >>
 
   publish_binary_release:
     parameters:
@@ -719,23 +720,31 @@ commands:
     steps:
       - set_env_var: { os: << parameters.os >>, label: "Configure parallelism", var: PARALLELISM, value: "<< parameters.value >>" }
   run_tests:
+    parameters:
+      os: { type: string }
     steps:
-      - run:
-          name: Determine core dump location
-          command: cat /proc/sys/kernel/core_pattern
+      - when: # TODO: windows/macos
+          condition: { equal: [ linux, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Determine core dump location
+                command: cat /proc/sys/kernel/core_pattern
       - cpp_tests
       - unit_tests
       # - wpt_tests
       - browser_tests
       - test_electron
-      - run:
-          command: |
-            mkdir -p /tmp/core_dumps
-            cp core* /tmp/core_dumps || true
-            cp report.*.json /tmp/core_dumps || true
-            cp /var/crash/* /tmp/core_dumps || true
-            cp /var/lib/apport/coredump/* /tmp/core_dumps || true
+      - when: # TODO: windows/macos
           when: on_fail
+          condition: { equal: [ linux, << parameters.os >> ] }
+          steps:
+            - run:
+                command: |
+                  mkdir -p /tmp/core_dumps
+                  cp core* /tmp/core_dumps || true
+                  cp report.*.json /tmp/core_dumps || true
+                  cp /var/crash/* /tmp/core_dumps || true
+                  cp /var/lib/apport/coredump/* /tmp/core_dumps || true
       - store_artifacts:
           name: Uploading core dumps (current directory)
           path: /tmp/core_dumps
