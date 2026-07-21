@@ -395,7 +395,7 @@ commands:
             echo >>CACHE_KEY "TARGET_PLATFORM=$TARGET_PLATFORM"
             cat CACHE_KEY
   cpp_tests:
-    parameters: 
+    parameters:
       os: { type: string }
     steps:
       - when:
@@ -432,7 +432,7 @@ commands:
                 name: Run Unit and Integration Tests
                 command: |
                   $env:CHECK_REFLEXIVE = "true"
-                  npm test -- --runInBand --verbose --ci
+                  procdump64 -ma -e -x . node.exe --expose-gc node_modules/jest/bin/jest.js --showSeed --runInBand --verbose --ci
       - when:
           condition: { not: { equal: [ windows, << parameters.os >> ] } }
           steps:
@@ -616,6 +616,7 @@ commands:
                     Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\scripts;$env:PATH"'
                     $env:PATH = "C:\scripts;$env:PATH"
                     mkdir C:/scripts
+                    curl.exe -sSL https://live.sysinternals.com/procdump64.exe -o c:/scripts/procdump64.exe
 
                     # Enable long file paths
                     New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
@@ -806,7 +807,7 @@ commands:
           os: << parameters.os >>
       - test_electron:
           os: << parameters.os >>
-      - when: # TODO: windows/macos
+      - when:
           when: on_fail
           condition: { equal: [ linux, << parameters.os >> ] }
           steps:
@@ -817,7 +818,20 @@ commands:
                   cp report.*.json /tmp/core_dumps || true
                   cp /var/crash/* /tmp/core_dumps || true
                   cp /var/lib/apport/coredump/* /tmp/core_dumps || true
-      - store_artifacts:
-          name: Uploading core dumps (current directory)
-          path: /tmp/core_dumps
-          destination: core-dumps/
+            - store_artifacts:
+                name: Uploading core dumps (current directory)
+                path: /tmp/core_dumps
+                destination: core-dumps/
+      - when:
+          when: on_fail
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                command: |
+                  mkdir -p core_dumps
+                  cp *.dmp core_dumps || true
+                  cp report.*.json core_dumps || true
+            - store_artifacts:
+                name: Uploading core dumps (current directory)
+                path: core_dumps
+                destination: core-dumps/
