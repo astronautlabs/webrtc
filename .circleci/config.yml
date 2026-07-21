@@ -806,10 +806,12 @@ commands:
       - test_electron:
           os: << parameters.os >>
       - when:
-          when: on_fail
+          when: always
           condition: { equal: [ linux, << parameters.os >> ] }
           steps:
             - run:
+                when: always
+                name: Collect core dumps
                 command: |
                   mkdir -p /tmp/core_dumps
                   cp core* /tmp/core_dumps || true
@@ -821,10 +823,12 @@ commands:
                 path: /tmp/core_dumps
                 destination: core-dumps/
       - when:
-          when: on_fail
+          when: always
           condition: { equal: [ windows, << parameters.os >> ] }
           steps:
             - run:
+                when: always
+                name: Collect core dumps
                 command: |
                   mkdir -p core_dumps
                   cp *.dmp core_dumps || true
