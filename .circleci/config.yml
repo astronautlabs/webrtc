@@ -522,8 +522,7 @@ commands:
                   cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.pdb wrtc.pdb
                   cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.lib wrtc.lib
             - store_artifacts:
-                path: c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node
-                destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
+                path: c:/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
             - persist_to_workspace:
                 root: c:/workspace
                 paths:
@@ -538,8 +537,7 @@ commands:
                   cd /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
                   cp ~/node-webrtc/build/<<parameters.build-type>>/wrtc.node wrtc.node
             - store_artifacts:
-                path: /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>/wrtc.node
-                destination: wrtc-<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>.node
+                path: /tmp/workspace/<<parameters.os>>-<<parameters.arch>>-<<parameters.build-type>>
             - persist_to_workspace:
                 root: /tmp/workspace
                 paths:
