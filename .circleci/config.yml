@@ -352,6 +352,13 @@ commands:
           name: Test Electron
           command: |
             ulimit -c unlimited
+
+            # Electron 42+ does not work on Node 18, but Electron <43 does not work
+            # on Node 26. Downgrade Electron on Node 18 for the test.
+            if node --version | grep v18 &>/dev/null; then
+              npm install electron@41.7.1
+            fi
+
             if [[ "$(uname)" == Linux ]]; then
               xvfb-run ./node_modules/.bin/electron dist/nodejs/test/electron/index.js --no-sandbox
             else
