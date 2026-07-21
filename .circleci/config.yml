@@ -185,6 +185,7 @@ jobs:
       arch:         { type: string }
       build-type:   { type: string }
     executor: << parameters.os >>-<< parameters.arch >>
+    working_directory: ~/node-webrtc
     steps:
       - platform_setup:
           os: <<parameters.os>>
@@ -213,6 +214,7 @@ jobs:
       arch:         { type: string }
       build-type:   { type: string }
     executor: linux-x64
+    working_directory: ~/node-webrtc
     steps:
       - platform_setup:
           os: <<parameters.os>>
