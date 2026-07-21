@@ -32,7 +32,7 @@ main(async args => {
         // Find the real rc.exe from the Windows SDK since cmake-js will find the npm "rc" package
         let rcExe = findProgram("rc.exe");
         if (rcExe)
-            cmakeJsArgs.push(`--CDCMAKE_RC_COMPILER=${rcExe}`);
+            cmakeJsArgs.push(`--CDCMAKE_RC_COMPILER=${rcExe.replace(/\\/g, "/").trim()}`);
     }
 
     if (arch !== os.arch()) {
