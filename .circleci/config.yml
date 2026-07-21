@@ -831,8 +831,8 @@ commands:
                 name: Collect core dumps
                 command: |
                   mkdir -p core_dumps
-                  cp *.dmp core_dumps || true
-                  cp report.*.json core_dumps || true
+                  cp *.dmp core_dumps -ErrorAction SilentlyContinue
+                  cp report.*.json core_dumps -ErrorAction SilentlyContinue
             - store_artifacts:
                 name: Uploading core dumps (current directory)
                 path: core_dumps
