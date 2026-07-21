@@ -347,7 +347,41 @@ commands:
   ###
   test_electron:
     description: Test Electron
+    parameters:
+        os: { type: string }
     steps:
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Test Electron
+                command: |
+                  # Electron 42+ does not work on Node 18, but Electron <43 does not work
+                  # on Node 26. Downgrade Electron on Node 18 for the test.
+                  if ($(node --version) -like 'v18.*') {
+                    npm install electron@41.7.1
+                  }
+
+                  npm run test:electron
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: Test Electron
+                command: |
+                  ulimit -c unlimited
+
+                  # Electron 42+ does not work on Node 18, but Electron <43 does not work
+                  # on Node 26. Downgrade Electron on Node 18 for the test.
+                  if node --version | grep v18 &>/dev/null; then
+                    npm install electron@41.7.1
+                  fi
+
+                  if [[ "$(uname)" == Linux ]]; then
+                    xvfb-run ./node_modules/.bin/electron dist/nodejs/test/electron/index.js --no-sandbox
+                  else
+                    npm run test:electron
+                  fi
       - run:
           name: Test Electron
           command: |
@@ -375,24 +409,53 @@ commands:
             echo >>CACHE_KEY "TARGET_PLATFORM=$TARGET_PLATFORM"
             cat CACHE_KEY
   cpp_tests:
+    parameters: 
+      os: { type: string }
     steps:
-      - run:
-          name: Run C++ unit tests
-          command: |
-            ulimit -c unlimited
-            if [[ "$CMAKE_BUILD_TYPE" == Debug ]]; then
-              node dist/nodejs/test/cpp-test.js
-            else
-              echo "Skipping C++ unit tests (not available on a release build)"
-            fi
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Run C++ unit tests
+                command: |
+                  if ( "$env:CMAKE_BUILD_TYPE" -eq "Debug" ) {
+                    node dist/nodejs/test/cpp-test.js
+                  } else {
+                    echo "Skipping C++ unit tests (not available on a release build)"
+                  }
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: Run C++ unit tests
+                command: |
+                  ulimit -c unlimited
+                  if [[ "$CMAKE_BUILD_TYPE" == Debug ]]; then
+                    node dist/nodejs/test/cpp-test.js
+                  else
+                    echo "Skipping C++ unit tests (not available on a release build)"
+                  fi
   unit_tests:
+    parameters:
+      os: { type: string }
     steps:
-      - run:
-          name: Run Unit and Integration Tests
-          command: |
-            ulimit -c unlimited
-            export CHECK_REFLEXIVE=true
-            npm test -- --runInBand --verbose --ci
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Run Unit and Integration Tests
+                command: |
+                  $env:CHECK_REFLEXIVE = "true"
+                  npm test -- --runInBand --verbose --ci
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: Run Unit and Integration Tests
+                command: |
+                  ulimit -c unlimited
+                  export CHECK_REFLEXIVE=true
+                  npm test -- --runInBand --verbose --ci
   ###
   # ARM UNIT TESTS (in emulator)
   ###
@@ -434,12 +497,24 @@ commands:
   # RUN BROWSER TESTS
   ###
   browser_tests:
+    parameters:
+      os: { type: string }
     steps:
-      - run:
-          name: Browser Tests
-          command: |
-            ulimit -c unlimited
-            npm run test:browser
+      - when:
+          condition: { equal: [ windows, << parameters.os >> ] }
+          steps:
+            - run:
+                name: Run Unit and Integration Tests
+                command: |
+                  npm run test:browser
+      - when:
+          condition: { not: { equal: [ windows, << parameters.os >> ] } }
+          steps:
+            - run:
+                name: Run Unit and Integration Tests
+                command: |
+                  ulimit -c unlimited
+                  npm run test:browser
   ###
   # STORE BUILD FOR LATER USE
   ###
@@ -736,11 +811,15 @@ commands:
             - run:
                 name: Determine core dump location
                 command: cat /proc/sys/kernel/core_pattern
-      - cpp_tests
-      - unit_tests
+      - cpp_tests:
+          os: << parameters.os >>
+      - unit_tests:
+          os: << parameters.os >>
       # - wpt_tests
-      - browser_tests
-      - test_electron
+      - browser_tests:
+          os: << parameters.os >>
+      - test_electron:
+          os: << parameters.os >>
       - when: # TODO: windows/macos
           when: on_fail
           condition: { equal: [ linux, << parameters.os >> ] }
