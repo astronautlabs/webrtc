@@ -1,12 +1,26 @@
 # vNext (0.6.0)
 
-- Move Javascript sources to Typescript
-- Use Visual Studio 2022 for Windows builds
-- Add cmake `project()` directive
-- Add VS code C++ configuration
-- Set up `webrtc.astrocdn.com` for future binary builds
-- RTCPeerConnection.legacyGetStats() is no longer available. Only the modern standards-compliant getStats() is available
+Features
+- Updates to Chromium WebRTC M150
+- This package is now context-aware, meaning it can be used with Node.js worker threads 
+  and other features which require isolated Javascript contexts.
+
+Fixes
+- Fixes a number of crash/hang and stability issues
+
+Removals
+- RTCPeerConnection.legacyGetStats() is no longer available. Only the modern standards-compliant getStats() is 
+  available.
 - Plan B is no longer supported
+
+Development / Technical
+- Moves to `napi_ref_ptr` smart pointers for managing references to Javascript objects
+- Moves to `webrtc::scoped_ref_ptr` smart pointers for managing references to libwebrtc objects
+- Move Javascript sources to Typescript
+- Use Visual Studio 2026 for Windows builds
+- Separate libwebrtc build from Node.js addon build to improve CI caching
+- Add VS Code + clangd support for C++ development
+- Set up `webrtc.astrocdn.com` for binary builds
 
 # Forked to @astronautlabs/webrtc
 
