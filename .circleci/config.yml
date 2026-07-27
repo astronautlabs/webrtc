@@ -117,9 +117,10 @@ executors:
       CMAKE_BUILD_TYPE: Release
       PLATFORM: linux
   windows-x64:
-    resource_class: astronautlabs/aether-g3 #windows.large
+    #resource_class: astronautlabs/aether-g3
+    resource_class: windows.large
     machine:
-      #image: windows-server-2025-gui:current
+      image: windows-server-2025-gui:current
       shell: powershell.exe -ExecutionPolicy Bypass
     environment:
       PLATFORM: windows
