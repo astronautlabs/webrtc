@@ -19,19 +19,19 @@ export class EventEmitter {
 
     static mixin(constructor: any) {
         Object.assign(
-            constructor.prototype, 
+            constructor.prototype,
             {
                 [GET_EMITTER]() {
                     return (this as any)[EMITTER] ??= new EventEmitter(this);
                 },
-                addEventListener(type: string, listener: (ev: Event) => void) { 
-                    return this[GET_EMITTER]().addEventListener(type, listener); 
+                addEventListener(type: string, listener: (ev: Event) => void) {
+                    return this[GET_EMITTER]().addEventListener(type, listener);
                 },
-                dispatchEvent(event: Event) { 
-                    return this[GET_EMITTER]().dispatchEvent(event); 
+                dispatchEvent(event: Event) {
+                    return this[GET_EMITTER]().dispatchEvent(event);
                 },
-                removeEventListener(type: string, listener: (ev: Event) => void) { 
-                    return this[GET_EMITTER]().removeEventListener(type, listener); 
+                removeEventListener(type: string, listener: (ev: Event) => void) {
+                    return this[GET_EMITTER]().removeEventListener(type, listener);
                 }
             }
         );
