@@ -1,4 +1,12 @@
-# vNext (0.6.0)
+# 0.6.1
+
+- Fixed a large performance issue in event dispatch when using RTCVideoSink/RTCAudioSink due to serializing the received
+  event to JSON for debug logging.
+- Added internal support for controlling the maximum tasks per tick to avoid monopolizing the event thread. This may be 
+  exposed as a configuration option in the future, for now it is inactive (drains all pending events without limitation
+  as it did prior)
+
+# 0.6.0
 
 - Move Javascript sources to Typescript
 - Use Visual Studio 2022 for Windows builds
