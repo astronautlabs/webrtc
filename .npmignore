@@ -8,7 +8,7 @@ dist/nodejs/test/**
 dist/**/*.test.js
 docs/
 test/
-node/
+./node/
 out/
 private/
 web-platform-tests/
