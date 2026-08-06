@@ -38,7 +38,7 @@ static Validation<webrtc::IceCandidate*> ICE_CANDIDATE_INTERFACE_FN(
 }
 
 FROM_NAPI_IMPL(std::shared_ptr<webrtc::IceCandidateInterface>, napi_value) {
-  return From<webrtc::IceCandidateInterface*>(napi_value).Map([](auto candidate) {
+  return To<webrtc::IceCandidateInterface*>(napi_value).Map([](auto candidate) {
     return std::shared_ptr<webrtc::IceCandidateInterface>(candidate);
   });
 }
@@ -55,7 +55,7 @@ TO_NAPI_IMPL(webrtc::IceCandidate*, pair) {
   std::string candidate_string;
   if (!value->ToString(&candidate_string)) {
     return Validation<Napi::Value>::Invalid(
-      "Failed to print the candidate string. This is pretty weird. " 
+      "Failed to print the candidate string. This is pretty weird. "
       "File a bug on https://github.com/astronautlabs/webrtc"
     );
   }

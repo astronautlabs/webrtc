@@ -48,6 +48,22 @@ namespace node_webrtc {
             return event;
         }
 
+        /**
+         * The number of events currently enqueued.
+         */
+        size_t Size() {
+            std::lock_guard<std::mutex> guard(_mutex);
+            return _events.size();
+        }
+
+        /**
+         * Whether the queue is currently empty.
+         */
+        bool Empty() {
+            std::lock_guard<std::mutex> guard(_mutex);
+            return _events.empty();
+        }
+
     private:
         std::queue<T> _events;
         std::mutex _mutex { };

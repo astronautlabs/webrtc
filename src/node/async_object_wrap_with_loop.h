@@ -1,6 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <atomic>
+#include <cstddef>
 #include <map>
 #include <mutex>
 
@@ -62,6 +64,16 @@ namespace node_webrtc {
         std::mutex _lock;
         std::atomic<bool> _shouldStop = false;
         std::atomic<bool> _didStop = false;
+
+        // The maximum number of queued tasks dispatched per uv_async wakeup. 0 means "unlimited"
+        // (the default): drain the entire queue each wakeup, matching this class's historical
+        // behavior. A nonzero value bounds the work done per libuv iteration — once that many tasks
+        // have been dispatched, Run() returns control to libuv (re-arming the async handle if work
+        // remains) so the loop's timer and poll (I/O) phases get serviced before we continue. This
+        // is a safety valve against a single wakeup monopolizing the event loop when a handler is
+        // expensive per event; it is off by default and meant to be exposed to consumers that need
+        // strict loop fairness. See SetMaxTasksPerTick().
+        std::atomic<size_t> _maxTasksPerTick = 0;
 
     protected:
         void DestroyAsyncContext() {
@@ -173,21 +185,63 @@ namespace node_webrtc {
             //     this->Unref();
         }
 
+        /**
+         * Sets the per-wakeup task budget for this object. 0 (the default) means unlimited: each
+         * uv_async wakeup drains the whole queue. A nonzero value caps how many tasks are dispatched
+         * per libuv iteration, yielding the loop to its timer/I/O phases between batches — useful for
+         * consumers that need strict event-loop fairness under expensive-per-event handlers.
+         */
+        void SetMaxTasksPerTick(size_t maxTasksPerTick) {
+            _maxTasksPerTick = maxTasksPerTick;
+        }
+
+        /**
+         * Dispatch a single queued task, wrapping it in the object's async callback scope if it has
+         * one. Returns false if the queue was empty.
+         */
+        bool DispatchOne() {
+            auto event = queue.Dequeue();
+            if (!event)
+                return false;
+
+            // Not all objects have async contexts. If we do, set up the appropriate callback scope.
+            // If not, just run the task without it.
+            if (_context) {
+                Napi::CallbackScope callbackScope(this->Env(), *_context);
+                event->Execute();
+            } else {
+                event->Execute();
+            }
+            return true;
+        }
+
         virtual void Run() {
             Napi::HandleScope scope(this->Env());
             if (!_shouldStop) {
-                while (auto event = queue.Dequeue()) {
-                    // Not all objects have async contexts. If we do, set up the appropriate callback scope.
-                    // If not, just run the task without it.
-                    if (_context) {
-                        Napi::CallbackScope callbackScope(this->Env(), *_context);
-                        event->Execute();
-                    } else {
-                        event->Execute();
+                size_t budget = _maxTasksPerTick;
+                if (budget == 0) {
+                    // Unlimited (default): drain everything currently queued, matching historical
+                    // behavior.
+                    while (DispatchOne()) {
+                        if (_shouldStop)
+                            break;
                     }
-
-                    if (_shouldStop) {
-                        break;
+                } else {
+                    // Bounded: dispatch at most `budget` tasks (of those present at entry), then
+                    // yield. If work remains — because we hit the cap or the producer enqueued more
+                    // while we ran — re-arm the async handle so libuv schedules us again on a later
+                    // iteration, after it has serviced its timer and poll (I/O) phases.
+                    budget = std::min(budget, queue.Size());
+                    while (budget-- > 0) {
+                        if (!DispatchOne() || _shouldStop)
+                            break;
+                    }
+                    if (!_shouldStop && !queue.Empty()) {
+                        _lock.lock();
+                        if (!uv_is_closing(reinterpret_cast<uv_handle_t*>(&_async))) {
+                            uv_async_send(&_async);
+                        }
+                        _lock.unlock();
                     }
                 }
             }
