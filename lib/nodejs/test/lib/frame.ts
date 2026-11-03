@@ -25,7 +25,7 @@ export class I420Frame {
     }
 
     get strideU() {
-        return this.width / 2;
+        return (this.width + 1) >> 1;
     }
 
     get dataV() {
@@ -64,7 +64,7 @@ export class I420Frame {
     }
 
     get sizeOfChromaPlane() {
-        return this.sizeOfLuminancePlane / 4;
+        return ((this.width + 1) >> 1) * ((this.height + 1) >> 1);
     }
 }
 

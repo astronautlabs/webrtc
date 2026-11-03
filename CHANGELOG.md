@@ -1,3 +1,9 @@
+# 0.6.2
+
+- Fixed an off-by-one issue when handling resolutions with non-even width/height (ie 203x203 as opposed to 202x202), 
+  previously we would take half the width/height for the chroma plane rounding down instead of up producing incorrect 
+  results and artifacts in those circumstances.
+
 # 0.6.1
 
 - Fixed a large performance issue in event dispatch when using RTCVideoSink/RTCAudioSink due to serializing the received

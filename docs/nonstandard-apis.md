@@ -195,7 +195,9 @@ dictionary RTCVideoFrame {
    source is the RTCVideoSource.
  * Calling `onFrame` with an RTCVideoFrame pushes a new video frame to every
    non-stopped local video MediaStreamTrack created with `createTrack`.
- * An RTCVideoFrame represents an I420 frame.
+ * An RTCVideoFrame represents an I420 frame: tightly-packed Y, U and V planes, where Y is `width` x `height` and
+   U and V are each `ceil(width / 2)` x `ceil(height / 2)`. For even dimensions that is `width * height * 1.5`
+   bytes; for odd dimensions it is slightly more (e.g. 720x405 is 437,760 bytes).
  * RTCVideoFrame `rotation` is either 0, 90, 180, or 270.
 
 ### RTCVideoSink

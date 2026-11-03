@@ -27,7 +27,7 @@ namespace node_webrtc {
     }
 
     Validation<I420ImageData> I420ImageData::Create(ImageData imageData) {
-        auto expectedByteLength = static_cast<size_t>(imageData.width * imageData.height * 1.5);
+        auto expectedByteLength = I420ImageData::byteLength(imageData.width, imageData.height);
         auto actualByteLength = imageData.contents.ByteLength();
         if (actualByteLength != expectedByteLength) {
             auto error = "Expected a .byteLength of " + std::to_string(expectedByteLength) + ", not " + std::to_string(actualByteLength);

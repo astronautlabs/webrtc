@@ -31,12 +31,22 @@ class I420ImageData {
 
   static Validation<I420ImageData> Create(ImageData imageData);
 
+  // Packed I420: a full-resolution Y plane, then U and V planes subsampled by two in each direction, rounding up
+  // (so odd dimensions keep their last chroma row/column).
+  static int chromaWidth(int width) { return (width + 1) / 2; }
+  static int chromaHeight(int height) { return (height + 1) / 2; }
+
+  static size_t byteLength(int width, int height) {
+    return (static_cast<size_t>(width) * height)
+        + (2 * static_cast<size_t>(chromaWidth(width)) * chromaHeight(height));
+  }
+
   size_t sizeOfLuminancePlane() const {
-    return static_cast<size_t>(width() * height());
+    return static_cast<size_t>(width()) * height();
   }
 
   size_t sizeOfChromaPlane() const {
-    return sizeOfLuminancePlane() / 4;
+    return static_cast<size_t>(chromaWidth(width())) * chromaHeight(height());
   }
 
   uint8_t* dataY() {
@@ -52,7 +62,7 @@ class I420ImageData {
   }
 
   int strideU() const {
-    return width() / 2;
+    return chromaWidth(width());
   }
 
   uint8_t* dataV() {
